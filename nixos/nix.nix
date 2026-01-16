@@ -1,4 +1,4 @@
-{ inputs, config, ... }:
+{ inputs, ... }:
 {
   nix = {
     channel.enable = false;
@@ -22,21 +22,9 @@
     };
   };
   nixpkgs = {
-    config = {
-      allowUnfree = true;
-      nvidia.acceptLicense = true;
-    };
+    config = inputs.self.nixpkgsConfig;
     overlays = [
-      (final: prev: {
-        stable = import inputs.nixpkgs-stable {
-          inherit (prev.stdenv.hostPlatform) system;
-          inherit (config.nixpkgs) config;
-        };
-        unstable = import inputs.nixpkgs-unstable {
-          inherit (prev.stdenv.hostPlatform) system;
-          inherit (config.nixpkgs) config;
-        };
-      })
+      inputs.self.overlays.default
     ];
   };
 }

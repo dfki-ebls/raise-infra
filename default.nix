@@ -35,10 +35,39 @@ in
   flake = {
     nixosModules.default = ./nixos;
     nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem cpu { });
+    nixpkgsConfig = {
+      allowUnfree = true;
+      nvidia.acceptLicense = true;
+    };
+    overlays.default =
+      final: prev:
+      let
+        custom = lib.packagesFromDirectoryRecursive {
+          inherit (final) callPackage;
+          directory = ./pkgs;
+        };
+      in
+      {
+        inherit custom;
+        stable = import inputs.nixpkgs-stable {
+          inherit (prev.stdenv.hostPlatform) system;
+          config = self.nixpkgsConfig;
+        };
+        unstable = import inputs.nixpkgs-unstable {
+          inherit (prev.stdenv.hostPlatform) system;
+          config = self.nixpkgsConfig;
+        };
+      }
+      // custom;
   };
 
   perSystem =
-    { system, pkgs, ... }:
+    {
+      system,
+      pkgs,
+      config,
+      ...
+    }:
     let
       kernel = pkgs.stdenv.hostPlatform.parsed.kernel.name;
       cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
@@ -48,22 +77,28 @@ in
         else
           mkNixosSystem cpu {
             virtualisation.vmVariant = {
-              virtualisation.host.pkgs = pkgs;
+              virtualisation.host.pkgs = import inputs.nixpkgs {
+                inherit system;
+                config = self.nixpkgsConfig;
+                # overlays already defined in nixos config
+              };
             };
           };
     in
     {
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
-        config = {
-          allowUnfree = true;
-          nvidia.acceptLicense = true;
-        };
+        config = self.nixpkgsConfig;
+        overlays = [
+          self.overlays.default
+        ];
       };
       packages = {
-        default = nixosSystem.config.system.build.vm;
+        default = config.packages.vm;
+        vm = nixosSystem.config.system.build.vm;
         proxmox = nixosSystem.config.system.build.VMA;
-      };
+      }
+      // pkgs.custom;
       treefmt = {
         projectRootFile = "flake.nix";
         programs = {
