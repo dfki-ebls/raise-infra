@@ -11,4 +11,11 @@
       dates = "daily";
     };
   };
+  virtualisation.quadlet = {
+    enable = true;
+    autoUpdate = {
+      enable = true;
+      startAt = "*-*-* 02:00:00";
+    };
+  };
 }

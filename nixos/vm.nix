@@ -2,11 +2,11 @@
 
 {
   virtualisation.vmVariant = {
-    _module.args.caddyHostName = "http://localhost";
     services.caddy = {
       globalConfig = ''
         auto_https off
       '';
+      virtualHosts.default.hostName = "http://localhost";
     };
     virtualisation = {
       graphics = true;
