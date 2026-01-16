@@ -31,5 +31,5 @@
       specialArgs = {
         lib'.flocken = inputs.flocken.lib;
       };
-    } ./default.nix;
+    } ./flake;
 }

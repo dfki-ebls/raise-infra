@@ -33,7 +33,7 @@ in
   systems = import inputs.systems;
 
   flake = {
-    nixosModules.default = ./nixos;
+    nixosModules.default = ../nixos;
     nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem cpu { });
     nixpkgsConfig = {
       allowUnfree = true;
@@ -44,7 +44,7 @@ in
       let
         custom = lib.packagesFromDirectoryRecursive {
           inherit (final) callPackage;
-          directory = ./pkgs;
+          directory = ../pkgs;
         };
       in
       {
