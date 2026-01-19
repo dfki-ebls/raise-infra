@@ -1,7 +1,7 @@
 { ... }:
 {
   system.autoUpgrade = {
-    enable = false;
+    enable = true;
     flake = "github:dfki-ebls/raise-infra";
     dates = "04:00";
     allowReboot = true;
