@@ -2,10 +2,15 @@
   pkgs,
   config,
   lib,
+  inputs,
   ...
 }:
 let
   inherit (config.virtualisation) quadlet;
+
+  ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app.override {
+    urlPrefix = "/ragold/";
+  };
 in
 {
   assertions = [
@@ -23,7 +28,17 @@ in
     virtualHosts.default = {
       hostName = lib.mkDefault "raise.dfki.de";
       extraConfig = ''
-        respond "Hello World!"
+        redir /ragold /ragold/
+        handle_path /ragold/* {
+          root * ${ragold}
+          encode gzip
+          try_files {path} /index.html
+          file_server
+        }
+
+        handle {
+          respond "Hello World!"
+        }
       '';
     };
   };
