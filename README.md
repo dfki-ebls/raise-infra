@@ -2,7 +2,7 @@
 
 ```bash
 # proxmox image to deploy
-nix build .#proxmox
+nix build .#.packages.x86_64-linux.proxmox
 # local qemu testing vm
 nix build .#vm
 ```
