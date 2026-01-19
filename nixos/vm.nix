@@ -6,7 +6,7 @@
       globalConfig = ''
         auto_https off
       '';
-      virtualHosts.default.hostName = "http://localhost";
+      virtualHosts.default.hostName = ":80";
     };
     virtualisation = {
       graphics = true;
