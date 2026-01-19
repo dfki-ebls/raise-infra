@@ -2,6 +2,9 @@
 {
   nix = {
     channel.enable = false;
+    extraOptions = ''
+      !include nix.secrets.conf
+    '';
     settings = {
       sandbox = true;
       experimental-features = [
