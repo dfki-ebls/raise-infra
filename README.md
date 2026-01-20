@@ -1,8 +1,8 @@
 # RAISE Infrastructure
 
 ```bash
-# proxmox image to deploy
-nix build .#.packages.x86_64-linux.proxmox
-# local qemu testing vm
+# image to deploy
+nix build .#.packages.x86_64-linux.image
+# local vm for testing
 nix build .#vm
 ```

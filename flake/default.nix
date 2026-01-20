@@ -6,59 +6,62 @@
   ...
 }:
 let
+
   mkNixosSystem =
-    cpu: extraModule:
+    {
+      cpu,
+      extraModule ? { },
+      format ? "qemu",
+    }:
     inputs.nixpkgs-unstable.lib.nixosSystem {
       system = null;
       specialArgs = {
         inherit inputs lib';
       };
-      modules = lib.singleton (
-        { modulesPath, ... }:
+      modules = [
+        self.nixosModules.default
+        self.nixosModules.${format}
+        extraModule
         {
-          imports = [
-            self.nixosModules.default
-            "${modulesPath}/virtualisation/proxmox-image.nix"
-            extraModule
-          ];
           nixpkgs.hostPlatform = "${cpu}-linux";
         }
-      );
+      ];
     };
 in
 {
   imports = [
     inputs.treefmt-nix.flakeModule
-  ];
+  ]
+  ++ lib'.flocken.getModules ./.;
   systems = import inputs.systems;
 
   flake = {
-    nixosModules.default = ../nixos;
-    nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem cpu { });
+    nixosModules = {
+      default = ../nixos;
+      proxmox =
+        { modulesPath, ... }:
+        {
+          imports = [
+            "${modulesPath}/virtualisation/proxmox-image.nix"
+          ];
+          proxmox = {
+            qemuConf.bios = "ovmf";
+            cloudInit.enable = false;
+          };
+        };
+      qemu =
+        { modulesPath, ... }:
+        {
+          imports = [
+            "${modulesPath}/virtualisation/disk-image.nix"
+          ];
+        };
+    };
+    nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem { inherit cpu; });
     nixpkgsConfig = {
       allowUnfree = true;
       nvidia.acceptLicense = true;
     };
-    overlays.default =
-      final: prev:
-      let
-        custom = lib.packagesFromDirectoryRecursive {
-          inherit (final) callPackage;
-          directory = ../pkgs;
-        };
-      in
-      {
-        inherit custom;
-        stable = import inputs.nixpkgs-stable {
-          inherit (prev.stdenv.hostPlatform) system;
-          config = self.nixpkgsConfig;
-        };
-        unstable = import inputs.nixpkgs-unstable {
-          inherit (prev.stdenv.hostPlatform) system;
-          config = self.nixpkgsConfig;
-        };
-      }
-      // custom;
   };
 
   perSystem =
@@ -69,21 +72,18 @@ in
       ...
     }:
     let
-      kernel = pkgs.stdenv.hostPlatform.parsed.kernel.name;
-      cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
-      nixosSystem =
-        if kernel == "linux" then
-          mkNixosSystem cpu { }
-        else
-          mkNixosSystem cpu {
-            virtualisation.vmVariant = {
-              virtualisation.host.pkgs = import inputs.nixpkgs {
-                inherit system;
-                config = self.nixpkgsConfig;
-                # overlays already defined in nixos config
-              };
+      nixosSystem = mkNixosSystem {
+        cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
+        extraModule = {
+          virtualisation.vmVariant = {
+            virtualisation.host.pkgs = import inputs.nixpkgs {
+              inherit system;
+              config = self.nixpkgsConfig;
+              # overlays already defined in nixos config
             };
           };
+        };
+      };
     in
     {
       _module.args.pkgs = import inputs.nixpkgs {
@@ -95,8 +95,7 @@ in
       };
       packages = {
         default = config.packages.vm;
-        vm = nixosSystem.config.system.build.vm;
-        proxmox = nixosSystem.config.system.build.VMA;
+        inherit (nixosSystem.config.system.build) vm image;
       }
       // pkgs.custom;
       treefmt = {
