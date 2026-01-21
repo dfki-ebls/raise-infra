@@ -26,7 +26,9 @@ in
       admin off
     '';
     virtualHosts.default = {
-      hostName = lib.mkDefault "raise.dfki.de";
+      # todo: enable for production build
+      # hostName = lib.mkDefault "raise.dfki.de";
+      hostName = lib.mkDefault ":80";
       extraConfig = ''
         redir /ragold /ragold/
         handle_path /ragold/* {
