@@ -11,7 +11,6 @@ let
     {
       cpu,
       extraModule ? { },
-      format ? "qemu",
     }:
     inputs.nixpkgs-unstable.lib.nixosSystem {
       system = null;
@@ -20,7 +19,7 @@ let
       };
       modules = [
         self.nixosModules.default
-        self.nixosModules.${format}
+        self.nixosModules.proxmox
         extraModule
         {
           nixpkgs.hostPlatform = "${cpu}-linux";
@@ -36,27 +35,6 @@ in
   systems = import inputs.systems;
 
   flake = {
-    nixosModules = {
-      default = ../nixos;
-      proxmox =
-        { modulesPath, ... }:
-        {
-          imports = [
-            "${modulesPath}/virtualisation/proxmox-image.nix"
-          ];
-          proxmox = {
-            qemuConf.bios = "ovmf";
-            cloudInit.enable = false;
-          };
-        };
-      qemu =
-        { modulesPath, ... }:
-        {
-          imports = [
-            "${modulesPath}/virtualisation/disk-image.nix"
-          ];
-        };
-    };
     nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem { inherit cpu; });
     nixpkgsConfig = {
       allowUnfree = true;
