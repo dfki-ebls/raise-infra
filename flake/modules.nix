@@ -8,6 +8,7 @@
         imports = [
           "${modulesPath}/virtualisation/proxmox-image.nix"
         ];
+        virtualization.diskSize = 128 * 1024; # MB
         proxmox = {
           qemuConf = {
             name = "raise";
@@ -15,7 +16,6 @@
             cores = 8;
             memory = 16 * 1024;
             agent = true;
-            additionalSpace = "8G";
             bootSize = "512M";
           };
           # https://pve.proxmox.com/pve-docs-7/qm.conf.5.html
