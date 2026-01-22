@@ -28,7 +28,7 @@
       isSystemUser = true;
       uid = 500;
       group = "quadlet";
-      linger = true;
+      linger = false;
       subUidRanges = [
         {
           startUid = 50000;
