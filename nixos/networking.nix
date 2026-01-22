@@ -8,7 +8,7 @@ in
     useHostResolvConf = false;
     firewall.enable = true;
     nftables.enable = true;
-    hostName = "raise-${cpu}";
+    hostName = "raise";
   };
 
   services.firewalld.enable = true;
