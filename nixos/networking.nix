@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 {
   networking = {
     useNetworkd = true;
