@@ -1,11 +1,14 @@
-{ ... }:
+{ pkgs, ... }:
+let
+  cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
+in
 {
   networking = {
     useNetworkd = true;
     useHostResolvConf = false;
     firewall.enable = true;
     nftables.enable = true;
-    hostName = "raise.dfki.de";
+    hostName = "raise-${cpu}";
   };
 
   services.firewalld.enable = true;

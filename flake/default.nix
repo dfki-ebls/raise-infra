@@ -35,7 +35,9 @@ in
   systems = import inputs.systems;
 
   flake = {
-    nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem { inherit cpu; });
+    nixosConfigurations = lib.genAttrs [ "raise-x86_64" "raise-aarch64" ] (
+      cpu: mkNixosSystem { inherit cpu; }
+    );
     nixpkgsConfig = {
       allowUnfree = true;
       nvidia.acceptLicense = true;
