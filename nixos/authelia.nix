@@ -2,9 +2,24 @@
 let
   secretsDir = "/etc/authelia";
   autheliaPackage = config.services.authelia.instances.main.package;
-  generateSecretsScript = pkgs.writeShellScript "authelia-generate-secrets" ''
+
+  # https://www.authelia.com/reference/guides/passwords/#user--password-file
+  mkUsersDatabaseYaml = passwordHash: ''
+    users:
+      mlenz:
+        disabled: false
+        displayname: Mirko Lenz
+        password: ${passwordHash}
+        email: mirko.lenz@dfki.de
+        groups:
+          - admins
+  '';
+
+  generateSecretsScript = pkgs.writeShellScript "authelia-generate-secrets" /* bash */ ''
     mkdir -p ${secretsDir}
     chmod 700 ${secretsDir}
+    mkdir -p /var/lib/authelia
+    chmod 700 /var/lib/authelia
 
     # https://www.authelia.com/reference/guides/generating-secure-values/#generating-a-random-alphanumeric-string
     generate_random_secret() {
@@ -63,6 +78,26 @@ let
       fi
     }
 
+    generate_users_database() {
+      local db_file="$1"
+      local plaintext_file="$2"
+      if [ ! -f "$db_file" ]; then
+        local output
+        output=$(${autheliaPackage}/bin/authelia crypto hash generate argon2 \
+          --random --random.length 32 --random.charset alphanumeric)
+        local password
+        password=$(echo "$output" | grep 'Random Password:' | sed 's/Random Password: //')
+        local hash
+        hash=$(echo "$output" | grep 'Digest:' | sed 's/Digest: //')
+        echo "${mkUsersDatabaseYaml "$hash"}" > "$db_file"
+        echo "$password" > "$plaintext_file"
+        chmod 600 "$db_file"
+        chmod 600 "$plaintext_file"
+        echo "Generated $db_file"
+        echo "Generated $plaintext_file (plaintext password for admin user)"
+      fi
+    }
+
     generate_random_secret "${secretsDir}/jwt-secret"
     generate_random_secret "${secretsDir}/oidc-hmac-secret"
     generate_random_secret "${secretsDir}/session-secret"
@@ -71,10 +106,12 @@ let
     generate_rsa_keypair "${secretsDir}/oidc-issuer-private-key.pem" "${secretsDir}/oidc-issuer-public-key.pem"
     generate_oidc_client_id "${secretsDir}/oidc-client-id-default"
     generate_oidc_client_secret "${secretsDir}/oidc-client-secret-default.hash" "${secretsDir}/oidc-client-secret-default.plaintext"
+    generate_users_database "/var/lib/authelia/users_database.yml" "${secretsDir}/admin-password.plaintext"
   '';
 in
 {
   systemd.services.authelia-generate-secrets = {
+    enable = config.services.authelia.instances.main.enable;
     description = "Generate Authelia secrets if missing";
     wantedBy = [ "authelia-main.service" ];
     before = [ "authelia-main.service" ];
