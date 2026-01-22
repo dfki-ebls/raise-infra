@@ -1,7 +1,9 @@
 { config, ... }:
 {
+  # todo: https://github.com/NixOS/nixpkgs/pull/446307
   services.crowdsec = {
     enable = false;
+    openFirewall = false;
     autoUpdateService = true;
     # https://app.crowdsec.net/hub/collections
     hub.collections = [
@@ -32,9 +34,11 @@
       }
     ];
   };
+
   services.crowdsec-firewall-bouncer = {
     enable = config.services.crowdsec.enable;
   };
+
   # todo: https://github.com/NixOS/nixpkgs/pull/476651
   systemd.services.crowdsec-firewall-bouncer = {
     partOf = [ "nftables.service" ];
