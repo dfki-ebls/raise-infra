@@ -1,7 +1,12 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   secretsDir = "/etc/authelia";
-  autheliaPackage = config.services.authelia.instances.main.package;
+  cfg = config.services.authelia.instances.main;
 
   # https://www.authelia.com/reference/guides/passwords/#user--password-file
   mkUsersDatabaseYaml = passwordHash: ''
@@ -25,7 +30,7 @@ let
     generate_random_secret() {
       local file="$1"
       if [ ! -f "$file" ]; then
-        ${autheliaPackage}/bin/authelia crypto rand --length 64 --charset alphanumeric > "$file"
+        ${lib.getExe cfg.package} crypto rand --length 64 --charset alphanumeric > "$file"
         chmod 600 "$file"
         echo "Generated $file"
       fi
@@ -38,7 +43,7 @@ let
       if [ ! -f "$private_key" ]; then
         local tmpdir
         tmpdir=$(mktemp -d)
-        ${autheliaPackage}/bin/authelia crypto pair rsa generate \
+        ${lib.getExe cfg.package} crypto pair rsa generate \
           --bits 4096 \
           --directory "$tmpdir"
         mv "$tmpdir/private.pem" "$private_key"
@@ -55,7 +60,7 @@ let
     generate_oidc_client_id() {
       local file="$1"
       if [ ! -f "$file" ]; then
-        ${autheliaPackage}/bin/authelia crypto rand --length 72 --charset rfc3986 > "$file"
+        ${lib.getExe cfg.package} crypto rand --length 72 --charset rfc3986 > "$file"
         chmod 600 "$file"
         echo "Generated $file"
       fi
@@ -67,7 +72,7 @@ let
       local plaintext_file="$2"
       if [ ! -f "$hash_file" ]; then
         local output
-        output=$(${autheliaPackage}/bin/authelia crypto hash generate pbkdf2 \
+        output=$(${lib.getExe cfg.package} crypto hash generate pbkdf2 \
           --variant sha512 --random --random.length 72 --random.charset rfc3986)
         echo "$output" | grep 'Random Password:' | sed 's/Random Password: //' > "$plaintext_file"
         echo "$output" | grep 'Digest:' | sed 's/Digest: //' > "$hash_file"
@@ -83,7 +88,7 @@ let
       local plaintext_file="$2"
       if [ ! -f "$db_file" ]; then
         local output
-        output=$(${autheliaPackage}/bin/authelia crypto hash generate argon2 \
+        output=$(${lib.getExe cfg.package} crypto hash generate argon2 \
           --random --random.length 32 --random.charset alphanumeric)
         local password
         password=$(echo "$output" | grep 'Random Password:' | sed 's/Random Password: //')
@@ -111,10 +116,10 @@ let
 in
 {
   systemd.services.authelia-generate-secrets = {
-    enable = config.services.authelia.instances.main.enable;
+    enable = cfg.enable;
     description = "Generate Authelia secrets if missing";
-    wantedBy = [ "authelia-main.service" ];
-    before = [ "authelia-main.service" ];
+    wantedBy = [ "authelia-${cfg.instance.name}.service" ];
+    before = [ "authelia-${cfg.instance.name}.service" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = generateSecretsScript;
