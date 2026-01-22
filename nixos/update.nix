@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 let
   cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
 in
