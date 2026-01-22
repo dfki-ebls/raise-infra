@@ -26,12 +26,5 @@
           cloudInit.enable = false;
         };
       };
-    qemu =
-      { modulesPath, ... }:
-      {
-        imports = [
-          "${modulesPath}/virtualisation/disk-image.nix"
-        ];
-      };
   };
 }
