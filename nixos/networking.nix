@@ -5,7 +5,7 @@
     useHostResolvConf = false;
     firewall.enable = true;
     nftables.enable = true;
-    hostName = "raise";
+    hostName = "raise.dfki.de";
   };
 
   services.firewalld.enable = true;
