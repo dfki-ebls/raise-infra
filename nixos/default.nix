@@ -28,9 +28,8 @@
   };
   boot.initrd.systemd.enable = true;
 
-  # zramSwap = {
-  #   enable = true;
-  #   memoryPercent = 100;
-  #   memoryMax = 8 * 1024 * 1024 * 1024;
-  # };
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
+  };
 }
