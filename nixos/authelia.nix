@@ -145,25 +145,23 @@ in
         file.path = "/var/lib/authelia/users_database.yml";
       };
       access_control = {
-        rules = [
-          {
-            domain = "public.example.com";
-            policy = "bypass";
-          }
-          {
-            domain = "domain.example.com";
-            policy = "one_factor";
-          }
-        ];
+        default_policy = "deny";
+        rules = [ ];
       };
       session = {
         name = "authelia_session";
         cookies = [
           {
-            domain = "example.com";
-            authelia_url = "https://auth.example.com";
+            domain = "raise.dfki.de";
+            authelia_url = "https://raise.dfki.de/authelia/";
           }
         ];
+      };
+      # https://www.authelia.com/configuration/security/regulation/
+      regulation = {
+        max_retries = 3;
+        find_time = "2m";
+        ban_time = "5m";
       };
       storage = {
         local.path = "/var/lib/authelia/db.sqlite3";
