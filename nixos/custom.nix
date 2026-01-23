@@ -4,7 +4,7 @@
   options.custom = {
     rootDomain = lib.mkOption {
       type = lib.types.str;
-      default = "raise.dfki.de";
+      default = "raise.dfki.dev";
       description = "The root domain for all services.";
     };
     vhostSuffix = lib.mkOption {

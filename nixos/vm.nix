@@ -1,5 +1,4 @@
 { ... }:
-
 {
   virtualisation.vmVariant = {
     custom.rootDomain = "localhost";
@@ -7,7 +6,6 @@
     services.caddy.globalConfig = ''
       auto_https off
     '';
-    services.portunus.ldap.suffix = "dc=home,dc=arpa";
     virtualisation = {
       graphics = true;
       forwardPorts = [
