@@ -10,7 +10,7 @@ let
 
   ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app;
 
-  prefix = if config.custom.enableCertificates then "http://" else "";
+  prefix = if config.custom.enableCertificates then "" else "http://";
 in
 {
   assertions = [
