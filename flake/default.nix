@@ -71,8 +71,9 @@ in
           self.overlays.default
         ];
       };
+      apps.default.program = config.packages.vm;
       packages = {
-        default = config.packages.vm;
+        default = config.packages.image;
         inherit (nixosSystem.config.system.build) vm image;
       }
       // pkgs.custom;
