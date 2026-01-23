@@ -118,8 +118,8 @@ in
   systemd.services.authelia-generate-secrets = {
     enable = cfg.enable;
     description = "Generate Authelia secrets if missing";
-    wantedBy = [ "authelia-${cfg.instance.name}.service" ];
-    before = [ "authelia-${cfg.instance.name}.service" ];
+    wantedBy = [ "authelia-${cfg.name}.service" ];
+    before = [ "authelia-${cfg.name}.service" ];
     serviceConfig = {
       Type = "oneshot";
       ExecStart = generateSecretsScript;
