@@ -25,6 +25,8 @@ in
     globalConfig = ''
       admin off
     '';
+    # requires admin api
+    enableReload = false;
     virtualHosts = {
       "${prefix}raise.dfki.de".extraConfig = "redir https://raise.dfki.dev{uri}";
       default = {
