@@ -40,10 +40,7 @@
       # but it gets symlinked into /var/lib/dex inside the unit
       StateDirectory = "dex";
 
-      # Make /etc/dex/users.yaml available to the service at runtime as a credential
-      LoadCredential = [ "users.yaml:/etc/dex/users.yaml" ];
-
-      # Append our merge after the upstream module’s ExecStartPre steps
+      # Append our merge after the upstream module's ExecStartPre steps
       # https://github.com/NixOS/nixpkgs/blob/88d3861acdd3d2f0e361767018218e51810df8a1/nixos/modules/services/web-apps/dex.nix#L109
       ExecStartPre = lib.mkAfter [
         "+${pkgs.writeShellScript "dex-merge-users" ''
@@ -51,7 +48,7 @@
 
           ${lib.getExe pkgs.yq-go} eval-all \
             'select(fileIndex==0) * select(fileIndex==1)' \
-            /run/dex/config.yaml "$CREDENTIALS_DIRECTORY/users.yaml" \
+            /run/dex/config.yaml /etc/dex/users.yaml \
             > /run/dex/config.yaml.tmp
 
           mv /run/dex/config.yaml.tmp /run/dex/config.yaml
