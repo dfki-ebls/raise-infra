@@ -2,12 +2,11 @@
 
 {
   virtualisation.vmVariant = {
-    services.caddy = {
-      globalConfig = ''
-        auto_https off
-      '';
-      virtualHosts.default.hostName = ":80";
-    };
+    custom.rootDomain = "localhost";
+    custom.vhostSuffix = ":80";
+    services.caddy.globalConfig = ''
+      auto_https off
+    '';
     virtualisation = {
       graphics = true;
       forwardPorts = [

@@ -8,9 +8,7 @@
 let
   inherit (config.virtualisation) quadlet;
 
-  ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app.override {
-    urlPrefix = "/ragold/";
-  };
+  ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app;
 in
 {
   assertions = [
@@ -25,31 +23,36 @@ in
     globalConfig = ''
       admin off
     '';
-    virtualHosts.default = {
-      hostName = lib.mkDefault "raise.dfki.de";
-      extraConfig = ''
-        handle /dex/* {
+    virtualHosts = {
+      default = {
+        hostName = "${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        extraConfig = ''
+          respond "Hello World!"
+        '';
+      };
+      dex = {
+        hostName = "dex.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        extraConfig = ''
           reverse_proxy 127.0.0.1:${toString config.services.portunus.dex.port}
-        }
-
-        handle /portunus/* {
+        '';
+      };
+      portunus = {
+        hostName = "portunus.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        extraConfig = ''
           @blocked not remote_ip 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 127.0.0.1
           respond @blocked "Forbidden" 403
           reverse_proxy 127.0.0.1:${toString config.services.portunus.port}
-        }
-
-        redir /ragold /ragold/
-        handle_path /ragold/* {
+        '';
+      };
+      ragold = {
+        hostName = "ragold.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        extraConfig = ''
           root * ${ragold}
           encode gzip
           try_files {path} /index.html
           file_server
-        }
-
-        handle {
-          respond "Hello World!"
-        }
-      '';
+        '';
+      };
     };
   };
   systemd.tmpfiles.settings.caddy = lib.mkIf quadlet.containers.caddy.enable {

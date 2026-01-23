@@ -4,12 +4,9 @@
   # On first run, the admin password is printed to stdout, access with `journalctl -u portunus.service -b` and change in UI
   services.portunus = {
     enable = false;
-    domain = "raise.dfki.de";
+    domain = "sso.${config.custom.rootDomain}";
     port = 5558;
-    ldap = {
-      searchUserName = "admin";
-      suffix = "dc=raise,dc=dfki,dc=de";
-    };
+    ldap.searchUserName = "admin";
     dex = {
       enable = true;
       port = 5556;
@@ -19,7 +16,7 @@
     environmentFile = "/etc/dex.env";
     settings = {
       web.allowedOrigins = [
-        "https://${config.services.portunus.domain}"
+        "https://app.${config.custom.rootDomain}"
       ];
       # https://dexidp.io/docs/configuration/custom-scopes-claims-clients/
       staticClients = [
@@ -28,7 +25,7 @@
           name = "Default Client";
           public = true;
           redirectURIs = [
-            "https://${config.services.portunus.domain}/app/oidc/callback"
+            "https://app.${config.custom.rootDomain}/sso/callback"
           ];
         }
       ];
