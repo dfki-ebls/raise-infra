@@ -7,10 +7,10 @@
       default = "raise.dfki.dev";
       description = "The root domain for all services.";
     };
-    vhostSuffix = lib.mkOption {
-      type = lib.types.str;
-      default = "";
-      description = "Suffix to append to all Caddy virtual host names (e.g., ':80' for local development).";
+    enableCertificates = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Whether to use secure connections (HTTPS) for services.";
     };
   };
 }

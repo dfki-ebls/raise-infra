@@ -2,7 +2,7 @@
 {
   virtualisation.vmVariant = {
     custom.rootDomain = "localhost";
-    custom.vhostSuffix = ":80";
+    custom.enableCertificates = false;
     services.caddy.globalConfig = ''
       auto_https off
     '';
@@ -16,7 +16,7 @@
         }
         {
           from = "host";
-          host.port = 8888;
+          host.port = 80;
           guest.port = 80;
         }
       ];

@@ -4,16 +4,19 @@
   pkgs,
   ...
 }:
+let
+  protocol = if config.custom.enableCertificates then "https" else "http";
+in
 {
   services.dex = {
     enable = false;
     environmentFile = "/etc/dex/dex.env";
     settings = {
-      issuer = "https://auth.${config.custom.rootDomain}";
+      issuer = "${protocol}://auth.${config.custom.rootDomain}";
       web = {
         http = "127.0.0.1:5556";
         allowedOrigins = [
-          "https://app.${config.custom.rootDomain}"
+          "${protocol}://app.${config.custom.rootDomain}"
         ];
       };
       storage = {
@@ -28,7 +31,7 @@
           name = "Default Client";
           public = true;
           redirectURIs = [
-            "https://app.${config.custom.rootDomain}/auth/callback"
+            "${protocol}://app.${config.custom.rootDomain}/auth/callback"
           ];
         }
       ];
@@ -40,20 +43,25 @@
       # but it gets symlinked into /var/lib/dex inside the unit
       StateDirectory = "dex";
 
-      # Append our merge after the upstream module's ExecStartPre steps
+      # Make /etc/dex/config.yaml available to the service at runtime as a credential
+      LoadCredential = [ "config.yaml:/etc/dex/config.yaml" ];
+
+      # Append our merge after the upstream module’s ExecStartPre steps
       # https://github.com/NixOS/nixpkgs/blob/88d3861acdd3d2f0e361767018218e51810df8a1/nixos/modules/services/web-apps/dex.nix#L109
       ExecStartPre = lib.mkAfter [
-        "+${pkgs.writeShellScript "dex-merge-users" ''
+        (pkgs.writeShellScript "dex-merge-config" ''
           set -euo pipefail
+
+          if [ ! -s "$CREDENTIALS_DIRECTORY/config.yaml" ]; then
+            echo "/etc/dex/config.yaml is empty, skipping merge"
+            exit 0
+          fi
 
           ${lib.getExe pkgs.yq-go} eval-all \
             'select(fileIndex==0) * select(fileIndex==1)' \
-            /run/dex/config.yaml /etc/dex/users.yaml \
-            > /run/dex/config.yaml.tmp
-
-          mv /run/dex/config.yaml.tmp /run/dex/config.yaml
-          chmod 600 /run/dex/config.yaml
-        ''}"
+            /run/dex/config.yaml "$CREDENTIALS_DIRECTORY/config.yaml" \
+            | ${lib.getExe' pkgs.moreutils "sponge"} /run/dex/config.yaml
+        '')
       ];
     };
   };
@@ -70,17 +78,17 @@
       user = "root";
       group = "root";
     };
-    "/etc/dex/users.yaml".f = {
+    "/etc/dex/config.yaml".f = {
       mode = "0600";
       user = "root";
       group = "root";
     };
   };
 
-  # restart Dex when users.yaml changes
-  systemd.paths.dex-users = {
+  # restart Dex when config.yaml changes
+  systemd.paths.etc-dex-config = {
     wantedBy = [ "multi-user.target" ];
-    pathConfig.PathChanged = "/etc/dex/users.yaml";
+    pathConfig.PathChanged = "/etc/dex/config.yaml";
     unitConfig.Unit = "dex.service";
   };
 }

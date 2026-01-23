@@ -9,6 +9,8 @@ let
   inherit (config.virtualisation) quadlet;
 
   ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app;
+
+  prefix = if config.custom.enableCertificates then "http://" else "";
 in
 {
   assertions = [
@@ -25,19 +27,19 @@ in
     '';
     virtualHosts = {
       default = {
-        hostName = "${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        hostName = "${prefix}${config.custom.rootDomain}";
         extraConfig = ''
           respond "Hello World!"
         '';
       };
       dex = {
-        hostName = "auth.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        hostName = "${prefix}auth.${config.custom.rootDomain}";
         extraConfig = ''
           reverse_proxy ${config.services.dex.settings.web.http}
         '';
       };
       ragold = {
-        hostName = "ragold.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        hostName = "${prefix}ragold.${config.custom.rootDomain}";
         extraConfig = ''
           root * ${ragold}
           encode gzip
