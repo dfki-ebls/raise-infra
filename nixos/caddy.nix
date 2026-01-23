@@ -24,6 +24,7 @@ in
     enable = true;
     globalConfig = ''
       admin off
+      email mirko.lenz@dfki.de
     '';
     # requires admin api
     enableReload = false;
