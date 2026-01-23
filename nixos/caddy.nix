@@ -31,13 +31,13 @@ in
         '';
       };
       dex = {
-        hostName = "dex.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        hostName = "auth.${config.custom.rootDomain}${config.custom.vhostSuffix}";
         extraConfig = ''
           reverse_proxy 127.0.0.1:${toString config.services.portunus.dex.port}
         '';
       };
       portunus = {
-        hostName = "portunus.${config.custom.rootDomain}${config.custom.vhostSuffix}";
+        hostName = "sso.${config.custom.rootDomain}${config.custom.vhostSuffix}";
         extraConfig = ''
           @blocked not remote_ip 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 127.0.0.1
           respond @blocked "Forbidden" 403
