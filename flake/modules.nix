@@ -8,7 +8,7 @@
         imports = [
           "${modulesPath}/virtualisation/proxmox-image.nix"
         ];
-        virtualization.diskSize = 128 * 1024; # MB
+        virtualisation.diskSize = 128 * 1024; # MB
         proxmox = {
           qemuConf = {
             name = "raise";
