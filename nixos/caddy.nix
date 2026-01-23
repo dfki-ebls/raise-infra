@@ -26,6 +26,7 @@ in
       admin off
     '';
     virtualHosts = {
+      "${prefix}raise.dfki.de".extraConfig = "redir https://raise.dfki.dev{uri}";
       default = {
         hostName = "${prefix}${config.custom.rootDomain}";
         extraConfig = ''
