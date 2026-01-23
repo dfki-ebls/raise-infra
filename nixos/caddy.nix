@@ -28,6 +28,16 @@ in
     virtualHosts.default = {
       hostName = lib.mkDefault "raise.dfki.de";
       extraConfig = ''
+        handle /dex/* {
+          reverse_proxy 127.0.0.1:${toString config.services.portunus.dex.port}
+        }
+
+        handle /portunus/* {
+          @blocked not remote_ip 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 127.0.0.1
+          respond @blocked "Forbidden" 403
+          reverse_proxy 127.0.0.1:${toString config.services.portunus.port}
+        }
+
         redir /ragold /ragold/
         handle_path /ragold/* {
           root * ${ragold}
