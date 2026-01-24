@@ -12,7 +12,7 @@ in
     enable = false;
     environmentFile = "/etc/dex/dex.env";
     settings = {
-      issuer = "${protocol}://auth.${config.custom.rootDomain}";
+      issuer = "${protocol}://dex.${config.custom.rootDomain}";
       web = {
         http = "127.0.0.1:5556";
         allowedOrigins = [

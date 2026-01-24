@@ -7,17 +7,17 @@
 let
   secretsDir = "/etc/authelia";
   cfg = config.services.authelia.instances.main;
+  protocol = if config.custom.enableCertificates then "https" else "http";
 
   # https://www.authelia.com/reference/guides/passwords/#user--password-file
   mkUsersDatabaseYaml = passwordHash: ''
     users:
       mlenz:
-        disabled: false
         displayname: Mirko Lenz
         password: ${passwordHash}
         email: mirko.lenz@dfki.de
         groups:
-          - admins
+          - admin
   '';
 
   generateSecretsScript = pkgs.writeShellScript "authelia-generate-secrets" /* bash */ ''
@@ -53,16 +53,6 @@ let
         chmod 644 "$public_key"
         echo "Generated $private_key"
         echo "Generated $public_key"
-      fi
-    }
-
-    # https://www.authelia.com/integration/openid-connect/frequently-asked-questions/#how-do-i-generate-a-client-identifier-or-client-secret
-    generate_oidc_client_id() {
-      local file="$1"
-      if [ ! -f "$file" ]; then
-        ${lib.getExe cfg.package} crypto rand --length 72 --charset rfc3986 > "$file"
-        chmod 600 "$file"
-        echo "Generated $file"
       fi
     }
 
@@ -109,9 +99,8 @@ let
     generate_random_secret "${secretsDir}/storage-encryption-key"
 
     generate_rsa_keypair "${secretsDir}/oidc-issuer-private-key.pem" "${secretsDir}/oidc-issuer-public-key.pem"
-    generate_oidc_client_id "${secretsDir}/oidc-client-id-default"
-    generate_oidc_client_secret "${secretsDir}/oidc-client-secret-default.hash" "${secretsDir}/oidc-client-secret-default.plaintext"
-    generate_users_database "/var/lib/authelia/users_database.yml" "${secretsDir}/admin-password.plaintext"
+    generate_oidc_client_secret "${secretsDir}/oidc-client-secret-default.hash" "${secretsDir}/oidc-client-secret-default.txt"
+    generate_users_database "/var/lib/authelia/users_database.yml" "${secretsDir}/admin-password.txt"
   '';
 in
 {
@@ -142,7 +131,7 @@ in
     settings = {
       theme = "dark";
       default_2fa_method = "totp";
-      server.address = "tcp://0.0.0.0:9091";
+      server.address = "tcp://127.0.0.1:9091";
       log = {
         level = "debug";
       };
@@ -157,8 +146,8 @@ in
         name = "authelia_session";
         cookies = [
           {
-            domain = "raise.dfki.de";
-            authelia_url = "https://raise.dfki.de/authelia/";
+            domain = "authelia.${config.custom.rootDomain}";
+            authelia_url = "${protocol}://authelia.${config.custom.rootDomain}/";
           }
         ];
       };
@@ -177,7 +166,7 @@ in
       identity_providers.oidc = {
         clients = [
           {
-            client_id = ''{{ fileContent "/etc/authelia/oidc-client-id-default" }}'';
+            client_id = "default";
             client_name = "Default Client";
             client_secret = ''{{ fileContent "/etc/authelia/oidc-client-secret-default.hash" }}'';
           }

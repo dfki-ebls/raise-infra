@@ -36,10 +36,16 @@ in
           respond "Hello World!"
         '';
       };
-      dex = {
-        hostName = "${prefix}auth.${config.custom.rootDomain}";
+      dex = lib.mkIf config.services.dex.enable {
+        hostName = "${prefix}dex.${config.custom.rootDomain}";
         extraConfig = ''
           reverse_proxy ${config.services.dex.settings.web.http}
+        '';
+      };
+      authelia = lib.mkIf config.services.authelia.instances.main.enable {
+        hostName = "${prefix}authelia.${config.custom.rootDomain}";
+        extraConfig = ''
+          reverse_proxy http://127.0.0.1:9091
         '';
       };
       ragold = {
