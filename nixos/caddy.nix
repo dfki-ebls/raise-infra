@@ -7,9 +7,6 @@
 }:
 let
   inherit (config.virtualisation) quadlet;
-
-  ragold = inputs.ragold.packages.${pkgs.stdenv.system}.app;
-
   prefix = if config.custom.enableCertificates then "" else "http://";
 in
 {
@@ -33,7 +30,10 @@ in
       default = {
         hostName = "${prefix}${config.custom.rootDomain}";
         extraConfig = ''
-          respond "Hello World!"
+          root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
+          encode gzip
+          try_files {path} /index.html
+          file_server
         '';
       };
       dex = lib.mkIf config.services.dex.enable {
@@ -51,7 +51,7 @@ in
       ragold = {
         hostName = "${prefix}ragold.${config.custom.rootDomain}";
         extraConfig = ''
-          root * ${ragold}
+          root * ${inputs.ragold.packages.${pkgs.stdenv.system}.default}
           encode gzip
           try_files {path} /index.html
           file_server
