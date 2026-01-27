@@ -528,11 +528,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769437180,
-        "narHash": "sha256-2ACQqMhakm6JhT+rIQQIXkxNdZxpx3BH3jVujbSUU9g=",
+        "lastModified": 1769512299,
+        "narHash": "sha256-y6WeZSvxIHIyJBB6lE3FOKfXNMXLWSGD5Ek2FvKIiQw=",
         "owner": "dfki-ebls",
         "repo": "raise-website",
-        "rev": "9b43685a4d8f5cccbcaa5cd7a917e384e23d04b2",
+        "rev": "e1ce9b9b1b43e6e7fb591762ba59f813cd3c09cd",
         "type": "github"
       },
       "original": {
