@@ -36,7 +36,11 @@ in
           @immutable path /assets/*
           header @immutable Cache-Control "public, max-age=31536000, immutable"
 
-          header Cache-Control "public, max-age=0, must-revalidate"
+          @html not path /assets/*
+          header @html {
+            Cache-Control "no-store"
+            -Last-Modified
+          }
 
           file_server
 
@@ -69,7 +73,10 @@ in
           header @immutable Cache-Control "public, max-age=31536000, immutable"
 
           @index path /index.html
-          header @index Cache-Control "public, max-age=0, must-revalidate"
+          header @html {
+            Cache-Control "no-store"
+            -Last-Modified
+          }
 
           try_files {path} /index.html
           file_server
