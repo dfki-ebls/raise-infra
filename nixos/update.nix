@@ -6,11 +6,11 @@ in
   system.autoUpgrade = {
     enable = true;
     flake = "github:dfki-ebls/raise-infra#${cpu}";
-    dates = "04:00";
+    dates = "hourly";
     allowReboot = true;
     runGarbageCollection = true;
     rebootWindow = {
-      lower = "03:30";
+      lower = "03:00";
       upper = "05:00";
     };
   };
