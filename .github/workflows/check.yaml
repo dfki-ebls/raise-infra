@@ -1,7 +1,8 @@
-on:
-  push:
-    branches: [main]
-  # pull_request:
+on: {}
+# on:
+#   push:
+#     branches: [main]
+#   # pull_request:
 jobs:
   check:
     permissions:
@@ -13,7 +14,6 @@ jobs:
         with:
           extra-conf: |
             accept-flake-config = true
-            access-tokens = github.com=${{ github.token }}
             eval-cores = 0
             log-lines = 200
       - run: nix flake check --show-trace

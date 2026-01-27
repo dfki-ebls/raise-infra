@@ -1,8 +1,9 @@
-on:
-  workflow_dispatch:
-  schedule:
-    # every day at midnight
-    - cron: "0 0 * * *"
+on: {}
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     # every day at midnight
+#     - cron: "0 0 * * *"
 jobs:
   update:
     permissions:
@@ -15,7 +16,6 @@ jobs:
         with:
           extra-conf: |
             accept-flake-config = true
-            access-tokens = github.com=${{ github.token }}
             commit-lock-file-summary = chore(deps): update flake.lock
             eval-cores = 0
             log-lines = 200
