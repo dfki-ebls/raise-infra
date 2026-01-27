@@ -39,6 +39,7 @@ in
           @html not path /assets/*
           header @html {
             Cache-Control "no-store"
+            -ETag
             -Last-Modified
           }
 
@@ -73,8 +74,9 @@ in
           header @immutable Cache-Control "public, max-age=31536000, immutable"
 
           @index path /index.html
-          header @html {
+          header @index {
             Cache-Control "no-store"
+            -ETag
             -Last-Modified
           }
 
