@@ -1,0 +1,29 @@
+on:
+  workflow_dispatch:
+  schedule:
+    # every day at midnight
+    - cron: "0 0 * * *"
+jobs:
+  update:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: fregante/setup-git-user@v2
+      - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          extra-conf: |
+            accept-flake-config = true
+            access-tokens = github.com=${{ github.token }}
+            commit-lock-file-summary = chore(deps): update flake.lock
+            eval-cores = 0
+            log-lines = 200
+      - run: nix flake update --commit-lock-file
+      - id: unpushed
+        run: |
+          echo "count=$(git rev-list --count "origin/$GITHUB_REF_NAME..HEAD")" >> "$GITHUB_OUTPUT"
+      - if: steps.unpushed.outputs.count != '0'
+        run: nix flake check --show-trace
+      - if: steps.unpushed.outputs.count != '0'
+        run: git push

@@ -1,0 +1,19 @@
+on:
+  push:
+    branches: [main]
+  # pull_request:
+jobs:
+  check:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/determinate-nix-action@v3
+        with:
+          extra-conf: |
+            accept-flake-config = true
+            access-tokens = github.com=${{ github.token }}
+            eval-cores = 0
+            log-lines = 200
+      - run: nix flake check --show-trace
