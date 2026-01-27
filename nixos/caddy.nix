@@ -32,7 +32,7 @@ in
         extraConfig = ''
           root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
           encode gzip
-          try_files {path} /404/
+          try_files {path} /404.html
           file_server
         '';
       };
@@ -53,7 +53,7 @@ in
         extraConfig = ''
           root * ${inputs.ragold.packages.${pkgs.stdenv.system}.default}
           encode gzip
-          try_files {path}/ /index.html
+          try_files {path} /index.html
           file_server
         '';
       };
