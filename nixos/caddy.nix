@@ -32,7 +32,7 @@ in
         extraConfig = ''
           root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
           encode gzip
-          try_files {path} /index.html
+          try_files {path} /404/
           file_server
         '';
       };
