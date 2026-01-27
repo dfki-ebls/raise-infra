@@ -501,11 +501,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769353635,
-        "narHash": "sha256-J0G1ACrUK29M0THPAsz429eZX07GmR9Bs/b0pB3N0dQ=",
+        "lastModified": 1769515380,
+        "narHash": "sha256-CWWK3PaQ7zhr+Jcf5zyaTR2cfRBXPo09H7+5nWApL8s=",
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "rev": "f46bb205f239b415309f58166f8df6919fa88377",
+        "rev": "9911802c2822def2eec3d22e2cafd1619ede94a5",
         "type": "github"
       },
       "original": {
@@ -528,11 +528,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769514551,
-        "narHash": "sha256-KNvHjvtXTbMkpUM5H5B0CmZVGbQJV7W1MJ9K1BgJVhU=",
+        "lastModified": 1769517161,
+        "narHash": "sha256-eRNN26mWlSkRQ5Ew95+MtVXbUqxhwzt8cboSm/5JYhE=",
         "owner": "dfki-ebls",
         "repo": "raise-website",
-        "rev": "c7c401bed7a96d2f98406cdd34660a0241418f10",
+        "rev": "8492bb8ee29322ee8a77c8cfa82e3127f5548d1c",
         "type": "github"
       },
       "original": {
