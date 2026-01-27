@@ -31,9 +31,20 @@ in
         hostName = "${prefix}${config.custom.rootDomain}";
         extraConfig = ''
           root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
-          encode gzip
-          try_files {path} /404.html
+          encode zstd gzip
+
+          @immutable path /assets/*
+          header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+          header Cache-Control "public, max-age=0, must-revalidate"
+
           file_server
+
+          handle_errors {
+            @404 expression {http.error.status_code} == 404
+            rewrite @404 /404.html
+            file_server
+          }
         '';
       };
       dex = lib.mkIf config.services.dex.enable {
@@ -52,7 +63,14 @@ in
         hostName = "${prefix}ragold.${config.custom.rootDomain}";
         extraConfig = ''
           root * ${inputs.ragold.packages.${pkgs.stdenv.system}.default}
-          encode gzip
+          encode zstd gzip
+
+          @immutable path /assets/*
+          header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+          @index path /index.html
+          header @index Cache-Control "public, max-age=0, must-revalidate"
+
           try_files {path} /index.html
           file_server
         '';
