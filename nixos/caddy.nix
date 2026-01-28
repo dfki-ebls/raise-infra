@@ -34,7 +34,7 @@ in
           encode zstd gzip
 
           @immutable path /assets/*
-          header @immutable Cache-Control "max-age=31536000, immutable"
+          header @immutable Cache-Control "public, max-age=31536000, immutable"
 
           @html not path /assets/*
           header @html Cache-Control "no-store"
@@ -72,7 +72,7 @@ in
           encode zstd gzip
 
           @immutable path /assets/*
-          header @immutable Cache-Control "max-age=31536000, immutable"
+          header @immutable Cache-Control "public, max-age=31536000, immutable"
 
           @html not path /assets/*
           header @html Cache-Control "no-store"
