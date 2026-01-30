@@ -391,11 +391,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1769692491,
-        "narHash": "sha256-B05JGXsLjGJ8s9G+XWWhoGP3iBBdg6bmdzeZPnpoVQw=",
+        "lastModified": 1769758935,
+        "narHash": "sha256-BvlnAOBYyTdRPUzr8Gz8Tm069szDNcvp+uWe6RqOqdQ=",
         "owner": "dfki-ebls",
         "repo": "ragold",
-        "rev": "5777a437b89a9ea157dea004581e72d53a70dd35",
+        "rev": "fa085c1cfc2ede5c9c964a89fa9c5edb3b19c4aa",
         "type": "github"
       },
       "original": {
