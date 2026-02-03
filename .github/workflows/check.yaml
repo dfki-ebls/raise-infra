@@ -4,7 +4,6 @@ on:
   pull_request:
 jobs:
   check:
-    if: false
     permissions:
       contents: read
     runs-on: ubuntu-latest
