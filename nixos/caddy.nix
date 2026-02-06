@@ -21,10 +21,10 @@ in
     enable = true;
     globalConfig = ''
       admin off
+      persist_config off
       email mirko.lenz@dfki.de
     '';
-    # requires admin api
-    enableReload = false;
+    enableReload = false; # requires admin api
     virtualHosts = {
       "${prefix}raise.dfki.de".extraConfig = "redir https://raise.dfki.dev{uri}";
       default = {
