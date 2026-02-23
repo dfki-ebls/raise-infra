@@ -8,6 +8,12 @@
 let
   inherit (config.virtualisation) quadlet;
   prefix = if config.custom.enableCertificates then "" else "http://";
+
+  website = inputs.website.packages.${pkgs.stdenv.system}.default;
+
+  ragold = inputs.ragold.packages.${pkgs.stdenv.system}.default.overrideAttrs (prevAttrs: {
+    VITE_CONTACT_INFO = "Mirko Lenz <mirko.lenz@dfki.de>";
+  });
 in
 {
   assertions = [
@@ -30,7 +36,7 @@ in
       default = {
         hostName = "${prefix}${config.custom.rootDomain}";
         extraConfig = ''
-          root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
+          root * ${website}
           encode zstd gzip
 
           @immutable path /assets/*
@@ -68,7 +74,7 @@ in
       ragold = {
         hostName = "${prefix}ragold.${config.custom.rootDomain}";
         extraConfig = ''
-          root * ${inputs.ragold.packages.${pkgs.stdenv.system}.default}
+          root * ${ragold}
           encode zstd gzip
 
           @immutable path /assets/*
