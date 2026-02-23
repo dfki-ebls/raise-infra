@@ -8,7 +8,7 @@ in
     flake = "github:dfki-ebls/raise-infra#${cpu}";
     dates = "hourly";
     allowReboot = true;
-    runGarbageCollection = true;
+    runGarbageCollection = false; # makes quick iterations impossible
     rebootWindow = {
       lower = "03:00";
       upper = "05:00";
