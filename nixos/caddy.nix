@@ -7,18 +7,14 @@
 }:
 let
   inherit (config.virtualisation) quadlet;
-  prefix = if config.custom.enableCertificates then "" else "http://";
+  mkHost = domain: if config.custom.enableCertificates then domain else "http://${domain}";
+  mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
   website = inputs.website.packages.${pkgs.stdenv.system}.default;
 
   ragold = inputs.ragold.packages.${pkgs.stdenv.system}.default.overrideAttrs (prevAttrs: {
     VITE_CONTACT_INFO = "Mirko Lenz <mirko.lenz@dfki.de>";
   });
-
-  # In production, the website is served at raise.dfki.de (not raise.dfki.dev).
-  # Locally (rootDomain = "localhost"), the website is served at localhost.
-  websiteDomain =
-    if config.custom.rootDomain == "raise.dfki.dev" then "raise.dfki.de" else config.custom.rootDomain;
 in
 {
   assertions = [
@@ -37,11 +33,16 @@ in
     '';
     enableReload = false; # requires admin api
     virtualHosts = {
-      "${prefix}raise.dfki.dev" = lib.mkIf (config.custom.rootDomain == "raise.dfki.dev") {
+      websiteAlias = lib.mkIf (config.custom.rootDomain == "raise.dfki.dev") {
+        hostName = mkHost "raise.dfki.dev";
         extraConfig = "redir https://raise.dfki.de{uri}";
       };
-      default = {
-        hostName = "${prefix}${websiteDomain}";
+      website = {
+        # In production, the website is served at raise.dfki.de (not raise.dfki.dev).
+        # Locally (rootDomain = "localhost"), the website is served at localhost.
+        hostName = mkHost (
+          if config.custom.rootDomain == "raise.dfki.dev" then "raise.dfki.de" else config.custom.rootDomain
+        );
         extraConfig = ''
           root * ${website}
           encode zstd gzip
@@ -67,19 +68,19 @@ in
         '';
       };
       dex = lib.mkIf config.services.dex.enable {
-        hostName = "${prefix}dex.${config.custom.rootDomain}";
+        hostName = mkSubHost "dex";
         extraConfig = ''
           reverse_proxy ${config.services.dex.settings.web.http}
         '';
       };
       authelia = lib.mkIf config.services.authelia.instances.main.enable {
-        hostName = "${prefix}authelia.${config.custom.rootDomain}";
+        hostName = mkSubHost "authelia";
         extraConfig = ''
           reverse_proxy http://127.0.0.1:9091
         '';
       };
       ragold = {
-        hostName = "${prefix}ragold.${config.custom.rootDomain}";
+        hostName = mkSubHost "ragold";
         extraConfig = ''
           root * ${ragold}
           encode zstd gzip
