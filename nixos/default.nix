@@ -9,7 +9,7 @@
   i18n.defaultLocale = "en_US.UTF-8";
   time.timeZone = "Europe/Berlin";
   system.stateVersion = "25.11";
-  documentation.man.generateCaches = false;
+  documentation.man.cache.enable = false;
   hardware.enableAllFirmware = true;
 
   security = {
