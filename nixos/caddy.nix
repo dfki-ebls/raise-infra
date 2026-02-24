@@ -14,6 +14,11 @@ let
   ragold = inputs.ragold.packages.${pkgs.stdenv.system}.default.overrideAttrs (prevAttrs: {
     VITE_CONTACT_INFO = "Mirko Lenz <mirko.lenz@dfki.de>";
   });
+
+  # In production, the website is served at raise.dfki.de (not raise.dfki.dev).
+  # Locally (rootDomain = "localhost"), the website is served at localhost.
+  websiteDomain =
+    if config.custom.rootDomain == "raise.dfki.dev" then "raise.dfki.de" else config.custom.rootDomain;
 in
 {
   assertions = [
@@ -32,9 +37,11 @@ in
     '';
     enableReload = false; # requires admin api
     virtualHosts = {
-      "${prefix}raise.dfki.de".extraConfig = "redir https://raise.dfki.dev{uri}";
+      "${prefix}raise.dfki.dev" = lib.mkIf (config.custom.rootDomain == "raise.dfki.dev") {
+        extraConfig = "redir https://raise.dfki.de{uri}";
+      };
       default = {
-        hostName = "${prefix}${config.custom.rootDomain}";
+        hostName = "${prefix}${websiteDomain}";
         extraConfig = ''
           root * ${website}
           encode zstd gzip
