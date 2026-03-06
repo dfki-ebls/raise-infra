@@ -14,9 +14,4 @@ in
       upper = "05:00";
     };
   };
-
-  systemd.sleep.extraConfig = ''
-    AllowSuspend=no
-    AllowHibernation=no
-  '';
 }
