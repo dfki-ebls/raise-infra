@@ -2,6 +2,13 @@
 {
   nix = {
     channel.enable = false;
+    gc = {
+      automatic = true;
+      options = "--delete-older-than 7d";
+    };
+    optimise = {
+      automatic = true;
+    };
     extraOptions = ''
       !include nix.secrets.conf
     '';
