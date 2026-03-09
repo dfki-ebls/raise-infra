@@ -2,16 +2,17 @@
 {
   flake.nixosModules = {
     default = ../nixos;
+    dfki = ../dfki;
     # https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/proxmox-image.nix
     proxmox =
-      { modulesPath, ... }:
+      { config, modulesPath, ... }:
       {
         imports = [
           "${modulesPath}/virtualisation/proxmox-image.nix"
         ];
         proxmox = {
           qemuConf = {
-            name = "raise";
+            name = config.networking.hostName;
             bios = "ovmf";
             cores = 8;
             memory = 16 * 1024;

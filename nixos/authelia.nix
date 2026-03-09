@@ -12,10 +12,10 @@ let
   # https://www.authelia.com/reference/guides/passwords/#user--password-file
   mkUsersDatabaseYaml = passwordHash: ''
     users:
-      mlenz:
-        displayname: Mirko Lenz
+      ${config.custom.admin.login}:
+        displayname: ${config.custom.admin.name}
         password: ${passwordHash}
-        email: mirko.lenz@dfki.de
+        email: ${config.custom.admin.mail}
         groups:
           - admin
   '';
@@ -104,8 +104,7 @@ let
   '';
 in
 {
-  systemd.services.authelia-generate-secrets = {
-    enable = cfg.enable;
+  systemd.services.authelia-generate-secrets = lib.mkIf cfg.enable {
     description = "Generate Authelia secrets if missing";
     wantedBy = [ "authelia-${cfg.name}.service" ];
     before = [ "authelia-${cfg.name}.service" ];

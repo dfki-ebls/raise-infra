@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 {
   virtualisation.vmVariant = {
     custom.rootDomain = "localhost";
@@ -22,7 +22,7 @@
       ];
     };
 
-    users.users.mlenz.password = "";
+    users.users.${config.custom.admin.login}.password = "";
     security.sudo-rs.wheelNeedsPassword = false;
   };
 }

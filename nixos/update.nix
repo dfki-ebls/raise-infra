@@ -1,8 +1,7 @@
-{ ... }:
+{ lib, ... }:
 {
   system.autoUpgrade = {
-    enable = true;
-    flake = "github:dfki-ebls/raise-infra#default";
+    enable = lib.mkDefault false;
     dates = "hourly";
     allowReboot = true;
     runGarbageCollection = true;

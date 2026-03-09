@@ -5,7 +5,6 @@
     useHostResolvConf = false;
     firewall.enable = true;
     nftables.enable = true;
-    hostName = "raise";
     nameservers = [
       "1.1.1.1"
       "1.0.0.1"

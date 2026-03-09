@@ -14,6 +14,7 @@ let
       };
       modules = [
         self.nixosModules.default
+        self.nixosModules.dfki
         module
       ];
     };
