@@ -1,11 +1,8 @@
-{ pkgs, ... }:
-let
-  cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
-in
+{ ... }:
 {
   system.autoUpgrade = {
     enable = true;
-    flake = "github:dfki-ebls/raise-infra#${cpu}";
+    flake = "github:dfki-ebls/raise-infra#default";
     dates = "hourly";
     allowReboot = true;
     runGarbageCollection = true;

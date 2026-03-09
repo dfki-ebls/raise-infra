@@ -2,16 +2,11 @@
   inputs,
   self,
   lib',
-  lib,
   ...
 }:
 let
-
   mkNixosSystem =
-    {
-      cpu,
-      extraModule ? { },
-    }:
+    module:
     inputs.nixpkgs-unstable.lib.nixosSystem {
       system = null;
       specialArgs = {
@@ -19,11 +14,7 @@ let
       };
       modules = [
         self.nixosModules.default
-        self.nixosModules.proxmox
-        extraModule
-        {
-          nixpkgs.hostPlatform = "${cpu}-linux";
-        }
+        module
       ];
     };
 in
@@ -35,7 +26,12 @@ in
   systems = import inputs.systems;
 
   flake = {
-    nixosConfigurations = lib.genAttrs [ "x86_64" "aarch64" ] (cpu: mkNixosSystem { inherit cpu; });
+    nixosConfigurations.default = mkNixosSystem {
+      imports = [
+        self.nixosModules.proxmox
+      ];
+      nixpkgs.hostPlatform = "x86_64-linux";
+    };
     nixpkgsConfig = {
       allowUnfree = true;
       nvidia.acceptLicense = true;
@@ -50,15 +46,15 @@ in
       ...
     }:
     let
+      cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
       nixosSystem = mkNixosSystem {
-        cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
-        extraModule = {
-          virtualisation.vmVariant = {
-            virtualisation.host.pkgs = import inputs.nixpkgs {
-              inherit system;
-              config = self.nixpkgsConfig;
-              # overlays already defined in nixos config
-            };
+        imports = [
+          self.nixosModules.proxmox
+        ];
+        nixpkgs.hostPlatform = "${cpu}-linux";
+        virtualisation.vmVariant = {
+          virtualisation.host.pkgs = import inputs.nixpkgs {
+            inherit system;
           };
         };
       };
