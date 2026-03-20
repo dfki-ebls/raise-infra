@@ -6,10 +6,9 @@
       type = lib.types.str;
       description = "The root domain for all services.";
     };
-    enableCertificates = lib.mkOption {
-      type = lib.types.bool;
+    enableNvidia = lib.mkEnableOption "NVIDIA drivers for GPU support";
+    enableCertificates = lib.mkEnableOption "secure connections for services" // {
       default = true;
-      description = "Whether to use secure connections (HTTPS) for services.";
     };
     admin = {
       login = lib.mkOption {

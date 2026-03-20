@@ -1,8 +1,11 @@
 { config, ... }:
 {
   virtualisation.vmVariant = {
-    custom.rootDomain = "localhost";
-    custom.enableCertificates = false;
+    custom = {
+      rootDomain = "localhost";
+      enableNvidia = false;
+      enableCertificates = false;
+    };
     services.caddy.globalConfig = ''
       auto_https off
     '';
