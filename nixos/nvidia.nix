@@ -8,4 +8,5 @@ lib.mkIf config.custom.enableNvidia {
     modesetting.enable = true;
   };
   hardware.nvidia-container-toolkit.enable = true;
+  nixpkgs.config.cudaSupport = true;
 }
