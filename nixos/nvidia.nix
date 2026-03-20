@@ -1,4 +1,9 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 lib.mkIf config.custom.enableNvidia {
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
@@ -9,4 +14,7 @@ lib.mkIf config.custom.enableNvidia {
   };
   hardware.nvidia-container-toolkit.enable = true;
   nixpkgs.config.cudaSupport = true;
+  environment.systemPackages = with pkgs; [
+    gpustat
+  ];
 }
