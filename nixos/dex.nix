@@ -23,12 +23,35 @@ in
         type = "sqlite3";
         config.file = "/var/lib/dex/dex.db";
       };
+      oauth2 = {
+        skipApprovalScreen = true;
+        responseTypes = [ "code" ];
+      };
+      expiry = {
+        idTokens = "10m";
+        signingKeys = "6h";
+        refreshTokens = {
+          validIfNotUsedFor = "168h";
+          absoluteLifetime = "720h";
+          reuseInterval = "30s";
+        };
+      };
       enablePasswordDB = true;
-      # https://dexidp.io/docs/configuration/custom-scopes-claims-clients/
+      staticPasswords = [
+        {
+          email = config.custom.admin.mail;
+          username = config.custom.admin.login;
+          name = config.custom.admin.name;
+          preferredUsername = config.custom.admin.login;
+          emailVerified = true;
+          userID = "admin";
+          hashFromEnv = "DEX_ADMIN_HASH";
+        }
+      ];
       staticClients = [
         {
-          id = "default";
-          name = "Default Client";
+          id = "app";
+          name = "Web Application";
           public = true;
           redirectURIs = [
             "${protocol}://app.${config.custom.rootDomain}/auth/callback"
@@ -37,56 +60,60 @@ in
       ];
     };
   };
-  systemd.services.dex = {
+
+  systemd.services.dex-generate-secrets = lib.mkIf config.services.dex.enable {
+    description = "Generate Dex secrets if missing";
+    wantedBy = [ "dex.service" ];
+    before = [ "dex.service" ];
     serviceConfig = {
-      # Creates $STATE_DIRECTORY below /var/lib/private because DynamicUser=true,
-      # but it gets symlinked into /var/lib/dex inside the unit
-      StateDirectory = "dex";
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "dex-generate-secrets" ''
+        set -euo pipefail
 
-      # Make /etc/dex/config.yaml available to the service at runtime as a credential
-      LoadCredential = [ "config.yaml:/etc/dex/config.yaml" ];
+        install -d -m 750 /etc/dex
 
-      # Append our merge after the upstream module’s ExecStartPre steps
-      # https://github.com/NixOS/nixpkgs/blob/88d3861acdd3d2f0e361767018218e51810df8a1/nixos/modules/services/web-apps/dex.nix#L109
-      ExecStartPre = lib.mkAfter [
-        (pkgs.writeShellScript "dex-merge-config" ''
-          set -euo pipefail
+        touch /etc/dex/config.yaml
+        chmod 600 /etc/dex/config.yaml
 
-          if [ ! -s "$CREDENTIALS_DIRECTORY/config.yaml" ]; then
-            echo "/etc/dex/config.yaml is empty, skipping merge"
-            exit 0
-          fi
+        if [ -s /etc/dex/dex.env ]; then
+          echo "/etc/dex/dex.env already populated, skipping generation"
+          exit 0
+        fi
 
-          ${lib.getExe pkgs.yq-go} eval-all \
-            'select(fileIndex==0) * select(fileIndex==1)' \
-            /run/dex/config.yaml "$CREDENTIALS_DIRECTORY/config.yaml" \
-            | ${lib.getExe' pkgs.moreutils "sponge"} /run/dex/config.yaml
-        '')
-      ];
+        password=$(${lib.getExe' pkgs.openssl "openssl"} rand -base64 24)
+        hash=$(echo -n "$password" | ${lib.getExe pkgs.mkpasswd} --method bcrypt --rounds 12 --stdin)
+
+        echo "DEX_ADMIN_HASH=$hash" > /etc/dex/dex.env
+        chmod 600 /etc/dex/dex.env
+
+        echo "$password" > /etc/dex/admin-password.txt
+        chmod 600 /etc/dex/admin-password.txt
+      '';
     };
   };
 
-  # ensure /etc/dex configuration files exist
-  systemd.tmpfiles.settings."10-dex" = {
-    "/etc/dex".d = {
-      mode = "0750";
-      user = "root";
-      group = "root";
-    };
-    "/etc/dex/dex.env".f = {
-      mode = "0600";
-      user = "root";
-      group = "root";
-    };
-    "/etc/dex/config.yaml".f = {
-      mode = "0600";
-      user = "root";
-      group = "root";
-    };
+  systemd.services.dex.serviceConfig = lib.mkIf config.services.dex.enable {
+    StateDirectory = "dex";
+    LoadCredential = [ "config.yaml:/etc/dex/config.yaml" ];
+    ExecStartPre = lib.mkAfter [
+      (pkgs.writeShellScript "dex-merge-config" ''
+        set -euo pipefail
+
+        if [ ! -s "$CREDENTIALS_DIRECTORY/config.yaml" ]; then
+          echo "/etc/dex/config.yaml is empty, skipping merge"
+          exit 0
+        fi
+
+        ${lib.getExe pkgs.yq-go} eval-all -i \
+          'select(fileIndex==0) *+ select(fileIndex==1)' \
+          /run/dex/config.yaml "$CREDENTIALS_DIRECTORY/config.yaml"
+      '')
+    ];
   };
 
-  # restart Dex when config.yaml changes
-  systemd.paths.etc-dex-config = {
+  # Restart Dex when /etc/dex/config.yaml changes (e.g. new users added)
+  systemd.paths.etc-dex-config = lib.mkIf config.services.dex.enable {
     wantedBy = [ "multi-user.target" ];
     pathConfig.PathChanged = "/etc/dex/config.yaml";
     unitConfig.Unit = "dex.service";
