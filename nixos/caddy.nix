@@ -33,12 +33,6 @@ in
           reverse_proxy ${config.services.dex.settings.web.http}
         '';
       };
-      authelia = lib.mkIf config.services.authelia.instances.main.enable {
-        hostName = mkSubHost "authelia";
-        extraConfig = ''
-          reverse_proxy http://127.0.0.1:9091
-        '';
-      };
     };
   };
   systemd.tmpfiles.settings.caddy = lib.mkIf quadlet.containers.caddy.enable {
