@@ -3,6 +3,7 @@
   virtualisation.vmVariant = {
     custom = {
       rootDomain = "localhost";
+      enableWaf = false;
       enableNvidia = false;
       enableCertificates = false;
     };

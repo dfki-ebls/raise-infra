@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  caddyHelpers,
   ...
 }:
 let
@@ -117,5 +118,13 @@ in
     wantedBy = [ "multi-user.target" ];
     pathConfig.PathChanged = "/etc/dex/config.yaml";
     unitConfig.Unit = "dex.service";
+  };
+
+  services.caddy.virtualHosts.dex = lib.mkIf config.services.dex.enable {
+    hostName = caddyHelpers.mkSubHost "dex";
+    extraConfig = ''
+      ${caddyHelpers.mkWaf { }}
+      reverse_proxy ${config.services.dex.settings.web.http}
+    '';
   };
 }
