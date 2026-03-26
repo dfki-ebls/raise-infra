@@ -4,7 +4,6 @@
 
   custom = {
     rootDomain = lib.mkDefault "raise.dfki.dev";
-    enableNvidia = lib.mkDefault true;
     admin = {
       login = "mlenz";
       name = "Mirko Lenz";

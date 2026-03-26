@@ -9,7 +9,9 @@
     enableWaf = lib.mkEnableOption "web application firewall for Caddy" // {
       default = true;
     };
-    enableNvidia = lib.mkEnableOption "NVIDIA drivers for GPU support";
+    enableNvidia = lib.mkEnableOption "NVIDIA drivers for GPU support" // {
+      default = true;
+    };
     enableCertificates = lib.mkEnableOption "secure connections for services" // {
       default = true;
     };
