@@ -16,5 +16,6 @@ lib.mkIf config.custom.enableNvidia {
   nixpkgs.config.cudaSupport = true;
   environment.systemPackages = with pkgs; [
     pythonPackages.gpustat
+    nvtopPackages.nvidia
   ];
 }
