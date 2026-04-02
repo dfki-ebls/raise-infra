@@ -15,7 +15,7 @@ lib.mkIf config.custom.enableNvidia {
   hardware.nvidia-container-toolkit.enable = true;
   nixpkgs.config.cudaSupport = true;
   environment.systemPackages = with pkgs; [
-    pythonPackages.gpustat
+    python3Packages.gpustat
     nvtopPackages.nvidia
   ];
 }
