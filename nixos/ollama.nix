@@ -54,7 +54,7 @@ lib.mkIf config.custom.enableNvidia {
       OLLAMA_KEEP_ALIVE = "-1";
       OLLAMA_KV_CACHE_TYPE = "q4_0";
       OLLAMA_NO_CLOUD = "1";
-      OLLAMA_NUM_PARALLEL = "4";
+      OLLAMA_NUM_PARALLEL = "2";
     };
   };
 }
