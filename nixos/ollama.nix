@@ -5,6 +5,23 @@
   ...
 }:
 lib.mkIf config.custom.enableNvidia {
+  systemd.services.ollama-model-warmup = {
+    description = "Load ollama models into memory";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "ollama-model-loader.service" ];
+    bindsTo = [ "ollama.service" ];
+    requires = [ "ollama-model-loader.service" ];
+    inherit (config.systemd.services.ollama) environment;
+    serviceConfig = {
+      Type = "oneshot";
+      DynamicUser = true;
+    };
+    script = lib.concatMapStringsSep "\n" (model: ''
+      echo "Loading ${model} into memory..."
+      ${lib.getExe config.services.ollama.package} run ${lib.escapeShellArg model} ""
+    '') config.services.ollama.loadModels;
+  };
+
   services.ollama = {
     enable = true;
     package = pkgs.ollama-cuda;
@@ -21,9 +38,9 @@ lib.mkIf config.custom.enableNvidia {
     ];
     # ollama serve --help
     environmentVariables = {
-      OLLAMA_CONTEXT_LENGTH = toString 64 * 1024;
+      OLLAMA_CONTEXT_LENGTH = toString (64 * 1024);
       OLLAMA_FLASH_ATTENTION = "1";
-      OLLAMA_KEEP_ALIVE = "60m";
+      OLLAMA_KEEP_ALIVE = "-1";
       OLLAMA_KV_CACHE_TYPE = "q8_0";
       OLLAMA_MAX_LOADED_MODELS = "3";
       OLLAMA_MAX_QUEUE = "128";
