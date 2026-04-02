@@ -40,8 +40,8 @@ lib.mkIf config.custom.enableNvidia {
     syncModels = true;
     loadModels = [
       # "gpt-oss:20b"
-      # "qwen3.5:0.8b"
-      "qwen3.5:2b"
+      "qwen3.5:0.8b"
+      # "qwen3.5:2b"
       # "qwen3.5:4b"
       # "qwen3.5:9b"
       "qwen3.5:27b"
@@ -53,8 +53,9 @@ lib.mkIf config.custom.enableNvidia {
       OLLAMA_FLASH_ATTENTION = "1";
       OLLAMA_KEEP_ALIVE = "-1";
       OLLAMA_KV_CACHE_TYPE = "q4_0";
+      OLLAMA_MAX_LOADED_MODELS = "8";
       OLLAMA_NO_CLOUD = "1";
-      OLLAMA_NUM_PARALLEL = "2";
+      OLLAMA_NUM_PARALLEL = "1";
     };
   };
 }
