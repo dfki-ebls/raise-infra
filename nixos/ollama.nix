@@ -49,11 +49,10 @@ lib.mkIf config.custom.enableNvidia {
     ];
     # ollama serve --help
     environmentVariables = {
-      OLLAMA_CONTEXT_LENGTH = toString (64 * 1024);
+      OLLAMA_CONTEXT_LENGTH = toString (32 * 1024);
       OLLAMA_FLASH_ATTENTION = "1";
       OLLAMA_KEEP_ALIVE = "-1";
-      OLLAMA_KV_CACHE_TYPE = "q8_0";
-      OLLAMA_MAX_QUEUE = "128";
+      OLLAMA_KV_CACHE_TYPE = "q4_0";
       OLLAMA_NO_CLOUD = "1";
       OLLAMA_NUM_PARALLEL = "4";
     };
