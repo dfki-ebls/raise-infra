@@ -11,13 +11,26 @@
     };
     flocken = {
       url = "github:mirkolenz/flocken/v2";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+      };
+    };
+    llmhop = {
+      url = "github:mirkolenz/llmhop/v1";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+        flocken.follows = "flocken";
+        treefmt-nix.follows = "treefmt-nix";
+      };
     };
     quadlet-nix = {
       url = "github:mirkolenz/quadlet-nix/v1";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+      };
     };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
