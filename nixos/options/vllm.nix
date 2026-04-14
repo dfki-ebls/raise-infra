@@ -180,25 +180,25 @@ in
     users.users.${cfg.user} = {
       description = "vLLM User";
       isSystemUser = true;
-      uid = 502;
+      uid = 503;
       group = cfg.user;
       home = "/var/lib/vllm";
       createHome = true;
       linger = true;
       subUidRanges = [
         {
-          startUid = 200000;
+          startUid = 300000;
           count = 65536;
         }
       ];
       subGidRanges = [
         {
-          startGid = 200000;
+          startGid = 300000;
           count = 65536;
         }
       ];
     };
-    users.groups.${cfg.user}.gid = 502;
+    users.groups.${cfg.user}.gid = 503;
 
     systemd.tmpfiles.settings."10-vllm" = {
       ${cfg.cacheDir}.d = {
