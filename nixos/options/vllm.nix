@@ -10,6 +10,7 @@ let
     { name, ... }:
     {
       options = {
+        enable = lib.mkEnableOption "serving of model ${name}";
         name = lib.mkOption {
           type = lib.types.str;
           default = name;
@@ -76,39 +77,36 @@ let
   models = lib.attrValues cfg.models;
 
   cdiDevices =
-    m:
-    if m.gpus == "all" then
+    model:
+    if model.gpus == "all" then
       [ "nvidia.com/gpu=all" ]
     else
-      map (i: "nvidia.com/gpu=${toString i}") m.gpus;
-
-  containerName = m: "vllm-${m.name}";
+      map (i: "nvidia.com/gpu=${toString i}") model.gpus;
 
   mkContainer =
-    m:
-    lib.nameValuePair (containerName m) {
+    model:
+    lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = {
         Image = cfg.image;
-        ContainerName = containerName m;
-        PublishPort = [ "127.0.0.1:${toString m.port}:8000" ];
-        AddDevice = cdiDevices m;
+        PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
+        AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
-        Environment = m.environment;
-        EnvironmentFile = m.environmentFile;
-        ShmSize = m.shmSize;
+        Environment = model.environment;
+        EnvironmentFile = model.environmentFile;
+        ShmSize = model.shmSize;
         NoNewPrivileges = true;
         Exec = lib.escapeShellArgs (
           [
-            m.model
+            model.model
             "--served-model-name"
-            m.name
+            model.name
             "--host"
             "0.0.0.0"
             "--port"
             "8000"
           ]
-          ++ m.extraArgs
+          ++ model.extraArgs
         );
       };
       serviceConfig = {
@@ -180,7 +178,7 @@ in
         message = "custom.vllm requires virtualisation.quadlet.enable.";
       }
       {
-        assertion = lib.length (lib.unique (map (m: m.port) models)) == lib.length models;
+        assertion = lib.length (lib.unique (map (model: model.port) models)) == lib.length models;
         message = "custom.vllm.models: each model must use a unique `port`.";
       }
     ];
@@ -223,7 +221,9 @@ in
       settings = {
         listen = "127.0.0.1:${toString cfg.routerPort}";
         models = lib.listToAttrs (
-          map (m: lib.nameValuePair m.name { url = "http://127.0.0.1:${toString m.port}"; }) models
+          map (
+            model: lib.nameValuePair model.name { url = "http://127.0.0.1:${toString model.port}"; }
+          ) models
         );
       };
     };
