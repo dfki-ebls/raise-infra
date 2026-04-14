@@ -34,7 +34,7 @@ lib.mkIf config.custom.enableNvidia {
   };
 
   services.ollama = {
-    enable = true;
+    enable = false;
     package = pkgs.ollama-cuda;
     openFirewall = false;
     syncModels = true;
