@@ -5,7 +5,7 @@
   ...
 }:
 lib.mkIf config.custom.enableNvidia {
-  systemd.services.ollama-model-warmup = {
+  systemd.services.ollama-model-warmup = lib.mkIf config.services.ollama.enable {
     description = "Load ollama models into memory";
     wantedBy = [ "multi-user.target" ];
     after = [ "ollama-model-loader.service" ];
