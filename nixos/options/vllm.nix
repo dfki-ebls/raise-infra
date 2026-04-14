@@ -132,9 +132,18 @@ in
       description = "Container image used for every model.";
     };
 
+    dataDir = lib.mkOption {
+      type = lib.types.path;
+      default = "/var/lib/vllm";
+      description = ''
+        Home directory of the `vllm` user.
+        Used by rootless podman for container storage (`~/.local/share/containers`).
+      '';
+    };
+
     cacheDir = lib.mkOption {
       type = lib.types.path;
-      default = "/var/lib/vllm/huggingface";
+      default = "/var/cache/vllm";
       description = "Host directory bind-mounted as the Hugging Face cache.";
     };
 
@@ -182,8 +191,7 @@ in
       isSystemUser = true;
       uid = 503;
       group = cfg.user;
-      home = "/var/lib/vllm";
-      createHome = true;
+      home = cfg.dataDir;
       linger = true;
       subUidRanges = [
         {
@@ -201,6 +209,11 @@ in
     users.groups.${cfg.user}.gid = 503;
 
     systemd.tmpfiles.settings."10-vllm" = {
+      ${cfg.dataDir}.d = {
+        user = cfg.user;
+        group = cfg.user;
+        mode = "0700";
+      };
       ${cfg.cacheDir}.d = {
         user = cfg.user;
         group = cfg.user;
