@@ -1,6 +1,7 @@
-{ lib, ... }:
-
+{ lib', lib, ... }:
 {
+  imports = lib'.flocken.getModules ./.;
+
   options.custom = {
     rootDomain = lib.mkOption {
       type = lib.types.str;
