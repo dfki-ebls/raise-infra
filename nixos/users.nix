@@ -16,18 +16,18 @@ in
       quadlet = {
         description = "Quadlet User";
         isSystemUser = true;
-        uid = 500;
+        uid = 501;
         group = "quadlet";
         linger = false;
         subUidRanges = [
           {
-            startUid = 50000;
+            startUid = 100000;
             count = 65536;
           }
         ];
         subGidRanges = [
           {
-            startGid = 50000;
+            startGid = 100000;
             count = 65536;
           }
         ];
