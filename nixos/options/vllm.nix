@@ -138,12 +138,6 @@ in
       description = "Host directory bind-mounted as the Hugging Face cache.";
     };
 
-    routerPort = lib.mkOption {
-      type = lib.types.port;
-      default = 8080;
-      description = "Port (bound to 127.0.0.1) llmhop listens on.";
-    };
-
     models = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule modelOpts);
       default = { };
@@ -215,17 +209,5 @@ in
     };
 
     virtualisation.quadlet.containers = lib.listToAttrs (map mkContainer models);
-
-    services.llmhop = {
-      enable = true;
-      settings = {
-        listen = "127.0.0.1:${toString cfg.routerPort}";
-        models = lib.listToAttrs (
-          map (
-            model: lib.nameValuePair model.name { url = "http://127.0.0.1:${toString model.port}"; }
-          ) models
-        );
-      };
-    };
   };
 }
