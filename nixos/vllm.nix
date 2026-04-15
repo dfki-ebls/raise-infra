@@ -5,11 +5,11 @@ in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
-    tag = "gemma4";
+    tag = "gemma4-cu130";
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
       "gemma4-31b" = {
-        model = "nvidia/Gemma-4-31B-IT-NVFP4";
+        model = "RedHatAI/gemma-4-31B-it-NVFP4";
         port = 18001;
         extraArgs = mkArgs {
           # general gemma
@@ -18,9 +18,8 @@ lib.mkIf config.custom.enableNvidia {
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.9;
           kv-cache-dtype = "fp8";
-          max-model-len = 16384;
+          max-model-len = 16 * 1024;
           max-num-seqs = 4;
-          quantization = "modelopt";
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           default-chat-template-kwargs = lib.toJSON {
