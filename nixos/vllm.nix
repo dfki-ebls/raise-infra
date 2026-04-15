@@ -22,7 +22,7 @@ lib.mkIf config.custom.enableNvidia {
           quantization = "modelopt";
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
-          chat-template = "./examples/tool_chat_template_gemma4.jinja";
+          chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
           default-chat-template-kwargs = lib.toJSON {
             enable_thinking = true;
           };
