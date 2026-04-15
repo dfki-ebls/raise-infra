@@ -4,9 +4,14 @@
     enable = config.custom.vllm.enable;
     settings = {
       listen = "127.0.0.1:8080";
-      models = lib.mapAttrs (_: m: {
-        url = "http://127.0.0.1:${toString m.port}";
+      # authTokens = [ "\${file:auth_token}" ];
+      models = lib.mapAttrs (_: model: {
+        url = "http://127.0.0.1:${toString model.port}";
       }) config.custom.vllm.models;
     };
   };
+
+  # systemd.services.llmhop.serviceConfig = lib.mkIf config.services.llmhop.enable {
+  #   LoadCredential = [ "auth_token:/etc/llmhop/auth-token" ];
+  # };
 }
