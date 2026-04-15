@@ -13,7 +13,7 @@ lib.mkIf config.custom.enableNvidia {
           async-scheduling = true;
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;
-          gpu-memory-utilization = 0.9;
+          gpu-memory-utilization = 0.8;
           kv-cache-dtype = "fp8";
           max-model-len = 16 * 1024;
           max-num-seqs = 4;
@@ -24,6 +24,25 @@ lib.mkIf config.custom.enableNvidia {
           };
           limit-mm-per-prompt = lib.toJSON {
             image = 2;
+            audio = 0;
+            video = 0;
+          };
+        };
+      };
+      "gemma4-e2b" = {
+        model = "ggml-org/gemma-4-E2B-it-GGUF:Q8_0";
+        tag = "gemma4-cu130";
+        port = 18002;
+        extraArgs = {
+          async-scheduling = true;
+          enable-prefix-caching = false;
+          gpu-memory-utilization = 0.1;
+          kv-cache-dtype = "fp8";
+          max-model-len = 4 * 1024;
+          max-num-seqs = 2;
+          tokenizer = "google/gemma-4-E2B-it";
+          limit-mm-per-prompt = lib.toJSON {
+            image = 1;
             audio = 0;
             video = 0;
           };
