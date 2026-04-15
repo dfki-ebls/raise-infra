@@ -4,7 +4,7 @@ let
 in
 {
   custom.vllm = {
-    enable = false;
+    enable = true;
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
       "gemma4-31b" = {
