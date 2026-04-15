@@ -21,7 +21,6 @@ in
           max-num-seqs = 4;
           quantization = "modelopt";
           reasoning-parser = "gemma4";
-          swap-space = 4;
           tool-call-parser = "gemma4";
           chat-template = "./examples/tool_chat_template_gemma4.jinja";
           default-chat-template-kwargs = lib.toJSON {
