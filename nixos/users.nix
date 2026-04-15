@@ -34,8 +34,8 @@ in
       };
     };
     groups = {
-      ${admin.login}.gid = 1000;
-      quadlet.gid = 500;
+      ${admin.login}.gid = config.users.users.${admin.login}.uid;
+      quadlet.gid = config.users.users.quadlet.uid;
     };
   };
 }

@@ -205,7 +205,7 @@ in
         }
       ];
     };
-    users.groups.${cfg.user}.gid = 503;
+    users.groups.${cfg.user}.gid = config.users.users.${cfg.user}.uid;
 
     systemd.tmpfiles.settings."10-vllm" = {
       ${cfg.dataDir}.d = {
