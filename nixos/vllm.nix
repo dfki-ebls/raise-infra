@@ -17,7 +17,6 @@ in
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.9;
           kv-cache-dtype = "fp8";
-          limit-mm-per-prompt = "image=2,audio=0";
           max-model-len = 16384;
           max-num-seqs = 4;
           quantization = "modelopt";
@@ -27,6 +26,11 @@ in
           chat-template = "./examples/tool_chat_template_gemma4.jinja";
           default-chat-template-kwargs = lib.toJSON {
             enable_thinking = true;
+          };
+          limit-mm-per-prompt = lib.toJSON {
+            image = 2;
+            audio = 0;
+            video = 0;
           };
         };
       };
