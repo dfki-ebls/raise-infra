@@ -88,7 +88,8 @@ let
     lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = {
-        Image = cfg.image;
+        Image = "${cfg.image}:${cfg.tag}";
+        Pull = "newer";
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
@@ -127,8 +128,14 @@ in
 
     image = lib.mkOption {
       type = lib.types.str;
-      default = "docker.io/vllm/vllm-openai:latest";
+      default = "docker.io/vllm/vllm-openai";
       description = "Container image used for every model.";
+    };
+
+    tag = lib.mkOption {
+      type = lib.types.str;
+      default = "latest";
+      description = "Tag of the container image used for every model.";
     };
 
     dataDir = lib.mkOption {

@@ -5,6 +5,7 @@ in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
+    tag = "gemma4";
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
       "gemma4-31b" = {
