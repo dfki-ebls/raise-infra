@@ -1,19 +1,15 @@
 { lib, config, ... }:
-let
-  mkArgs = lib.cli.toCommandLineGNU { };
-in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
-    tag = "gemma4-cu130";
     environmentFile = "/etc/vllm/.env";
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
       "gemma4-31b" = {
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
+        tag = "gemma4-cu130";
         port = 18001;
-        extraArgs = mkArgs {
-          # general gemma
+        extraArgs = {
           async-scheduling = true;
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;

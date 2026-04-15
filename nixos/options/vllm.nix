@@ -6,6 +6,8 @@
 let
   cfg = config.custom.vllm;
 
+  mkArgs = lib.cli.toCommandLineShellGNU { };
+
   modelOpts =
     { name, ... }:
     {
@@ -24,6 +26,11 @@ let
           example = "Qwen/Qwen2.5-7B-Instruct";
           description = "Hugging Face repo id (or local path) passed to vLLM as the positional model argument.";
         };
+        tag = lib.mkOption {
+          type = lib.types.str;
+          default = "latest";
+          description = "Tag of the container image used for this model.";
+        };
         port = lib.mkOption {
           type = lib.types.port;
           description = "Loopback host port forwarded to the container's vLLM API. Must be unique per model.";
@@ -34,15 +41,16 @@ let
           description = "GPU device(s) exposed to the container via the NVIDIA CDI provider.";
         };
         extraArgs = lib.mkOption {
-          type = lib.types.listOf lib.types.str;
-          default = [ ];
-          example = [
-            "--tensor-parallel-size"
-            "2"
-            "--max-model-len"
-            "32768"
-          ];
-          description = "Additional CLI flags forwarded to `vllm serve`.";
+          type = lib.types.attrsOf lib.types.anything;
+          default = { };
+          example = {
+            tensor-parallel-size = 2;
+            max-model-len = 32768;
+          };
+          description = ''
+            Additional CLI flags forwarded to `vllm serve`.
+            Rendered via `lib.cli.toCommandLineShellGNU`.
+          '';
         };
         shmSize = lib.mkOption {
           type = lib.types.str;
@@ -88,7 +96,7 @@ let
     lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = {
-        Image = "${cfg.image}:${cfg.tag}";
+        Image = "${cfg.image}:${model.tag}";
         Pull = "newer";
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
         AddDevice = cdiDevices model;
@@ -97,18 +105,14 @@ let
         EnvironmentFile = model.environmentFile;
         ShmSize = model.shmSize;
         NoNewPrivileges = true;
-        Exec = lib.escapeShellArgs (
-          [
-            model.model
-            "--served-model-name"
-            model.name
-            "--host"
-            "0.0.0.0"
-            "--port"
-            "8000"
-          ]
-          ++ model.extraArgs
-        );
+        Exec = "${lib.escapeShellArg model.model} ${mkArgs (
+          {
+            served-model-name = model.name;
+            host = "0.0.0.0";
+            port = 8000;
+          }
+          // model.extraArgs
+        )}";
       };
       serviceConfig = {
         TimeoutStartSec = 3600;
@@ -130,12 +134,6 @@ in
       type = lib.types.str;
       default = "docker.io/vllm/vllm-openai";
       description = "Container image used for every model.";
-    };
-
-    tag = lib.mkOption {
-      type = lib.types.str;
-      default = "latest";
-      description = "Tag of the container image used for every model.";
     };
 
     dataDir = lib.mkOption {
@@ -165,7 +163,7 @@ in
           "llama-3-8b" = {
             model = "meta-llama/Meta-Llama-3-8B-Instruct";
             port = 18002;
-            extraArgs = [ "--max-model-len" "8192" ];
+            extraArgs.max-model-len = 8192;
           };
         }
       '';
