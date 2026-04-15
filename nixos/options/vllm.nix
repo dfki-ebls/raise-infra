@@ -111,7 +111,6 @@ let
       };
       serviceConfig = {
         TimeoutStartSec = 3600;
-        Restart = "on-failure";
         RestartSec = 30;
       };
     };
