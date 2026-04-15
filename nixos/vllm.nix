@@ -1,8 +1,8 @@
-{ lib, ... }:
+{ lib, config, ... }:
 let
   mkArgs = lib.cli.toCommandLineGNU { };
 in
-{
+lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
     models = {
