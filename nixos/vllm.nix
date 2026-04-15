@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  mkArgs = lib.cli.toCommandLineShellGNU { };
+  mkArgs = lib.cli.toCommandLineGNU { };
 in
 {
   custom.vllm = {
