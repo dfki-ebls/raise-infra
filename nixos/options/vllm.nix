@@ -104,6 +104,10 @@ let
         TimeoutStartSec = 3600;
         RestartSec = 30;
       };
+      unitConfig = {
+        StartLimitBurst = 3;
+        StartLimitIntervalSec = 3600;
+      };
     };
 in
 {
