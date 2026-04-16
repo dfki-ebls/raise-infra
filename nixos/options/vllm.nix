@@ -13,7 +13,9 @@ let
     { name, ... }:
     {
       options = {
-        enable = lib.mkEnableOption "serving of model ${name}";
+        enable = lib.mkEnableOption "serving of model ${name}" // {
+          default = true;
+        };
         name = lib.mkOption {
           type = lib.types.str;
           default = name;
@@ -68,7 +70,7 @@ let
       };
     };
 
-  models = lib.attrValues cfg.models;
+  models = lib.filter (model: model.enable) (lib.attrValues cfg.models);
 
   cdiDevices =
     model:

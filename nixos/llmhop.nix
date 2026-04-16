@@ -7,7 +7,7 @@
       # authTokens = [ "\${file:auth_token}" ];
       models = lib.mapAttrs (_: model: {
         url = "http://127.0.0.1:${toString model.port}";
-      }) config.custom.vllm.models;
+      }) (lib.filterAttrs (_: model: model.enable) config.custom.vllm.models);
     };
   };
 
