@@ -2,7 +2,7 @@
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
-    environmentFile = "/etc/vllm/.env";
+    environmentFile = "/etc/vllm/vllm.env";
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
       "gemma4-31b" = {

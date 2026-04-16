@@ -64,21 +64,6 @@ let
             higher tensor-parallel sizes (upstream suggests `16g` for TP=8).
           '';
         };
-        environment = lib.mkOption {
-          type = lib.types.attrsOf lib.types.str;
-          default = { };
-          description = "Extra environment variables passed to the container.";
-        };
-        environmentFile = lib.mkOption {
-          type = lib.types.listOf lib.types.path;
-          default = [ ];
-          description = ''
-            Files in `KEY=VALUE` format passed to the container via `--env-file`.
-            Use for secrets managed by sops-nix/agenix, e.g. a file containing `HF_TOKEN=<token>`
-            to access gated Hugging Face repositories.
-            Files must be readable by the `vllm` user.
-          '';
-        };
       };
     };
 
@@ -101,18 +86,19 @@ let
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
-        Environment = model.environment;
-        EnvironmentFile = model.environmentFile;
+        EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
         ShmSize = model.shmSize;
         NoNewPrivileges = true;
-        Exec = "${lib.escapeShellArg model.model} ${mkArgs (
-          {
-            served-model-name = model.name;
-            host = "0.0.0.0";
-            port = 8000;
-          }
-          // model.extraArgs
-        )}";
+        Exec = "${lib.escapeShellArg model.model} ${
+          mkArgs (
+            {
+              served-model-name = model.name;
+              host = "0.0.0.0";
+              port = 8000;
+            }
+            // model.extraArgs
+          )
+        }";
       };
       serviceConfig = {
         TimeoutStartSec = 3600;
@@ -149,6 +135,18 @@ in
       type = lib.types.path;
       default = "/var/cache/vllm";
       description = "Host directory bind-mounted as the Hugging Face cache.";
+    };
+
+    environmentFile = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      default = null;
+      example = "/etc/vllm/.env";
+      description = ''
+        File in `KEY=VALUE` format forwarded to every container via `--env-file`.
+        Use for secrets managed by sops-nix/agenix, e.g. a file containing
+        `HF_TOKEN=<token>` to access gated Hugging Face repositories.
+        Must be readable by the `vllm` user.
+      '';
     };
 
     models = lib.mkOption {
