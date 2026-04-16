@@ -30,7 +30,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "gemma4-e2b" = {
-        model = "ggml-org/gemma-4-E2B-it-GGUF:Q8_0";
+        model = "google/gemma-4-E2B-it";
         tag = "gemma4-cu130";
         port = 18002;
         extraArgs = {
@@ -40,6 +40,7 @@ lib.mkIf config.custom.enableNvidia {
           kv-cache-dtype = "fp8";
           max-model-len = 4 * 1024;
           max-num-seqs = 2;
+          quantization = "bitsandbytes";
           tokenizer = "google/gemma-4-E2B-it";
           limit-mm-per-prompt = lib.toJSON {
             image = 1;
