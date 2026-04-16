@@ -9,7 +9,7 @@ lib.mkIf config.custom.enableNvidia {
       "gemma4-26b" = {
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         # RedHatAI's NVFP4 Gemma 4 MoE checkpoint requires vLLM's quantized MoE loader support.
-        tag = "cu130-nightly";
+        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
         port = 18001;
         extraArgs = {
           async-scheduling = true;

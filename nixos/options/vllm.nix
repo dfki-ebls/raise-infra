@@ -30,9 +30,21 @@ let
           description = "Hugging Face repo id (or local path) passed to vLLM as the positional model argument.";
         };
         tag = lib.mkOption {
-          type = lib.types.str;
-          default = "latest";
-          description = "Tag of the container image used for this model.";
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = ''
+            Tag of the container image used for this model.
+            Mutually exclusive with `digest`.
+          '';
+        };
+        digest = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          example = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
+          description = ''
+            Immutable digest of the container image (e.g. `sha256:…`).
+            Mutually exclusive with `tag`.
+          '';
         };
         port = lib.mkOption {
           type = lib.types.port;
@@ -79,13 +91,24 @@ let
     else
       map (i: "nvidia.com/gpu=${toString i}") model.gpus;
 
+  imageRef =
+    model:
+    if model.tag != null && model.digest != null then
+      throw "custom.vllm.models.${model.name}: `tag` and `digest` are mutually exclusive."
+    else if model.digest != null then
+      "${cfg.image}@${model.digest}"
+    else if model.tag != null then
+      "${cfg.image}:${model.tag}"
+    else
+      throw "custom.vllm.models.${model.name}: either `tag` or `digest` must be set.";
+
   mkContainer =
     model:
     lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = {
-        Image = "${cfg.image}:${model.tag}";
-        Pull = "newer";
+        Image = imageRef model;
+        Pull = if model.digest != null then "missing" else "newer";
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
