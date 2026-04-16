@@ -32,6 +32,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "gemma4-e2b" = {
+        enable = false;
         model = "google/gemma-4-E2B-it";
         tag = "gemma4-cu130";
         port = 18002;
