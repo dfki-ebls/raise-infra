@@ -5,6 +5,7 @@ lib.mkIf config.custom.enableNvidia {
     environmentFile = "/etc/vllm/vllm.env";
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
+      # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
       "gemma4-31b" = {
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
         tag = "gemma4-cu130";
@@ -13,10 +14,11 @@ lib.mkIf config.custom.enableNvidia {
           async-scheduling = true;
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;
+          enforce_eager = true;
           gpu-memory-utilization = 0.8;
           kv-cache-dtype = "fp8";
           max-model-len = 16 * 1024;
-          max-num-seqs = 4;
+          max-num-seqs = 2;
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           default-chat-template-kwargs = lib.toJSON {
@@ -36,6 +38,7 @@ lib.mkIf config.custom.enableNvidia {
         extraArgs = {
           async-scheduling = true;
           enable-prefix-caching = false;
+          enforce_eager = true;
           gpu-memory-utilization = 0.1;
           kv-cache-dtype = "fp8";
           max-model-len = 4 * 1024;
