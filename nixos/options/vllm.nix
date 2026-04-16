@@ -255,7 +255,7 @@ in
           model="$1"
           shift
           sudo journalctl _UID="${
-            config.users.users.${cfg.user}.uid
+            toString config.users.users.${cfg.user}.uid
           }" _SYSTEMD_USER_UNIT="vllm-$model.service" "$@"
         '';
       })
