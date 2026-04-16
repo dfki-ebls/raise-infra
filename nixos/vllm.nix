@@ -41,8 +41,8 @@ lib.mkIf config.custom.enableNvidia {
           enforce_eager = true;
           gpu-memory-utilization = 0.1;
           kv-cache-dtype = "fp8";
-          max-model-len = 4 * 1024;
-          max-num-seqs = 2;
+          max-model-len = 1024;
+          max-num-seqs = 1;
           quantization = "bitsandbytes";
           tokenizer = "google/gemma-4-E2B-it";
           limit-mm-per-prompt = lib.toJSON {
