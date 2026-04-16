@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 let
@@ -228,5 +229,36 @@ in
     };
 
     virtualisation.quadlet.containers = lib.listToAttrs (map mkContainer models);
+
+    environment.systemPackages = [
+      (pkgs.writeShellApplication {
+        name = "vllm-systemctl";
+        text = ''
+          if [ "$#" -lt 2 ]; then
+            echo "Usage: "$0" <action> <model> [args...]"
+            exit 1
+          fi
+          action="$1"
+          shift
+          model="$1"
+          shift
+          sudo systemctl --user --machine=${cfg.user}@.host "$action" "vllm-$model.service" "$@"
+        '';
+      })
+      (pkgs.writeShellApplication {
+        name = "vllm-journalctl";
+        text = ''
+          if [ "$#" -lt 1 ]; then
+            echo "Usage: "$0" <model> [args...]"
+            exit 1
+          fi
+          model="$1"
+          shift
+          sudo journalctl _UID="${
+            config.users.users.${cfg.user}.uid
+          }" _SYSTEMD_USER_UNIT="vllm-$model.service" "$@"
+        '';
+      })
+    ];
   };
 }
