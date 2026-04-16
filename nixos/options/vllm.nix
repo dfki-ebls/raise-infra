@@ -235,7 +235,7 @@ in
         name = "vllm-systemctl";
         text = ''
           if [ "$#" -lt 2 ]; then
-            echo "Usage: "$0" <action> <model> [args...]"
+            echo "Usage: $0 <action> <model> [args...]"
             exit 1
           fi
           action="$1"
@@ -249,7 +249,7 @@ in
         name = "vllm-journalctl";
         text = ''
           if [ "$#" -lt 1 ]; then
-            echo "Usage: "$0" <model> [args...]"
+            echo "Usage: $0 <model> [args...]"
             exit 1
           fi
           model="$1"
