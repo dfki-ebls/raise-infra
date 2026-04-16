@@ -1,9 +1,10 @@
 { lib, config, ... }:
 {
   services.llmhop = {
-    enable = config.custom.vllm.enable;
+    # enable = config.custom.vllm.enable;
+    enable = false;
     settings = {
-      listen = "127.0.0.1:8080";
+      listen = "127.0.0.1:18000";
       # authTokens = [ "\${file:auth_token}" ];
       models = lib.mapAttrs (_: model: {
         url = "http://127.0.0.1:${toString model.port}";
