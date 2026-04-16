@@ -21,6 +21,7 @@ lib.mkIf config.custom.enableNvidia {
           max-num-seqs = 2;
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
+          chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
           default-chat-template-kwargs = lib.toJSON {
             enable_thinking = true;
           };
@@ -46,6 +47,7 @@ lib.mkIf config.custom.enableNvidia {
           max-num-seqs = 1;
           quantization = "bitsandbytes";
           tokenizer = "google/gemma-4-E2B-it";
+          chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
           limit-mm-per-prompt = lib.toJSON {
             image = 1;
             audio = 0;
