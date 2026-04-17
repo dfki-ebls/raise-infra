@@ -7,7 +7,9 @@
 let
   cfg = config.custom.vllm;
 
-  mkArgs = lib.cli.toCommandLineShellGNU { };
+  mkArgs = lib.cli.toGNUCommandLineShell {
+    mkBool = k: v: lib.singleton (if v then "--${k}" else "--no-${k}");
+  };
 
   modelOpts =
     { name, ... }:
