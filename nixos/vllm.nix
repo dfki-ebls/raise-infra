@@ -63,7 +63,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18003;
         extraArgs = commonArgs // {
           enable-prefix-caching = false;
-          gpu-memory-utilization = 0.1;
+          gpu-memory-utilization = 0.15;
           max-model-len = 4 * 1024;
           max-num-seqs = 4;
           quantization = "fp8";
