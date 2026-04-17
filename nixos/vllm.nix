@@ -39,7 +39,7 @@ lib.mkIf config.custom.enableNvidia {
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
-        tag = "qwen3_5-cu130";
+        tag = "cu130-nightly";
         port = 18002;
         environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
         # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
@@ -57,7 +57,6 @@ lib.mkIf config.custom.enableNvidia {
       };
       "qwen3.5-0.8b" = {
         model = "Qwen/Qwen3.5-0.8B";
-        # `qwen3_5-cu130` predates vLLM PR #35289 which fixes fp8 weight loading for Qwen3.5.
         tag = "v0.19.0-cu130";
         port = 18003;
         extraArgs = commonArgs // {
