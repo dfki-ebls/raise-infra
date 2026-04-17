@@ -25,7 +25,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18001;
         extraArgs = commonArgs // {
           enable-prefix-caching = true;
-          gpu-memory-utilization = 0.7;
+          gpu-memory-utilization = 0.75;
           max-model-len = 16 * 1024;
           max-num-seqs = 4;
           reasoning-parser = "gemma4";
@@ -48,7 +48,7 @@ lib.mkIf config.custom.enableNvidia {
         # https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3
         extraArgs = commonArgs // {
           enable-prefix-caching = true;
-          gpu-memory-utilization = 0.7;
+          gpu-memory-utilization = 0.75;
           max-model-len = 32 * 1024;
           max-num-batched-tokens = 2096;
           max-num-seqs = 4;
