@@ -53,6 +53,7 @@ lib.mkIf config.custom.enableNvidia {
             enable_thinking = false;
           };
         };
+      };
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
         enable = false;
