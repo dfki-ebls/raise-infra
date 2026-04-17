@@ -57,7 +57,8 @@ lib.mkIf config.custom.enableNvidia {
       };
       "qwen3.5-0.8b" = {
         model = "Qwen/Qwen3.5-0.8B";
-        tag = "qwen3_5-cu130";
+        # `qwen3_5-cu130` predates vLLM PR #35289 which fixes fp8 weight loading for Qwen3.5.
+        tag = "v0.19.0-cu130";
         port = 18003;
         extraArgs = commonArgs // {
           enable-prefix-caching = false;
