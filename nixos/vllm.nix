@@ -42,11 +42,14 @@ lib.mkIf config.custom.enableNvidia {
         tag = "qwen3_5-cu130";
         port = 18002;
         environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
+        # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
+        # https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3
         extraArgs = commonArgs // {
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.7;
           max-model-len = 32 * 1024;
+          max-num-batched-tokens = 2096;
           max-num-seqs = 4;
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
