@@ -7,9 +7,13 @@
 let
   cfg = config.custom.vllm;
 
-  mkArgs = lib.cli.toGNUCommandLineShell {
-    mkBool = k: v: lib.singleton (if v then "--${k}" else "--no-${k}");
-  };
+  mkArgs =
+    attrs:
+    lib.cli.toCommandLineShellGNU { } (
+      lib.mapAttrs' (
+        k: v: if v == false then lib.nameValuePair "no-${k}" true else lib.nameValuePair k v
+      ) attrs
+    );
 
   modelOpts =
     { name, ... }:
