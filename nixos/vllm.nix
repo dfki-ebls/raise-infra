@@ -39,7 +39,7 @@ lib.mkIf config.custom.enableNvidia {
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
-        tag = "v0.19.0-cu130";
+        tag = "qwen3_5-cu130";
         port = 18002;
         extraArgs = commonArgs // {
           enable-auto-tool-choice = true;
@@ -54,13 +54,14 @@ lib.mkIf config.custom.enableNvidia {
       };
       "qwen3.5-0.8b" = {
         model = "Qwen/Qwen3.5-0.8B";
-        tag = "v0.19.0-cu130";
+        tag = "qwen3_5-cu130";
         port = 18003;
         extraArgs = commonArgs // {
           enable-prefix-caching = false;
           gpu-memory-utilization = 0.1;
           max-model-len = 4 * 1024;
           max-num-seqs = 4;
+          quantization = "bitsandbytes";
           reasoning-parser = "qwen3";
         };
       };
