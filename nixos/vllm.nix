@@ -41,13 +41,13 @@ lib.mkIf config.custom.enableNvidia {
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         tag = "qwen3_5-cu130";
         port = 18002;
+        environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
         extraArgs = commonArgs // {
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.7;
           max-model-len = 32 * 1024;
           max-num-seqs = 4;
-          moe-backend = "flashinfer_cutlass";
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
         };
@@ -61,7 +61,7 @@ lib.mkIf config.custom.enableNvidia {
           gpu-memory-utilization = 0.1;
           max-model-len = 4 * 1024;
           max-num-seqs = 4;
-          quantization = "bitsandbytes";
+          quantization = "fp8";
           reasoning-parser = "qwen3";
         };
       };

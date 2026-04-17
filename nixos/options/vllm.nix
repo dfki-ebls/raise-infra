@@ -73,6 +73,17 @@ let
             Rendered via `lib.cli.toCommandLineShellGNU`.
           '';
         };
+        environment = lib.mkOption {
+          type = lib.types.attrsOf lib.types.str;
+          default = { };
+          example = {
+            VLLM_FLASHINFER_MOE_BACKEND = "throughput";
+          };
+          description = ''
+            Additional environment variables set on the container.
+            Merged with `custom.vllm.environmentFile`; these entries take precedence.
+          '';
+        };
         shmSize = lib.mkOption {
           type = lib.types.str;
           default = "2g";
@@ -119,6 +130,7 @@ let
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
         EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+        Environment = lib.mapAttrsToList (k: v: "${k}=${v}") model.environment;
         ShmSize = model.shmSize;
         NoNewPrivileges = true;
         Exec = "${lib.escapeShellArg model.model} ${
