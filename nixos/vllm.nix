@@ -1,22 +1,31 @@
 { lib, config, ... }:
+let
+  commonArgs = {
+    async-scheduling = true;
+    kv-cache-dtype = "fp8";
+    limit-mm-per-prompt = lib.toJSON {
+      image = 1;
+      audio = 0;
+      video = 0;
+    };
+  };
+in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
     environmentFile = "/etc/vllm/vllm.env";
+    # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
-      # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
       "gemma4-26b" = {
+        enable = false;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
-        # RedHatAI's NVFP4 Gemma 4 MoE checkpoint requires vLLM's quantized MoE loader support.
-        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
+        tag = "gemma4-cu130";
         port = 18001;
-        extraArgs = {
-          async-scheduling = true;
+        extraArgs = commonArgs // {
           enable-auto-tool-choice = true;
           enable-prefix-caching = true;
-          gpu-memory-utilization = 0.9;
-          kv-cache-dtype = "fp8";
+          gpu-memory-utilization = 0.7;
           max-model-len = 16 * 1024;
           max-num-seqs = 4;
           reasoning-parser = "gemma4";
@@ -25,11 +34,34 @@ lib.mkIf config.custom.enableNvidia {
           default-chat-template-kwargs = lib.toJSON {
             enable_thinking = true;
           };
-          limit-mm-per-prompt = lib.toJSON {
-            image = 2;
-            audio = 0;
-            video = 0;
-          };
+        };
+      };
+      # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
+      "qwen3.6-35b" = {
+        model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
+        tag = "v0.19.0-cu130";
+        port = 18002;
+        extraArgs = commonArgs // {
+          enable-auto-tool-choice = true;
+          enable-prefix-caching = true;
+          gpu-memory-utilization = 0.7;
+          max-model-len = 32 * 1024;
+          max-num-seqs = 4;
+          moe-backend = "flashinfer_cutlass";
+          reasoning-parser = "qwen3";
+          tool-call-parser = "qwen3_coder";
+        };
+      };
+      "qwen3.5-0.8b" = {
+        model = "Qwen/Qwen3.5-0.8B";
+        tag = "v0.19.0-cu130";
+        port = 18003;
+        extraArgs = commonArgs // {
+          enable-prefix-caching = false;
+          gpu-memory-utilization = 0.1;
+          max-model-len = 4 * 1024;
+          max-num-seqs = 4;
+          reasoning-parser = "qwen3";
         };
       };
     };
