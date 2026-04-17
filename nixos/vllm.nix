@@ -1,6 +1,7 @@
 { lib, config, ... }:
 let
   commonArgs = {
+    enable-auto-tool-choice = true;
     async-scheduling = true;
     kv-cache-dtype = "fp8";
     limit-mm-per-prompt = lib.toJSON {
@@ -17,15 +18,12 @@ lib.mkIf config.custom.enableNvidia {
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
-      "gemma4-26b" = {
+      "gemma4-31b" = {
         enable = true;
-        model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
-        # Last clean `cu130-nightly` before PR #33773 (aiter pandas import) broke startup.
-        # Commit 55e1a8e1 from 2026-04-15, pinned by manifest-list digest.
-        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
+        model = "RedHatAI/gemma-4-31B-it-NVFP4";
+        tag = "gemma4-cu130";
         port = 18001;
         extraArgs = commonArgs // {
-          enable-auto-tool-choice = true;
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.7;
           max-model-len = 16 * 1024;
@@ -43,13 +41,12 @@ lib.mkIf config.custom.enableNvidia {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         # https://huggingface.co/RedHatAI/Qwen3.6-35B-A3B-NVFP4/discussions/1
-        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
+        tag = "v0.19.0-cu130";
         port = 18002;
         environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
         # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
         # https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3
         extraArgs = commonArgs // {
-          enable-auto-tool-choice = true;
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.7;
           max-model-len = 32 * 1024;
@@ -71,6 +68,7 @@ lib.mkIf config.custom.enableNvidia {
           max-num-seqs = 4;
           quantization = "fp8";
           reasoning-parser = "qwen3";
+          tool-call-parser = "qwen3_coder";
         };
       };
     };
