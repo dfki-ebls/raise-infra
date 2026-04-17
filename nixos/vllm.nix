@@ -20,7 +20,9 @@ lib.mkIf config.custom.enableNvidia {
       "gemma4-26b" = {
         enable = false;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
-        tag = "gemma4-cu130";
+        # Last clean `cu130-nightly` before PR #33773 (aiter pandas import) broke startup.
+        # Commit 55e1a8e1 from 2026-04-15, pinned by manifest-list digest.
+        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
         port = 18001;
         extraArgs = commonArgs // {
           enable-auto-tool-choice = true;
@@ -39,7 +41,8 @@ lib.mkIf config.custom.enableNvidia {
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
-        tag = "cu130-nightly";
+        # https://huggingface.co/RedHatAI/Qwen3.6-35B-A3B-NVFP4/discussions/1
+        digest = "sha256:a73fb0b9046fee099f7c1829d2548e6cc1740f4c2776a6855fa659ae5d0deb49";
         port = 18002;
         environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
         # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
