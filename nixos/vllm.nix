@@ -36,13 +36,30 @@ lib.mkIf config.custom.enableNvidia {
           };
         };
       };
+      "gemma4-2b" = {
+        enable = true;
+        model = "google/gemma-4-E2B-it";
+        tag = "gemma4-cu130";
+        port = 18002;
+        extraArgs = commonArgs // {
+          enable-prefix-caching = false;
+          gpu-memory-utilization = 0.15;
+          max-model-len = 4 * 1024;
+          max-num-seqs = 4;
+          quantization = "fp8";
+          reasoning-parser = "gemma4";
+          tool-call-parser = "gemma4";
+          default-chat-template-kwargs = lib.toJSON {
+            enable_thinking = false;
+          };
+        };
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         # https://huggingface.co/RedHatAI/Qwen3.6-35B-A3B-NVFP4/discussions/1
         tag = "v0.19.0-cu130";
-        port = 18002;
+        port = 18003;
         environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
         # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
         # https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3
@@ -60,10 +77,10 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "qwen3.5-0.8b" = {
-        enable = true;
+        enable = false;
         model = "Qwen/Qwen3.5-0.8B";
         tag = "v0.19.0-cu130";
-        port = 18003;
+        port = 18004;
         extraArgs = commonArgs // {
           enable-prefix-caching = false;
           gpu-memory-utilization = 0.15;
