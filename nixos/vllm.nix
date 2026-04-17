@@ -54,6 +54,9 @@ lib.mkIf config.custom.enableNvidia {
           max-num-seqs = 4;
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
+          default-chat-template-kwargs = lib.toJSON {
+            enable_thinking = true;
+          };
         };
       };
       "qwen3.5-0.8b" = {
@@ -69,6 +72,9 @@ lib.mkIf config.custom.enableNvidia {
           quantization = "fp8";
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
+          default-chat-template-kwargs = lib.toJSON {
+            enable_thinking = false;
+          };
         };
       };
     };
