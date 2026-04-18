@@ -1,9 +1,10 @@
 { lib, config, ... }:
 let
   commonArgs = {
-    enable-auto-tool-choice = true;
     async-scheduling = true;
+    enable-auto-tool-choice = true;
     kv-cache-dtype = "fp8";
+    max-num-seqs = 3;
     limit-mm-per-prompt = lib.toJSON {
       image = 1;
       audio = 0;
@@ -27,7 +28,6 @@ lib.mkIf config.custom.enableNvidia {
           enable-prefix-caching = true;
           gpu-memory-utilization = 0.75;
           max-model-len = 16 * 1024;
-          max-num-seqs = 4;
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
@@ -45,7 +45,6 @@ lib.mkIf config.custom.enableNvidia {
           enable-prefix-caching = false;
           gpu-memory-utilization = 0.15;
           max-model-len = 4 * 1024;
-          max-num-seqs = 4;
           quantization = "fp8";
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
@@ -69,7 +68,6 @@ lib.mkIf config.custom.enableNvidia {
           gpu-memory-utilization = 0.75;
           max-model-len = 32 * 1024;
           max-num-batched-tokens = 2096;
-          max-num-seqs = 4;
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
           default-chat-template-kwargs = lib.toJSON {
@@ -86,7 +84,6 @@ lib.mkIf config.custom.enableNvidia {
           enable-prefix-caching = false;
           gpu-memory-utilization = 0.15;
           max-model-len = 4 * 1024;
-          max-num-seqs = 4;
           quantization = "fp8";
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
