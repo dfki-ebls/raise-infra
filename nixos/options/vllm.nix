@@ -140,6 +140,8 @@ let
         Notify = "healthy";
         HealthCmd = ''python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"'';
         HealthStartPeriod = "30m";
+        HealthInterval = "10s";
+        HealthTimeout = "5s";
         Exec = "${lib.escapeShellArg model.model} ${
           mkArgs (
             {
