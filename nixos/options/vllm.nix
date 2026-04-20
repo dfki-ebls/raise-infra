@@ -138,7 +138,7 @@ let
         ShmSize = model.shmSize;
         NoNewPrivileges = true;
         Notify = "healthy";
-        HealthCmd = ''python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"'';
+        HealthCmd = "curl --fail --silent --show-error http://localhost:8000/health";
         HealthStartPeriod = "30m";
         HealthInterval = "10s";
         HealthTimeout = "5s";
