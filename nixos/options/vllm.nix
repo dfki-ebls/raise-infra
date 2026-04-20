@@ -162,7 +162,9 @@ let
       unitConfig = {
         StartLimitBurst = 3;
         StartLimitIntervalSec = 3600;
-        After = lib.optional (cfg.startupOrdering && i > 0) "vllm-${(lib.elemAt models (i - 1)).name}.service";
+        After =
+          lib.optional (cfg.startupOrdering && i > 0)
+            "vllm-${(lib.elemAt models (i - 1)).name}.service";
       };
     };
 in
@@ -268,8 +270,7 @@ in
             (map (model: model.port))
             lib.unique
             lib.length
-          ]
-          == lib.length models;
+          ] == lib.length models;
         message = "custom.vllm.models: each model must use a unique `port`.";
       }
     ];
