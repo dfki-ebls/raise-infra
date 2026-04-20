@@ -328,6 +328,12 @@ in
         '';
       })
       (pkgs.writeShellApplication {
+        name = "vllm-podman";
+        text = ''
+          sudo machinectl shell ${cfg.user}@.host ${lib.getExe config.virtualisation.podman.package} "$@"
+        '';
+      })
+      (pkgs.writeShellApplication {
         name = "vllm-journalctl";
         text = ''
           if [ "$#" -lt 1 ]; then
