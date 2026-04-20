@@ -71,6 +71,7 @@ let
           description = ''
             Additional CLI flags forwarded to `vllm serve`.
             Rendered via `lib.cli.toCommandLineShellGNU`.
+            Set `kv-cache-memory-bytes` manually to avoid vLLM's startup memory profiling and make startup ordering unnecessary.
           '';
         };
         environment = lib.mkOption {
@@ -99,7 +100,12 @@ let
       };
     };
 
-  models = lib.filter (model: model.enable) (lib.attrValues cfg.models);
+  # Keep enabled models in ascending port order so optional startup chaining is explicit and deterministic.
+  models = lib.pipe cfg.models [
+    lib.attrValues
+    (lib.filter (model: model.enable))
+    (lib.sort (a: b: a.port < b.port))
+  ];
 
   cdiDevices =
     model:
@@ -118,7 +124,7 @@ let
       "${cfg.image}:${if model.tag != null then model.tag else cfg.tag}";
 
   mkContainer =
-    model:
+    i: model:
     lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = {
@@ -131,6 +137,9 @@ let
         Environment = lib.mapAttrsToList (k: v: "${k}=${v}") model.environment;
         ShmSize = model.shmSize;
         NoNewPrivileges = true;
+        Notify = "healthy";
+        HealthCmd = ''python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"'';
+        HealthStartPeriod = "30m";
         Exec = "${lib.escapeShellArg model.model} ${
           mkArgs (
             {
@@ -146,9 +155,12 @@ let
         TimeoutStartSec = 3600;
         RestartSec = 30;
       };
+      # Chain units via After= by ascending port so GPU-profiling phases don't overlap during startup.
+      # Notify=healthy makes each unit go "active" only once vLLM answers /health.
       unitConfig = {
         StartLimitBurst = 3;
         StartLimitIntervalSec = 3600;
+        After = lib.optional (cfg.startupOrdering && i > 0) "vllm-${(lib.elemAt models (i - 1)).name}.service";
       };
     };
 in
@@ -204,6 +216,16 @@ in
       '';
     };
 
+    startupOrdering = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Whether to chain enabled model services by ascending `port` during startup.
+        This reduces GPU-memory profiling races when models rely on `gpu-memory-utilization`.
+        Disable this when you set `extraArgs.kv-cache-memory-bytes` manually or otherwise avoid profiling-time contention.
+      '';
+    };
+
     models = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule modelOpts);
       default = { };
@@ -223,6 +245,7 @@ in
       description = ''
         Models to serve.
         Each entry produces one rootless quadlet container; the attribute name is the routing key.
+        Enabled entries are sorted by ascending `port`.
       '';
     };
   };
@@ -238,7 +261,13 @@ in
         message = "custom.vllm requires virtualisation.quadlet.enable.";
       }
       {
-        assertion = lib.length (lib.unique (map (model: model.port) models)) == lib.length models;
+        assertion =
+          lib.pipe models [
+            (map (model: model.port))
+            lib.unique
+            lib.length
+          ]
+          == lib.length models;
         message = "custom.vllm.models: each model must use a unique `port`.";
       }
     ];
@@ -278,7 +307,7 @@ in
       };
     };
 
-    virtualisation.quadlet.containers = lib.listToAttrs (map mkContainer models);
+    virtualisation.quadlet.containers = lib.listToAttrs (lib.imap0 mkContainer models);
 
     environment.systemPackages = [
       (pkgs.writeShellApplication {
