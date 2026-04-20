@@ -114,10 +114,8 @@ let
       throw "custom.vllm.models.${model.name}: `tag` and `digest` are mutually exclusive."
     else if model.digest != null then
       "${cfg.image}@${model.digest}"
-    else if model.tag != null then
-      "${cfg.image}:${model.tag}"
     else
-      throw "custom.vllm.models.${model.name}: either `tag` or `digest` must be set.";
+      "${cfg.image}:${if model.tag != null then model.tag else cfg.tag}";
 
   mkContainer =
     model:
@@ -168,6 +166,15 @@ in
       type = lib.types.str;
       default = "docker.io/vllm/vllm-openai";
       description = "Container image used for every model.";
+    };
+
+    tag = lib.mkOption {
+      type = lib.types.str;
+      example = "v0.11.0";
+      description = ''
+        Default tag of the container image used for models that do not set their own `tag` or `digest`.
+        Can be overridden per model via `custom.vllm.models.<name>.tag` or `.digest`.
+      '';
     };
 
     dataDir = lib.mkOption {
