@@ -82,7 +82,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "qwen3.5-0.8b" = {
-        enable = true;
+        enable = false;
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         extraArgs = instantArgs // {
