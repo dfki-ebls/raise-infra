@@ -60,8 +60,7 @@ lib.mkIf config.custom.enableNvidia {
         model = "google/gemma-4-E2B-it";
         port = 18003;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.2;
-          kv-cache-memory-bytes = "256M";
+          gpu-memory-utilization = 0.25;
           max-model-len = 4 * 1024;
           quantization = "fp8";
         };
