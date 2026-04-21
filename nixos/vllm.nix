@@ -56,11 +56,11 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "gemma4-2b" = {
-        enable = true;
+        enable = false;
         model = "google/gemma-4-E2B-it";
         port = 18003;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.25;
+          gpu-memory-utilization = 0.2;
           max-model-len = 4 * 1024;
           quantization = "fp8";
         };
@@ -82,7 +82,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "qwen3.5-0.8b" = {
-        enable = false;
+        enable = true;
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         extraArgs = instantArgs // {
