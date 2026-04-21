@@ -136,6 +136,7 @@ let
         EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
         Environment = lib.mapAttrsToList (k: v: "${k}=${v}") model.environment;
         ShmSize = model.shmSize;
+        Ulimit = "host";
         NoNewPrivileges = true;
         Notify = "healthy";
         HealthCmd = "curl --fail --silent --show-error http://localhost:8000/health";
@@ -156,6 +157,7 @@ let
       serviceConfig = {
         TimeoutStartSec = 3600;
         RestartSec = 30;
+        LimitNOFILE = cfg.openFilesLimit;
       };
       # Chain units via After= by ascending port so GPU-profiling phases don't overlap during startup.
       # Notify=healthy makes each unit go "active" only once vLLM answers /health.
@@ -227,6 +229,17 @@ in
         Whether to chain enabled model services by ascending `port` during startup.
         This reduces GPU-memory profiling races when models rely on `gpu-memory-utilization`.
         Disable this when you set `extraArgs.kv-cache-memory-bytes` manually or otherwise avoid profiling-time contention.
+      '';
+    };
+
+    openFilesLimit = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 1048576;
+      description = ''
+        File descriptor limit (`LimitNOFILE`) applied to every vLLM systemd unit.
+        Containers copy their ulimits from the host process via `--ulimit host`,
+        so this value flows through to the vLLM server inside each container.
+        Increase this if vLLM logs `accept: Too many open files` under concurrent load.
       '';
     };
 
