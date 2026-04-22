@@ -5,9 +5,21 @@ let
     kv-cache-dtype = "fp8";
     max-num-seqs = 2;
     limit-mm-per-prompt = lib.toJSON {
-      image = 1;
-      audio = 0;
-      video = 0;
+      image = {
+        count = 1;
+        width = 2048;
+        height = 2048;
+      };
+      video = {
+        count = 0;
+        num_frames = 32;
+        width = 512;
+        height = 512;
+      };
+      audio = {
+        count = 0;
+        length = 480000; # ~30s at 16kH
+      };
     };
   };
   instantArgs = commonArgs // {
@@ -41,10 +53,13 @@ lib.mkIf config.custom.enableNvidia {
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
+          mm-processor-kwargs = lib.toJSON {
+            max_soft_tokens = 1120;
+          };
         };
       };
       "gemma4-26b" = {
-        enable = true;
+        enable = false;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         port = 18002;
         extraArgs = thinkingArgs // {
@@ -53,6 +68,9 @@ lib.mkIf config.custom.enableNvidia {
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
+          mm-processor-kwargs = lib.toJSON {
+            max_soft_tokens = 1120;
+          };
         };
       };
       "gemma4-2b" = {
@@ -62,23 +80,28 @@ lib.mkIf config.custom.enableNvidia {
         extraArgs = instantArgs // {
           gpu-memory-utilization = 0.2;
           max-model-len = 4 * 1024;
-          quantization = "fp8";
+          mm-processor-kwargs = lib.toJSON {
+            max_soft_tokens = 1120;
+          };
         };
       };
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
-        enable = false;
+        enable = true;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18005;
-        environment.VLLM_FLASHINFER_MOE_BACKEND = "throughput";
-        # GDN/Mamba cache align mode requires block_size (2096) <= max-num-batched-tokens.
-        # https://huggingface.co/Qwen/Qwen3.5-35B-A3B-GPTQ-Int4/discussions/3
         extraArgs = thinkingArgs // {
           gpu-memory-utilization = 0.75;
           max-model-len = 32 * 1024;
-          max-num-batched-tokens = 2096;
+          moe-backend = "flashinfer_cutlass";
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
+          mm-processor-kwargs = lib.toJSON {
+            images_kwargs.size = {
+              longest_edge = 2048 * 2048;
+              shortest_edge = 4096;
+            };
+          };
         };
       };
       "qwen3.5-0.8b" = {
@@ -88,7 +111,12 @@ lib.mkIf config.custom.enableNvidia {
         extraArgs = instantArgs // {
           gpu-memory-utilization = 0.15;
           max-model-len = 4 * 1024;
-          quantization = "fp8";
+          mm-processor-kwargs = lib.toJSON {
+            images_kwargs.size = {
+              longest_edge = 2048 * 2048;
+              shortest_edge = 4096;
+            };
+          };
         };
       };
     };
