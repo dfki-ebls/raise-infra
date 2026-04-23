@@ -12,13 +12,13 @@ let
       };
       video = {
         count = 0;
-        num_frames = 32;
-        width = 512;
-        height = 512;
+        # num_frames = 32;
+        # width = 512;
+        # height = 512;
       };
       audio = {
         count = 0;
-        length = 480000; # ~30s at 16kH
+        # length = 480000; # ~30s at 16kH
       };
     };
   };
@@ -79,7 +79,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18003;
         extraArgs = instantArgs // {
           gpu-memory-utilization = 0.2;
-          max-model-len = 4 * 1024;
+          max-model-len = 2 * 1024;
           mm-processor-kwargs = lib.toJSON {
             max_soft_tokens = 1120;
           };
@@ -90,9 +90,12 @@ lib.mkIf config.custom.enableNvidia {
         enable = true;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18005;
+        # Hybrid Mamba+attention: vLLM aligns attention block size to the
+        # Mamba page size (2096 tokens), which must be <= max-num-batched-tokens.
         extraArgs = thinkingArgs // {
           gpu-memory-utilization = 0.75;
-          max-model-len = 32 * 1024;
+          max-model-len = 16 * 1024;
+          max-num-batched-tokens = 4 * 1024;
           moe-backend = "flashinfer_cutlass";
           reasoning-parser = "qwen3";
           tool-call-parser = "qwen3_coder";
@@ -109,8 +112,8 @@ lib.mkIf config.custom.enableNvidia {
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.15;
-          max-model-len = 4 * 1024;
+          gpu-memory-utilization = 0.20;
+          max-model-len = 2 * 1024;
           mm-processor-kwargs = lib.toJSON {
             images_kwargs.size = {
               longest_edge = 2048 * 2048;
