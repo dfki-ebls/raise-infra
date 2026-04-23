@@ -24,6 +24,7 @@ let
     };
   };
   instantArgs = commonArgs // {
+    kv-cache-memory-bytes = "512M";
     default-chat-template-kwargs = lib.toJSON {
       enable_thinking = false;
     };
@@ -31,6 +32,7 @@ let
   thinkingArgs = commonArgs // {
     enable-auto-tool-choice = true;
     enable-prefix-caching = true;
+    kv-cache-memory-bytes = "4G";
     default-chat-template-kwargs = lib.toJSON {
       enable_thinking = true;
     };

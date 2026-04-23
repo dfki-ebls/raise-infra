@@ -71,7 +71,6 @@ let
           description = ''
             Additional CLI flags forwarded to `vllm serve`.
             Rendered via `lib.cli.toCommandLineShellGNU`.
-            Set `kv-cache-memory-bytes` manually to avoid vLLM's startup memory profiling and make startup ordering unnecessary.
           '';
         };
         environment = lib.mkOption {
@@ -228,7 +227,6 @@ in
       description = ''
         Whether to chain enabled model services by ascending `port` during startup.
         This reduces GPU-memory profiling races when models rely on `gpu-memory-utilization`.
-        Disable this when you set `extraArgs.kv-cache-memory-bytes` manually or otherwise avoid profiling-time contention.
       '';
     };
 
