@@ -94,7 +94,7 @@ lib.mkIf config.custom.enableNvidia {
         # Hybrid Mamba+attention: vLLM aligns attention block size to the
         # Mamba page size (2096 tokens), which must be <= max-num-batched-tokens.
         extraArgs = thinkingArgs // {
-          gpu-memory-utilization = 0.75;
+          gpu-memory-utilization = 0.7;
           max-model-len = 16 * 1024;
           max-num-batched-tokens = 4 * 1024;
           moe-backend = "flashinfer_cutlass";
@@ -113,7 +113,7 @@ lib.mkIf config.custom.enableNvidia {
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.15;
+          gpu-memory-utilization = 0.1;
           max-model-len = 2 * 1024;
           mm-processor-kwargs = lib.toJSON {
             images_kwargs.size = {
