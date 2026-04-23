@@ -32,7 +32,7 @@ let
   thinkingArgs = commonArgs // {
     enable-auto-tool-choice = true;
     enable-prefix-caching = true;
-    kv-cache-memory-bytes = "4G";
+    kv-cache-memory-bytes = "2G";
     default-chat-template-kwargs = lib.toJSON {
       enable_thinking = true;
     };
@@ -51,8 +51,8 @@ lib.mkIf config.custom.enableNvidia {
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
         port = 18001;
         extraArgs = thinkingArgs // {
-          gpu-memory-utilization = 0.75;
-          max-model-len = 16 * 1024;
+          gpu-memory-utilization = 0.7;
+          max-model-len = "16K";
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
@@ -62,12 +62,12 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       "gemma4-26b" = {
-        enable = false;
+        enable = true;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         port = 18002;
         extraArgs = thinkingArgs // {
           gpu-memory-utilization = 0.7;
-          max-model-len = 16 * 1024;
+          max-model-len = "16K";
           reasoning-parser = "gemma4";
           tool-call-parser = "gemma4";
           chat-template = "/vllm-workspace/examples/tool_chat_template_gemma4.jinja";
@@ -81,8 +81,8 @@ lib.mkIf config.custom.enableNvidia {
         model = "google/gemma-4-E2B-it";
         port = 18003;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.2;
-          max-model-len = 2 * 1024;
+          gpu-memory-utilization = 0.1;
+          max-model-len = "2K";
           mm-processor-kwargs = lib.toJSON {
             max_soft_tokens = 1120;
           };
@@ -90,14 +90,14 @@ lib.mkIf config.custom.enableNvidia {
       };
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       "qwen3.6-35b" = {
-        enable = true;
+        enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18005;
         # Hybrid Mamba+attention: vLLM aligns attention block size to the
         # Mamba page size (2096 tokens), which must be <= max-num-batched-tokens.
         extraArgs = thinkingArgs // {
           gpu-memory-utilization = 0.7;
-          max-model-len = 16 * 1024;
+          max-model-len = "16K";
           max-num-batched-tokens = 4 * 1024;
           moe-backend = "flashinfer_cutlass";
           reasoning-parser = "qwen3";
@@ -116,7 +116,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18006;
         extraArgs = instantArgs // {
           gpu-memory-utilization = 0.1;
-          max-model-len = 2 * 1024;
+          max-model-len = "2K";
           mm-processor-kwargs = lib.toJSON {
             images_kwargs.size = {
               longest_edge = imgSize * imgSize;
