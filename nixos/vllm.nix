@@ -1,5 +1,6 @@
 { lib, config, ... }:
 let
+  imgSize = 1024;
   commonArgs = {
     async-scheduling = true;
     kv-cache-dtype = "fp8";
@@ -7,8 +8,8 @@ let
     limit-mm-per-prompt = lib.toJSON {
       image = {
         count = 1;
-        width = 2048;
-        height = 2048;
+        width = imgSize;
+        height = imgSize;
       };
       video = {
         count = 0;
@@ -101,7 +102,7 @@ lib.mkIf config.custom.enableNvidia {
           tool-call-parser = "qwen3_coder";
           mm-processor-kwargs = lib.toJSON {
             images_kwargs.size = {
-              longest_edge = 2048 * 2048;
+              longest_edge = imgSize * imgSize;
               shortest_edge = 4096;
             };
           };
@@ -112,11 +113,11 @@ lib.mkIf config.custom.enableNvidia {
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         extraArgs = instantArgs // {
-          gpu-memory-utilization = 0.20;
+          gpu-memory-utilization = 0.15;
           max-model-len = 2 * 1024;
           mm-processor-kwargs = lib.toJSON {
             images_kwargs.size = {
-              longest_edge = 2048 * 2048;
+              longest_edge = imgSize * imgSize;
               shortest_edge = 4096;
             };
           };
