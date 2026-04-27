@@ -41,7 +41,7 @@ in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
     enable = true;
-    tag = "v0.19.1-cu130";
+    tag = "v0.20.0-cu130";
     environmentFile = "/etc/vllm/vllm.env";
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
