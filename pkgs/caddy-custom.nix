@@ -2,7 +2,7 @@
 caddy.withPlugins {
   plugins = [
     # https://github.com/fabriziosalmi/caddy-waf/releases
-    "github.com/fabriziosalmi/caddy-waf@v0.3.0"
+    "github.com/fabriziosalmi/caddy-waf@v0.3.2"
   ];
-  hash = "sha256-cBAfvD2hbvsv8STeoVkmETemYAdO/uMx/fT4bv5T7h4=";
+  hash = "sha256-67EyPwLFPA1bi2D6ke8tvf6yckjas02pd+O1GNoLLVw=";
 }
