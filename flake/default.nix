@@ -68,6 +68,7 @@ in
           self.overlays.default
         ];
       };
+      checks = pkgs.custom;
       apps.default.program = config.packages.vm;
       packages = {
         default = config.packages.image;
