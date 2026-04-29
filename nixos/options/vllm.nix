@@ -81,7 +81,17 @@ let
           };
           description = ''
             Additional environment variables set on the container.
-            Merged with `custom.vllm.environmentFile`; these entries take precedence.
+            Merged with `custom.vllm.environment`; these entries take precedence.
+          '';
+        };
+        environmentFile = lib.mkOption {
+          type = lib.types.nullOr lib.types.path;
+          default = null;
+          example = "/etc/vllm/qwen.env";
+          description = ''
+            File in `KEY=VALUE` format forwarded to this model's container via `--env-file`.
+            Loaded after `custom.vllm.environmentFile`, so its entries override global ones.
+            Must be readable by the `vllm` user.
           '';
         };
         shmSize = lib.mkOption {
@@ -132,8 +142,10 @@ let
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
-        EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
-        Environment = lib.mapAttrsToList (k: v: "${k}=${v}") model.environment;
+        EnvironmentFile =
+          lib.optional (cfg.environmentFile != null) cfg.environmentFile
+          ++ lib.optional (model.environmentFile != null) model.environmentFile;
+        Environment = cfg.environment // model.environment;
         ShmSize = model.shmSize;
         Ulimit = "host";
         NoNewPrivileges = true;
@@ -209,6 +221,18 @@ in
       description = "Host directory bind-mounted as the Hugging Face cache.";
     };
 
+    environment = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      example = {
+        VLLM_FLASHINFER_MOE_BACKEND = "throughput";
+      };
+      description = ''
+        Environment variables set on every container.
+        Merged with `custom.vllm.models.<name>.environment`; per-model entries take precedence.
+      '';
+    };
+
     environmentFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -217,6 +241,7 @@ in
         File in `KEY=VALUE` format forwarded to every container via `--env-file`.
         Use for secrets managed by sops-nix/agenix, e.g. a file containing
         `HF_TOKEN=<token>` to access gated Hugging Face repositories.
+        Loaded before `custom.vllm.models.<name>.environmentFile`, so per-model files override these entries.
         Must be readable by the `vllm` user.
       '';
     };
