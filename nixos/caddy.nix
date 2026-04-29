@@ -5,8 +5,16 @@
   ...
 }:
 let
-  mkHost = domain: if config.custom.enableCertificates then domain else "http://${domain}";
+  mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
+
+  # Caddyfile snippet that 403s any request whose source IP isn't in `sources` (CIDRs); empty list = no restriction.
+  mkAllowedSources =
+    sources:
+    lib.optionalString (sources != [ ]) ''
+      @blocked not remote_ip ${toString sources}
+      respond @blocked 403
+    '';
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
 
@@ -97,6 +105,7 @@ in
     inherit
       mkHost
       mkSubHost
+      mkAllowedSources
       mkWaf
       defaultIncludeFiles
       defaultExcludeRules
