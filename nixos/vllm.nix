@@ -43,6 +43,9 @@ lib.mkIf config.custom.enableNvidia {
     enable = true;
     tag = "v0.20.0-cu130";
     environmentFile = "/etc/vllm/vllm.env";
+    environment = {
+      VLLM_USE_V2_MODEL_RUNNER = "1";
+    };
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       # https://docs.vllm.ai/projects/recipes/en/latest/Google/Gemma4.html
