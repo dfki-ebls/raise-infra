@@ -6,18 +6,20 @@
   ...
 }:
 let
-  protocol = if config.custom.enableCertificates then "https" else "http";
+  # CIDRs allowed to reach Dex through Caddy; empty means unrestricted.
+  # E.g. [ "127.0.0.1/32" "::1/128" ] for localhost-only, [ "10.0.0.0/8" ] for an internal VPN.
+  allowedSources = [ ];
 in
 {
   services.dex = {
     enable = false;
     environmentFile = "/etc/dex/dex.env";
     settings = {
-      issuer = "${protocol}://dex.${config.custom.rootDomain}";
+      issuer = caddyHelpers.mkHost "dex.${config.custom.rootDomain}";
       web = {
         http = "127.0.0.1:5556";
         allowedOrigins = [
-          "${protocol}://app.${config.custom.rootDomain}"
+          (caddyHelpers.mkSubHost "app")
         ];
       };
       storage = {
@@ -55,7 +57,7 @@ in
           name = "Web Application";
           public = true;
           redirectURIs = [
-            "${protocol}://app.${config.custom.rootDomain}/auth/callback"
+            "${caddyHelpers.mkSubHost "app"}/auth/callback"
           ];
         }
       ];
@@ -121,8 +123,9 @@ in
   };
 
   services.caddy.virtualHosts.dex = lib.mkIf config.services.dex.enable {
-    hostName = caddyHelpers.mkSubHost "dex";
+    hostName = config.services.dex.settings.issuer;
     extraConfig = ''
+      ${caddyHelpers.mkAllowedSources allowedSources}
       ${caddyHelpers.mkWaf { }}
       reverse_proxy ${config.services.dex.settings.web.http}
     '';
