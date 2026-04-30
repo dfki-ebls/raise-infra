@@ -18,14 +18,6 @@ let
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
 
-  # https://github.com/fabriziosalmi/caddy-waf/releases
-  caddy-waf-src = pkgs.fetchFromGitHub {
-    owner = "fabriziosalmi";
-    repo = "caddy-waf";
-    tag = "v0.3.0";
-    hash = "sha256-scav5J/38wbrdN+oD587qUFaC1EovXeajWvs+QNcK9s=";
-  };
-
   defaultIncludeFiles = [
     "insecure-deserialization.json" # 5 rules — Java/PHP/Python/YAML deserialization
     "lfi.json" # 19 rules — path traversal, sensitive file access
@@ -56,7 +48,7 @@ let
       excludeRules ? defaultExcludeRules,
     }:
     let
-      filePaths = map (f: "${caddy-waf-src}/rules/${f}") includeFiles;
+      filePaths = map (f: "${pkgs.caddy-waf}/rules/${f}") includeFiles;
       excludeRuleIds = builtins.toJSON excludeRules;
     in
     pkgs.runCommand "waf-rules.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
