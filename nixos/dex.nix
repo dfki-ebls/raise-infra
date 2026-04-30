@@ -15,7 +15,7 @@ let
 in
 {
   services.dex = {
-    enable = false;
+    enable = true;
     environmentFile = "/etc/dex/dex.env";
     settings = {
       issuer = caddyHelpers.mkHost "dex.${config.custom.rootDomain}";
