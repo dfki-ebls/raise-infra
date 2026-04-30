@@ -18,9 +18,7 @@
       trusted-users = [ "@wheel" ];
       experimental-features = [
         "flakes"
-        "impure-derivations"
         "nix-command"
-        "no-url-literals"
         "pipe-operators"
       ];
       commit-lock-file-summary = "chore(deps): update flake.lock";
