@@ -69,7 +69,6 @@ let
         cleanupInterval = "5m";
       },
       anomalyThreshold ? 10,
-      maxRequestBodySize ? "10MB",
       logSeverity ? "info",
       extraConfig ? "",
     }:
@@ -78,8 +77,6 @@ let
         rule_file ${mkRulesFile { inherit includeFiles excludeRules; }}
         anomaly_threshold ${toString anomalyThreshold}
         whitelist_countries ${countryDb} ${toString countries}
-        geoip_fail_open
-        max_request_body_size ${maxRequestBodySize}
         log_severity ${logSeverity}
         log_json
         redact_sensitive_data
