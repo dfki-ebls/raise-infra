@@ -8,11 +8,14 @@
 let
   # CIDRs allowed to reach Dex through Caddy; empty means unrestricted.
   # E.g. [ "127.0.0.1/32" "::1/128" ] for localhost-only, [ "10.0.0.0/8" ] for an internal VPN.
-  allowedSources = [ ];
+  allowedSources = [
+    "127.0.0.1/32"
+    "::1/128"
+  ];
 in
 {
   services.dex = {
-    enable = false;
+    enable = true;
     environmentFile = "/etc/dex/dex.env";
     settings = {
       issuer = caddyHelpers.mkHost "dex.${config.custom.rootDomain}";
