@@ -18,51 +18,44 @@ let
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
 
-  defaultIncludeFiles = [
-    "insecure-deserialization.json" # 5 rules — Java/PHP/Python/YAML deserialization
-    "lfi.json" # 19 rules — path traversal, sensitive file access
-    "rce.json" # 18 rules — command injection, shell execution
-    "rfi.json" # 17 rules — remote file inclusion
-    "smuggling.json" # 6 rules — HTTP request smuggling
-    "sql-injection.json" # 23 rules — SQLi patterns
-    "ssrf.json" # 8 rules — server-side request forgery
-    "ssti.json" # 14 rules — template injection
-    "vulnerability.json" # 17 rules — mixed XSS/SQLi/RCE/LFI/Log4j signatures
-    "xss.json" # 21 rules — cross-site scripting
-    "xxe.json" # 6 rules — XML external entity injection
-  ];
-  # Not included: spiderlabs.json (600+ OWASP CRS, log-only score 1),
-  # authentication.json, csfr.json, data-validation.json, graphql.json, hpp.json
-
-  defaultExcludeRules = [
-    "idor-attacks" # logs numeric IDs, extremely noisy for REST APIs
-    "open-redirect-attempt" # breaks OAuth redirect URIs
-    "rce-commands-expanded" # blocks common words (curl, echo, python) in ARGS/HEADERS
-    "rfi-http-url" # blocks any HTTP URL in params, breaks OAuth flows
-    "unusual-paths" # blocks /admin, /login — too broad
+  # Curated allowlist of high-confidence rules from caddy-waf's upstream rules.json.
+  # The per-category community rule files (rules/*.json) are too noisy for this
+  # deployment and several have outright bugs (e.g. REQUEST_COOKIES is not a
+  # valid extraction target in v0.3.3). The author's own rules.json is denser
+  # and tighter, but contains its own broken rules — most notably four
+  # browser-integrity rules that target invented pseudo-headers and would 403
+  # every request. We keep only the rules that are tight, useful, and add
+  # genuine defense-in-depth on top of the country whitelist + rate limit.
+  defaultIncludeRules = [
+    "block-scanners" # nikto/sqlmap/nmap/burpsuite/etc. User-Agents
+    "crlf-injection-headers" # %0d%0a in headers
+    "header-attacks-consolidated" # SQLi/XSS/path-traversal payloads in headers
+    "http-request-smuggling" # Transfer-Encoding/Content-Length games
+    "insecure-deserialization-java" # rO0AB / aced0005 magic bytes
+    "jwt-tampering" # forged JWTs in Authorization/Cookie
+    "path-traversal" # ../, %2e%2e, etc/passwd, /proc/self/environ
+    "sensitive-files" # /.git/, /.env, /.htaccess, server-status, *.bak
+    "sensitive-files-expanded" # narrower companion to sensitive-files
   ];
 
   mkRulesFile =
     {
-      includeFiles ? defaultIncludeFiles,
-      excludeRules ? defaultExcludeRules,
+      includeRules ? defaultIncludeRules,
     }:
     let
-      filePaths = map (f: "${pkgs.caddy-waf}/rules/${f}") includeFiles;
-      excludeRuleIds = builtins.toJSON excludeRules;
+      includeRuleIds = builtins.toJSON includeRules;
     in
     pkgs.runCommand "waf-rules.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
-      ${lib.getExe pkgs.jq} -s \
-        --argjson exclude '${excludeRuleIds}' \
-        '[.[][] | select(.id as $id | $exclude | index($id) | not)]' \
-        ${lib.concatStringsSep " " filePaths} > $out
+      ${lib.getExe pkgs.jq} \
+        --argjson include '${includeRuleIds}' \
+        '[.[] | select(.id as $id | $include | index($id))]' \
+        ${pkgs.caddy-waf}/rules.json > $out
     '';
 
   mkWaf =
     {
       countries ? [ "DE" ],
-      includeFiles ? defaultIncludeFiles,
-      excludeRules ? defaultExcludeRules,
+      includeRules ? defaultIncludeRules,
       rateLimit ? {
         requests = 100;
         window = "1m";
@@ -74,12 +67,11 @@ let
     }:
     lib.optionalString config.custom.enableWaf ''
       waf {
-        rule_file ${mkRulesFile { inherit includeFiles excludeRules; }}
+        rule_file ${mkRulesFile { inherit includeRules; }}
         anomaly_threshold ${toString anomalyThreshold}
         whitelist_countries ${countryDb} ${toString countries}
         log_path ${config.services.caddy.logDir}/waf.json
         log_severity ${logSeverity}
-        log_json
         redact_sensitive_data
         rate_limit {
           requests ${toString rateLimit.requests}
@@ -97,8 +89,7 @@ in
       mkSubHost
       mkAllowedSources
       mkWaf
-      defaultIncludeFiles
-      defaultExcludeRules
+      defaultIncludeRules
       ;
   };
 
