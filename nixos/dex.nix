@@ -5,14 +5,6 @@
   caddyHelpers,
   ...
 }:
-let
-  # CIDRs allowed to reach Dex through Caddy; empty means unrestricted.
-  # E.g. [ "127.0.0.1/32" "::1/128" ] for localhost-only, [ "10.0.0.0/8" ] for an internal VPN.
-  allowedSources = [
-    "127.0.0.1/32"
-    "::1/128"
-  ];
-in
 {
   services.dex = {
     enable = true;
@@ -152,7 +144,6 @@ in
   services.caddy.virtualHosts.dex = lib.mkIf config.services.dex.enable {
     hostName = config.services.dex.settings.issuer;
     extraConfig = ''
-      ${caddyHelpers.mkAllowedSources allowedSources}
       ${caddyHelpers.mkWaf { }}
       reverse_proxy ${config.services.dex.settings.web.http}
     '';
