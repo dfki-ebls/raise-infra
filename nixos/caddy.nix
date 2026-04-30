@@ -38,16 +38,11 @@ let
     "sensitive-files-expanded" # narrower companion to sensitive-files
   ];
 
-  mkRulesFile =
-    {
-      includeRules ? defaultIncludeRules,
-    }:
-    let
-      includeRuleIds = builtins.toJSON includeRules;
-    in
-    pkgs.runCommand "waf-rules.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
+  mkRuleFile =
+    includeRules:
+    pkgs.runCommand "waf-rules.json" { } ''
       ${lib.getExe pkgs.jq} \
-        --argjson include '${includeRuleIds}' \
+        --argjson include '${lib.toJSON includeRules}' \
         '[.[] | select(.id as $id | $include | index($id))]' \
         ${pkgs.caddy-waf}/rules.json > $out
     '';
@@ -67,7 +62,7 @@ let
     }:
     lib.optionalString config.custom.enableWaf ''
       waf {
-        rule_file ${mkRulesFile { inherit includeRules; }}
+        rule_file ${mkRuleFile includeRules}
         anomaly_threshold ${toString anomalyThreshold}
         whitelist_countries ${countryDb} ${toString countries}
         log_path ${config.services.caddy.logDir}/waf.json
