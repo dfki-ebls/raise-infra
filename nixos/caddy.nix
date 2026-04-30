@@ -13,7 +13,7 @@ let
     sources:
     lib.optionalString (sources != [ ]) ''
       @blocked not remote_ip ${toString sources}
-      respond @blocked 403
+      respond @blocked "Access denied: Your IP is not allowed to access this resource." 403
     '';
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
