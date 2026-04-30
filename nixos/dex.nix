@@ -80,7 +80,7 @@
       set -euo pipefail
       umask 077
 
-      install -d -m 750 /etc/dex
+      install -d -m 755 /etc/dex
 
       touch /etc/dex/config.yaml
 
