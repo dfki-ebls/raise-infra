@@ -98,7 +98,14 @@ in
       fi
 
       password=$(${lib.getExe' pkgs.openssl "openssl"} rand -base64 24)
-      hash=$(echo -n "$password" | ${lib.getExe pkgs.mkpasswd} --method bcrypt --rounds 14 --stdin)
+      # mkpasswd (whois 5.6.6) requires `=` for long options; with spaces it
+      # silently ignores the value, prints the method list, and exits 0.
+      hash=$(echo -n "$password" | ${lib.getExe pkgs.mkpasswd} --method=bcrypt --rounds=14 --stdin)
+
+      if [ "''${#hash}" -ne 60 ]; then
+        echo "ERROR: bcrypt hash has unexpected length ''${#hash} (expected 60)" >&2
+        exit 1
+      fi
 
       echo "DEX_ADMIN_HASH=$hash" > /etc/dex/dex.env
 
