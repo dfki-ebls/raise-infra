@@ -77,6 +77,7 @@ let
         rule_file ${mkRulesFile { inherit includeFiles excludeRules; }}
         anomaly_threshold ${toString anomalyThreshold}
         whitelist_countries ${countryDb} ${toString countries}
+        log_path ${config.services.caddy.logDir}/waf.json
         log_severity ${logSeverity}
         log_json
         redact_sensitive_data
