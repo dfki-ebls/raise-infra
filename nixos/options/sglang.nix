@@ -191,9 +191,8 @@ let
         # and `sglang.cli.main` lacks a `__main__` guard, so `launch_server`
         # remains the only working invocation here.
         Entrypoint = lib.toJSON [
-          "python3"
-          "-m"
-          "sglang.launch_server"
+          "sglang"
+          "serve"
         ];
         Exec = modelExec model;
       };
@@ -301,10 +300,10 @@ in
 
     tag = lib.mkOption {
       type = lib.types.str;
-      example = "latest-runtime";
+      example = "latest";
       description = ''
         Default tag of the SGLang image used for models that do not set their own `tag` or `digest`.
-        Prefer the `*-runtime` variants for production deployments.
+        Use the `*-runtime` variants for production deployments.
       '';
     };
 

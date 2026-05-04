@@ -54,7 +54,7 @@ lib.mkIf config.custom.enableNvidia {
     environmentFile = "/etc/sglang/sglang.env";
     # https://hub.docker.com/r/lmsysorg/sglang/tags
     # https://github.com/sgl-project/sglang/releases/latest
-    tag = "v0.5.10.post1-cu130-runtime";
+    tag = "v0.5.10.post1-cu130";
 
     modelSettings = {
       max-running-requests = 2;
@@ -94,16 +94,19 @@ lib.mkIf config.custom.enableNvidia {
     models = {
       "gemma4-31b" = {
         enable = false;
+        tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-26b" = {
         enable = true;
+        tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-2b" = {
         enable = false;
+        tag = "cu13-gemma4";
         model = "google/gemma-4-E2B-it";
         settings = instantSettings // gemmaSettings;
       };
