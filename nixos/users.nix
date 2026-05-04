@@ -1,10 +1,11 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 let
   admin = config.custom.admin;
 in
 {
   users = {
     mutableUsers = false;
+    defaultUserShell = pkgs.fish;
     users = {
       ${admin.login} = {
         description = admin.name;

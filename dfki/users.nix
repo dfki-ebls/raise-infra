@@ -1,7 +1,6 @@
-{ config, pkgs, ... }:
+{ config, ... }:
 {
   users.users.${config.custom.admin.login} = {
-    shell = pkgs.fish;
     # no password set, authentication only via rssh
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFT0P6ZLB5QOtEdpPHCF0frL3WJEQQGEpMf2r010gYH3 mlenz@macbook"
