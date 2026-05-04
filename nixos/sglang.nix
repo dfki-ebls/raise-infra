@@ -60,9 +60,10 @@ lib.mkIf config.custom.enableNvidia {
       max-running-requests = 2;
       cuda-graph-max-bs = 2;
       log-requests = true;
-      # FP8 KV cache silently regresses accuracy when the checkpoint lacks calibrated
-      # k_scale/v_scale; FP4 E2M1 auto-scales and uses half the memory.
-      kv-cache-dtype = "fp4_e2m1";
+      # fp4_e2m1 would halve KV memory but PyTorch lacks fill_cuda for it (buffer alloc
+      # crashes); fp8_e4m3 needs calibrated k_scale/v_scale, fp8_e5m2's wider exponent
+      # tolerates uncalibrated checkpoints.
+      kv-cache-dtype = "fp8_e5m2";
       # KV4 MHA rejects flashinfer, and trtllm_mha prefill is SM100-only (datacenter
       # Blackwell). On SM120 workstation Blackwell, triton is the remaining pick that
       # preserves radix cache for the Qwen3.6 hybrid (mamba) architecture.
