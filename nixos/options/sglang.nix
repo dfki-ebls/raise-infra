@@ -234,8 +234,9 @@ let
   # become separate argv entries; `toCommandLineShell` would shell-escape them into one.
   gatewayExec =
     mkArgs (gatewayBaseSettings // cfg.gateway.settings)
-    + lib.optionalString (models != [ ])
-      " ${lib.escapeShellArgs ([ "--worker-urls" ] ++ map workerUrl models)}";
+    +
+      lib.optionalString (models != [ ])
+        " ${lib.escapeShellArgs ([ "--worker-urls" ] ++ map workerUrl models)}";
 
   gatewayName = containerName "gateway";
   workerServices = map (m: "${containerName m.name}.service") models;
