@@ -59,7 +59,6 @@ lib.mkIf config.custom.enableNvidia {
     modelSettings = {
       max-running-requests = 2;
       cuda-graph-max-bs = 2;
-      log-requests = true;
       # fp4_e2m1 would halve KV memory but PyTorch lacks fill_cuda for it (buffer alloc
       # crashes); fp8_e4m3 needs calibrated k_scale/v_scale, fp8_e5m2's wider exponent
       # tolerates uncalibrated checkpoints.
