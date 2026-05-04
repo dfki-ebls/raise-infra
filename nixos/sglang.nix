@@ -98,7 +98,7 @@ lib.mkIf config.custom.enableNvidia {
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-26b" = {
-        enable = false;
+        enable = true;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         settings = thinkingSettings // gemmaSettings;
       };
@@ -108,7 +108,7 @@ lib.mkIf config.custom.enableNvidia {
         settings = instantSettings // gemmaSettings;
       };
       "qwen3-6-35b" = {
-        enable = true;
+        enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         settings = thinkingSettings // qwenSettings;
       };
