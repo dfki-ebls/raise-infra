@@ -51,7 +51,7 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   custom.sglang = {
-    enable = true;
+    enable = false;
     environmentFile = "/etc/sglang/sglang.env";
     # https://hub.docker.com/r/lmsysorg/sglang/tags
     # https://github.com/sgl-project/sglang/releases/latest

@@ -48,8 +48,10 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
-    enable = false;
-    tag = "v0.20.0-cu130";
+    enable = true;
+    # https://hub.docker.com/r/vllm/vllm-openai/tags
+    # https://github.com/vllm-project/vllm/releases/latest
+    tag = "v0.20.1-cu130";
     environmentFile = "/etc/vllm/vllm.env";
     environment = {
       VLLM_USE_V2_MODEL_RUNNER = "1";
