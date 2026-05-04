@@ -13,6 +13,8 @@ let
     chunked-prefill-size = 512;
     quantization = "fp8";
     disable-cuda-graph = true;
+    # One-shot traffic; don't evict prefixes held by agentic workers.
+    disable-radix-cache = true;
   };
 
   # Larger thinking/tool-using profile sized for a 32 GB card. HiCache (hierarchical
