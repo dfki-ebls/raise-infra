@@ -76,7 +76,7 @@ let
             cuda-graph-max-bs = 4;
           };
           description = ''
-            Additional CLI flags forwarded to `python3 -m sglang.launch_server`.
+            Additional CLI flags forwarded to `sglang serve`.
             Rendered via `lib.cli.toCommandLineShellGNU`; entries with `false` or `null` are omitted.
             Merged with `custom.sglang.modelSettings`; these entries take precedence.
           '';
@@ -187,9 +187,8 @@ let
         HealthTimeout = "5s";
         # `lmsysorg/sglang`'s default entrypoint isn't the launcher we want.
         Entrypoint = lib.toJSON [
-          "python3"
-          "-m"
-          "sglang.launch_server"
+          "sglang"
+          "serve"
         ];
         Exec = modelExec model;
       };
@@ -358,7 +357,7 @@ in
         max-running-requests = 2;
       };
       description = ''
-        CLI flags forwarded to `python3 -m sglang.launch_server` for every worker.
+        CLI flags forwarded to `sglang serve` for every worker.
         Rendered via `lib.cli.toCommandLineShellGNU`; entries with `false` or `null` are omitted.
         Merged with `custom.sglang.models.<name>.settings`; per-model entries take precedence.
       '';
