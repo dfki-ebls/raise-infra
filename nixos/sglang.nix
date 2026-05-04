@@ -15,14 +15,14 @@ let
     disable-cuda-graph = true;
   };
 
-  # Larger thinking/tool-using profile sized for a 32 GB card. HiCache offloads
-  # less-hot prefixes to host RAM, growing the effective prefix cache without
-  # inflating GPU usage.
+  # Larger thinking/tool-using profile sized for a 32 GB card. HiCache (hierarchical
+  # cache) is unavailable: it requires pure MHA or MLA, but Gemma4 uses sliding window
+  # attention and Qwen3.6 is a mamba hybrid.
   thinkingSettings = {
     mem-fraction-static = 0.7;
     context-length = 16 * 1024;
     chunked-prefill-size = 1024;
-    enable-hierarchical-cache = true;
+    enable-hierarchical-cache = false;
   };
 
   # https://docs.sglang.io/cookbook/autoregressive/Google/Gemma4
