@@ -1,4 +1,7 @@
 { lib, config, ... }:
+# Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
+# Workstation Blackwell is SM120 (GB20x), NOT SM100 (GB100/GB200 datacenter Blackwell);
+# kernels gated on SM100 — most notably the trtllm_mha prefill path — are unavailable here.
 let
   imgSize = 1024;
 
@@ -35,7 +38,8 @@ let
   qwenSettings = {
     reasoning-parser = "qwen3";
     tool-call-parser = "qwen3_coder";
-    mm-attention-backend = "fa3";
+    # fa3 (Hopper) and fa4 (SM100) don't apply on SM120; triton_attn is the fallback.
+    mm-attention-backend = "triton_attn";
     mm-process-config = lib.toJSON {
       image.size = {
         longest_edge = imgSize * imgSize;
@@ -59,9 +63,10 @@ lib.mkIf config.custom.enableNvidia {
       # FP8 KV cache silently regresses accuracy when the checkpoint lacks calibrated
       # k_scale/v_scale; FP4 E2M1 auto-scales and uses half the memory.
       kv-cache-dtype = "fp4_e2m1";
-      # KV4 MHA rejects flashinfer; trtllm_mha is the Blackwell-optimized choice
-      # from the allowed set (triton, torch_native, flex_attention, trtllm_mha).
-      attention-backend = "trtllm_mha";
+      # KV4 MHA rejects flashinfer, and trtllm_mha prefill is SM100-only (datacenter
+      # Blackwell). On SM120 workstation Blackwell, triton is the remaining pick that
+      # preserves radix cache for the Qwen3.6 hybrid (mamba) architecture.
+      attention-backend = "triton";
       # SGLang only clamps counts, not resolution (sgl-project/sglang#9164); resolution
       # is bounded per-model via `mm-process-config`.
       limit-mm-data-per-request = lib.toJSON {
