@@ -69,7 +69,7 @@ let
           default = "all";
           description = "GPU device(s) exposed to the container via the NVIDIA CDI provider.";
         };
-        extraArgs = lib.mkOption {
+        settings = lib.mkOption {
           type = lib.types.attrsOf lib.types.anything;
           default = { };
           example = {
@@ -79,6 +79,7 @@ let
           description = ''
             Additional CLI flags forwarded to `vllm serve`.
             Rendered via `lib.cli.toCommandLineShellGNU`.
+            Merged with `custom.vllm.modelSettings`; these entries take precedence.
           '';
         };
         environment = lib.mkOption {
@@ -171,7 +172,8 @@ let
               host = "0.0.0.0";
               port = 8000;
             }
-            // model.extraArgs
+            // cfg.modelSettings
+            // model.settings
           )
         }";
       };
@@ -242,6 +244,20 @@ in
       '';
     };
 
+    modelSettings = lib.mkOption {
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
+      example = {
+        kv-cache-dtype = "fp8";
+        max-num-seqs = 2;
+      };
+      description = ''
+        CLI flags forwarded to `vllm serve` for every model.
+        Rendered via `lib.cli.toCommandLineShellGNU`.
+        Merged with `custom.vllm.models.<name>.settings`; per-model entries take precedence.
+      '';
+    };
+
     environmentFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -287,7 +303,7 @@ in
           "llama-3-8b" = {
             model = "meta-llama/Meta-Llama-3-8B-Instruct";
             port = 18002;
-            extraArgs.max-model-len = 8192;
+            settings.max-model-len = 8192;
           };
         }
       '';

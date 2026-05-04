@@ -68,7 +68,7 @@ let
           default = "all";
           description = "GPU device(s) exposed to the container via the NVIDIA CDI provider.";
         };
-        extraArgs = lib.mkOption {
+        settings = lib.mkOption {
           type = lib.types.attrsOf lib.types.anything;
           default = { };
           example = {
@@ -78,6 +78,7 @@ let
           description = ''
             Additional CLI flags forwarded to `python3 -m sglang.launch_server`.
             Rendered via `lib.cli.toCommandLineShellGNU`; entries with `false` or `null` are omitted.
+            Merged with `custom.sglang.modelSettings`; these entries take precedence.
           '';
         };
         environment = lib.mkOption {
@@ -153,7 +154,8 @@ let
         host = "0.0.0.0";
         port = cfg.workerPort;
       }
-      // model.extraArgs
+      // cfg.modelSettings
+      // model.settings
     );
 
   workerUrl = model: "http://${containerName model.name}:${toString cfg.workerPort}";
@@ -220,7 +222,7 @@ let
 
   # The gateway calls /get_model_info on each `worker-urls` entry and uses the worker's
   # `--served-model-name` as the routing key — a fully declarative IGW dispatch table.
-  gatewayBaseArgs = {
+  gatewayBaseSettings = {
     host = "0.0.0.0";
     port = cfg.gateway.port;
     prometheus-host = if cfg.gateway.enableMetrics then "0.0.0.0" else null;
@@ -231,7 +233,7 @@ let
   # `--worker-urls` uses argparse `nargs='*'` and must be appended manually so the URLs
   # become separate argv entries; `toCommandLineShell` would shell-escape them into one.
   gatewayExec =
-    mkArgs (gatewayBaseArgs // cfg.gateway.extraArgs)
+    mkArgs (gatewayBaseSettings // cfg.gateway.settings)
     + lib.optionalString (models != [ ])
       " ${lib.escapeShellArgs ([ "--worker-urls" ] ++ map workerUrl models)}";
 
@@ -347,6 +349,20 @@ in
       '';
     };
 
+    modelSettings = lib.mkOption {
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
+      example = {
+        kv-cache-dtype = "fp4_e2m1";
+        max-running-requests = 2;
+      };
+      description = ''
+        CLI flags forwarded to `python3 -m sglang.launch_server` for every worker.
+        Rendered via `lib.cli.toCommandLineShellGNU`; entries with `false` or `null` are omitted.
+        Merged with `custom.sglang.models.<name>.settings`; per-model entries take precedence.
+      '';
+    };
+
     environmentFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -388,7 +404,7 @@ in
         {
           "qwen3-8b" = {
             model = "Qwen/Qwen3-8B";
-            extraArgs = {
+            settings = {
               reasoning-parser = "qwen3";
               tool-call-parser = "qwen3_coder";
               mem-fraction-static = 0.6;
@@ -471,11 +487,11 @@ in
         description = ''
           File in `KEY=VALUE` format forwarded to the gateway via `--env-file`.
           Use for secrets like API keys; the gateway's `--api-key` flag may also be passed via
-          `extraArgs` if the value is non-secret.
+          `settings` if the value is non-secret.
         '';
       };
 
-      extraArgs = lib.mkOption {
+      settings = lib.mkOption {
         type = lib.types.attrsOf lib.types.anything;
         default = { };
         example = {
