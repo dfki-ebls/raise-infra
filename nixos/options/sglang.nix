@@ -186,14 +186,14 @@ let
         HealthInterval = "10s";
         HealthTimeout = "5s";
         # `lmsysorg/sglang`'s default entrypoint isn't the launcher we want.
-        # The `sglang` console script is missing from the `*-runtime` image
-        # (only `sgl-model-gateway` and `py-spy` are copied from the framework
-        # stage), so invoke the entry-point module directly.
+        # The new `sglang serve` CLI emits a deprecation warning for this path,
+        # but the `sglang` console script is missing from the `*-runtime` image
+        # and `sglang.cli.main` lacks a `__main__` guard, so `launch_server`
+        # remains the only working invocation here.
         Entrypoint = lib.toJSON [
           "python3"
           "-m"
-          "sglang.cli.main"
-          "serve"
+          "sglang.launch_server"
         ];
         Exec = modelExec model;
       };
