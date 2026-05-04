@@ -1,5 +1,10 @@
 { ... }:
 {
+  environment.etc."fish/functions/fish_greeting.fish".text = ''
+    function fish_greeting
+    end
+  '';
+
   programs = {
     bash.enable = true;
     fish.enable = true;
