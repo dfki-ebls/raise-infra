@@ -40,7 +40,7 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
-    enable = true;
+    enable = false;
     tag = "v0.20.0-cu130";
     environmentFile = "/etc/vllm/vllm.env";
     environment = {
@@ -92,7 +92,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
-      "qwen3.6-35b" = {
+      "qwen3-6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18005;
@@ -113,7 +113,7 @@ lib.mkIf config.custom.enableNvidia {
           };
         };
       };
-      "qwen3.5-0.8b" = {
+      "qwen3-5-0-8b" = {
         enable = true;
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;

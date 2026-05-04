@@ -15,6 +15,10 @@ let
       ) attrs
     );
 
+  # vLLM doesn't strictly need DNS-safe names (no inter-container DNS), but we mirror
+  # sglang's constraint so unit names stay simple and the two modules read identically.
+  dnsLabel = lib.types.strMatching "[a-zA-Z0-9][a-zA-Z0-9-]*";
+
   modelOpts =
     { name, ... }:
     {
@@ -23,11 +27,15 @@ let
           default = true;
         };
         name = lib.mkOption {
-          type = lib.types.str;
+          type = dnsLabel;
           default = name;
           description = ''
-            Routing name exposed by llmhop.
-            Clients select the backend by sending this value in the OpenAI `model` field.
+            Canonical identifier for this model. Used for the container/unit name
+            (`vllm-<name>`) and as the routing name exposed by llmhop (clients select
+            the backend by sending this value in the OpenAI `model` field).
+
+            Defaults to the attribute key, so the key itself must be a DNS label
+            (starts with an alphanumeric, then alphanumerics or hyphens; no dots).
           '';
         };
         model = lib.mkOption {
@@ -109,7 +117,7 @@ let
       };
     };
 
-  # Keep enabled models in ascending port order so optional startup chaining is explicit and deterministic.
+  # Sort by port so the After= chain below is deterministic across rebuilds.
   models = lib.pipe cfg.models [
     lib.attrValues
     (lib.filter (model: model.enable))
@@ -136,6 +144,7 @@ let
     i: model:
     lib.nameValuePair "vllm-${model.name}" {
       uid = config.users.users.${cfg.user}.uid;
+      # Rootfs stays writable so torch's compile cache and vLLM's scratch files don't fail.
       containerConfig = {
         Image = imageRef model;
         Pull = if model.digest != null then "missing" else "newer";
@@ -149,6 +158,7 @@ let
         ShmSize = model.shmSize;
         Ulimit = "host";
         NoNewPrivileges = true;
+        DropCapability = "all";
         Notify = "healthy";
         HealthCmd = "curl --fail --silent --show-error http://localhost:8000/health";
         HealthStartPeriod = "30m";
@@ -170,8 +180,7 @@ let
         RestartSec = 30;
         LimitNOFILE = cfg.openFilesLimit;
       };
-      # Chain units via After= by ascending port so GPU-profiling phases don't overlap during startup.
-      # Notify=healthy makes each unit go "active" only once vLLM answers /health.
+      # Chain ascending so each worker finishes GPU-memory profiling before the next starts.
       unitConfig = {
         StartLimitBurst = 3;
         StartLimitIntervalSec = 3600;
@@ -317,6 +326,9 @@ in
       uid = 503;
       group = cfg.user;
       home = cfg.dataDir;
+      # Real shell so the `vllm` helper (no args) can drop into an interactive
+      # session via machinectl. No password is set, so SSH/console login is still impossible.
+      shell = config.users.defaultUserShell;
       linger = true;
       subUidRanges = [
         {
@@ -348,39 +360,21 @@ in
 
     virtualisation.quadlet.containers = lib.listToAttrs (lib.imap0 mkContainer models);
 
+    # Drop into a shell or run a command as the `vllm` user; inside, standard
+    # tools work unmodified (e.g. `vllm systemctl --user status vllm-<model>`).
     environment.systemPackages = [
       (pkgs.writeShellApplication {
-        name = "vllm-systemctl";
+        name = "vllm";
         text = ''
-          if [ "$#" -lt 2 ]; then
-            echo "Usage: $0 <action> <model> [args...]"
-            exit 1
+          if [ "$#" -eq 0 ]; then
+            echo "Entering the vllm user shell. Useful commands:"
+            echo "  systemctl --user status vllm-<model>    # service state"
+            echo "  journalctl --user -u vllm-<model> -f    # tail logs"
+            echo "  podman ps                               # list containers"
+            echo "  exit                                    # back to host"
+            exec sudo machinectl --quiet shell ${cfg.user}@.host
           fi
-          action="$1"
-          shift
-          model="$1"
-          shift
-          sudo systemctl --user --machine=${cfg.user}@.host "$action" "vllm-$model.service" "$@"
-        '';
-      })
-      (pkgs.writeShellApplication {
-        name = "vllm-podman";
-        text = ''
-          sudo machinectl shell ${cfg.user}@.host ${lib.getExe config.virtualisation.podman.package} "$@"
-        '';
-      })
-      (pkgs.writeShellApplication {
-        name = "vllm-journalctl";
-        text = ''
-          if [ "$#" -lt 1 ]; then
-            echo "Usage: $0 <model> [args...]"
-            exit 1
-          fi
-          model="$1"
-          shift
-          sudo journalctl _UID="${
-            toString config.users.users.${cfg.user}.uid
-          }" _SYSTEMD_USER_UNIT="vllm-$model.service" "$@"
+          exec sudo machinectl --quiet shell ${cfg.user}@.host /usr/bin/env "$@"
         '';
       })
     ];
