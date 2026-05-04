@@ -345,6 +345,8 @@ in
       # Real shell so the `vllm` helper (no args) can drop into an interactive
       # session via machinectl. No password is set, so SSH/console login is still impossible.
       shell = config.users.defaultUserShell;
+      # Required for `journalctl --user` inside a `machinectl shell` session.
+      extraGroups = [ "systemd-journal" ];
       linger = true;
       subUidRanges = [
         {
