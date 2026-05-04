@@ -59,6 +59,9 @@ lib.mkIf config.custom.enableNvidia {
       # FP8 KV cache silently regresses accuracy when the checkpoint lacks calibrated
       # k_scale/v_scale; FP4 E2M1 auto-scales and uses half the memory.
       kv-cache-dtype = "fp4_e2m1";
+      # KV4 MHA rejects flashinfer; trtllm_mha is the Blackwell-optimized choice
+      # from the allowed set (triton, torch_native, flex_attention, trtllm_mha).
+      attention-backend = "trtllm_mha";
       # SGLang only clamps counts, not resolution (sgl-project/sglang#9164); resolution
       # is bounded per-model via `mm-process-config`.
       limit-mm-data-per-request = lib.toJSON {
