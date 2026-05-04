@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.custom.sglang;
+  qcfg = config.virtualisation.quadlet;
 
   # SGLang/gateway use GNU long options with `=` separators; null/false attrs are dropped.
   # Lists are not supported here — `toCommandLineShell` would render them as repeated
@@ -158,20 +159,18 @@ let
       // model.settings
     );
 
-  workerUrl = model: "http://${containerName model.name}:${toString cfg.workerPort}";
+  workerContainer = model: qcfg.containers.${containerName model.name};
+  network = qcfg.networks.${cfg.networkName};
+  workerUrl = model: "http://${(workerContainer model).podmanName}:${toString cfg.workerPort}";
 
   mkModelContainer =
     i: model:
-    let
-      cname = containerName model.name;
-    in
-    lib.nameValuePair cname {
+    lib.nameValuePair (containerName model.name) {
       uid = config.users.users.${cfg.user}.uid;
       containerConfig = hardening // {
-        ContainerName = cname;
         Image = imageRef model;
         Pull = if model.digest != null then "missing" else "newer";
-        Network = "${cfg.networkName}.network";
+        Network = network.ref;
         AddDevice = cdiDevices model;
         Volume = [ "${cfg.cacheDir}:/root/.cache/huggingface" ];
         EnvironmentFile =
@@ -206,12 +205,12 @@ let
         StartLimitIntervalSec = 3600;
         # Chain ascending so each worker finishes GPU-memory profiling before the next starts.
         After = [
-          "${cfg.networkName}-network.service"
+          "${network.serviceName}.service"
         ]
         ++
           lib.optional (cfg.startupOrdering && i > 0)
-            "${containerName (lib.elemAt models (i - 1)).name}.service";
-        Requires = [ "${cfg.networkName}-network.service" ];
+            "${(workerContainer (lib.elemAt models (i - 1))).serviceName}.service";
+        Requires = [ "${network.serviceName}.service" ];
       };
     };
 
@@ -241,17 +240,15 @@ let
       lib.optionalString (models != [ ])
         " ${lib.escapeShellArgs ([ "--worker-urls" ] ++ map workerUrl models)}";
 
-  gatewayName = containerName "gateway";
-  workerServices = map (m: "${containerName m.name}.service") models;
+  workerServices = map (m: "${(workerContainer m).serviceName}.service") models;
 
-  mkGatewayContainer = lib.nameValuePair gatewayName {
+  mkGatewayContainer = lib.nameValuePair (containerName "gateway") {
     uid = config.users.users.${cfg.user}.uid;
     containerConfig = hardening // {
-      ContainerName = gatewayName;
       Image = gatewayImageRef;
       Pull = if cfg.gateway.digest != null then "missing" else "newer";
       ReadOnly = true;
-      Network = "${cfg.networkName}.network";
+      Network = network.ref;
       # Only the gateway publishes ports; workers stay on the internal network.
       PublishPort = [
         "${cfg.gateway.bindAddress}:${toString cfg.gateway.port}:${toString cfg.gateway.port}"
@@ -277,8 +274,8 @@ let
       # Requires=+After= combined with Notify=healthy on workers gives us
       # `depends_on: service_healthy`: the gateway starts only after every worker
       # answers /health, so /get_model_info discovery succeeds.
-      After = [ "${cfg.networkName}-network.service" ] ++ workerServices;
-      Requires = [ "${cfg.networkName}-network.service" ] ++ workerServices;
+      After = [ "${network.serviceName}.service" ] ++ workerServices;
+      Requires = [ "${network.serviceName}.service" ] ++ workerServices;
     };
   };
 in

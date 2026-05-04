@@ -6,6 +6,7 @@
 }:
 let
   cfg = config.custom.vllm;
+  qcfg = config.virtualisation.quadlet;
 
   mkArgs =
     attrs:
@@ -105,8 +106,8 @@ let
         };
         shmSize = lib.mkOption {
           type = lib.types.str;
-          default = "2g";
-          example = "16g";
+          default = "32g";
+          example = "64g";
           description = ''
             Size of the container's private `/dev/shm` tmpfs.
             PyTorch uses shared memory for NCCL/tensor-parallel inference; upstream requires
@@ -188,7 +189,7 @@ let
         StartLimitIntervalSec = 3600;
         After =
           lib.optional (cfg.startupOrdering && i > 0)
-            "vllm-${(lib.elemAt models (i - 1)).name}.service";
+            "${qcfg.containers."vllm-${(lib.elemAt models (i - 1)).name}".serviceName}.service";
       };
     };
 in
