@@ -15,8 +15,8 @@
       "*" = rec {
         # keep-sorted start
         cache-ram = 128 * 1024; # MiB
-        cache-type-k = "q4_0";
-        cache-type-v = "q4_0";
+        cache-type-k = "q8_0";
+        cache-type-v = "q8_0";
         ctx-size = 32 * 1024 * parallel;
         flash-attn = "on";
         mlock = true;
