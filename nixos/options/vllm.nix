@@ -379,6 +379,11 @@ in
 
     virtualisation.quadlet.containers = lib.listToAttrs (lib.imap0 mkContainer models);
 
+    services.llmhop.settings.models = lib.mkIf cfg.llmhop.addModels (
+      lib.mapAttrs (_: model: {
+        url = "http://127.0.0.1:${toString model.port}";
+      }) (lib.filterAttrs (_: model: model.enable) cfg.models)
+    );
     # Drop into a shell or run a command as the `vllm` user; inside, standard
     # tools work unmodified (e.g. `vllm systemctl --user status vllm-<model>`).
     environment.systemPackages = [
