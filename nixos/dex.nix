@@ -11,12 +11,7 @@
     environmentFile = "/etc/dex/dex.env";
     settings = {
       issuer = caddyHelpers.mkHost "dex.${config.custom.rootDomain}";
-      web = {
-        http = "127.0.0.1:5556";
-        allowedOrigins = [
-          (caddyHelpers.mkSubHost "app")
-        ];
-      };
+      web.http = "127.0.0.1:5556";
       storage = {
         type = "sqlite3";
         config.file = "/var/lib/dex/dex.db";
@@ -49,16 +44,6 @@
           # Opaque, stable OIDC `sub` generated via `uuidgen`.
           # Apps key user data on this value, so do not change it.
           userID = "38b0b104-f0da-4103-88d5-ce117a213d1d";
-        }
-      ];
-      staticClients = [
-        {
-          id = "app";
-          name = "Web Application";
-          public = true;
-          redirectURIs = [
-            "${caddyHelpers.mkSubHost "app"}/auth/callback"
-          ];
         }
       ];
     };
