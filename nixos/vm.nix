@@ -7,7 +7,12 @@
       enableWaf = false;
       enableNvidia = false;
       enableCertificates = false;
-      hivegent.enable = lib.mkForce true;
+      hivegent = {
+        enable = lib.mkForce true;
+        # MCP SDK's `validate_issuer_url` only accepts HTTP for `localhost`
+        # or `127.0.0.1`; the default `hivegent.localhost` fails that check.
+        settings.mcp.base_url = lib.mkForce "http://localhost/mcp";
+      };
     };
     services.caddy.globalConfig = ''
       auto_https off
