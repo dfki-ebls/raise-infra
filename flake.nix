@@ -44,6 +44,15 @@
         treefmt-nix.follows = "treefmt-nix";
       };
     };
+    hivegent = {
+      url = "github:dfki-ebls/hivegent";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-parts.follows = "flake-parts";
+        treefmt-nix.follows = "treefmt-nix";
+        flocken.follows = "flocken";
+      };
+    };
     website = {
       url = "github:dfki-ebls/raise-website";
       inputs = {
