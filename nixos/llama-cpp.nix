@@ -8,7 +8,7 @@
     extraFlags = [
       "--no-models-autoload"
       "--models-max"
-      "100"
+      "10"
     ];
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
     modelsPreset = {
