@@ -14,7 +14,6 @@
         cache-type-v = "q4_0";
         ctx-size = 32 * 1024 * parallel;
         flash-attn = "on";
-        load-on-startup = true;
         mlock = true;
         mmap = false;
         models-autoload = false;
@@ -29,6 +28,7 @@
       "qwen3.6-35b" = {
         hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
         # keep-sorted start
+        load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
         reasoning = "on";
@@ -42,6 +42,7 @@
       "qwen3.5-0.8b" = {
         hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
         # keep-sorted start
+        load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
         reasoning = "on";
