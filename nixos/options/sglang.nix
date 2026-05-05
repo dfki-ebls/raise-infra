@@ -1,12 +1,23 @@
 {
   lib,
   config,
-  pkgs,
   ...
 }:
 let
   cfg = config.custom.sglang;
   qcfg = config.virtualisation.quadlet;
+
+  # Container root maps to the dedicated `sglang` user so cache writes land with
+  # the right ownership; container UIDs ≥1 land in an unprivileged subordinate
+  # range so processes that drop privileges still resolve to host UIDs.
+  uidMap = [
+    "0:${toString config.users.users.${cfg.user}.uid}:1"
+    "1:${toString cfg.subIdStart}:${toString cfg.subIdCount}"
+  ];
+  gidMap = [
+    "0:${toString config.users.groups.${cfg.user}.gid}:1"
+    "1:${toString cfg.subIdStart}:${toString cfg.subIdCount}"
+  ];
 
   # SGLang/gateway use GNU long options with `=` separators; null/false attrs are dropped.
   # Lists are not supported here — `toCommandLineShell` would render them as repeated
@@ -166,8 +177,9 @@ let
   mkModelContainer =
     i: model:
     lib.nameValuePair (containerName model.name) {
-      uid = config.users.users.${cfg.user}.uid;
       containerConfig = hardening // {
+        UIDMap = uidMap;
+        GIDMap = gidMap;
         Image = imageRef model;
         Pull = if model.digest != null then "missing" else "newer";
         Network = network.ref;
@@ -243,8 +255,9 @@ let
   workerServices = map (m: "${(workerContainer m).serviceName}.service") models;
 
   mkGatewayContainer = lib.nameValuePair (containerName "gateway") {
-    uid = config.users.users.${cfg.user}.uid;
     containerConfig = hardening // {
+      UIDMap = uidMap;
+      GIDMap = gidMap;
       Image = gatewayImageRef;
       Pull = if cfg.gateway.digest != null then "missing" else "newer";
       ReadOnly = true;
@@ -286,7 +299,10 @@ in
     user = lib.mkOption {
       type = lib.types.str;
       default = "sglang";
-      description = "Dedicated system user that owns the rootless SGLang model containers.";
+      description = ''
+        Dedicated system user that owns the SGLang cache directory and that container
+        root is mapped to via `--uidmap`/`--gidmap`.
+      '';
     };
 
     image = lib.mkOption {
@@ -308,7 +324,7 @@ in
       type = lib.types.str;
       default = "sglang";
       description = ''
-        Name of the shared rootless podman network that joins every container.
+        Name of the shared podman network that joins every container.
         Containers reach each other via container-DNS (e.g. `sglang-<model>:30000`),
         so no host-side port forwarding is needed for inter-container traffic.
       '';
@@ -320,15 +336,6 @@ in
       description = ''
         Internal port that every model worker binds to inside the shared network.
         Not exposed to the host; the gateway is the only container that publishes ports.
-      '';
-    };
-
-    dataDir = lib.mkOption {
-      type = lib.types.path;
-      default = "/var/lib/sglang";
-      description = ''
-        Home directory of the `sglang` user.
-        Used by rootless podman for container storage (`~/.local/share/containers`).
       '';
     };
 
@@ -388,6 +395,26 @@ in
       '';
     };
 
+    subIdStart = lib.mkOption {
+      type = lib.types.ints.unsigned;
+      default = 400000;
+      description = ''
+        First host UID/GID of the subordinate range mapped into every container.
+        Container UIDs ≥1 are mapped to `subIdCount` consecutive host IDs starting here.
+        Default keeps clear of NixOS system users (`<1000`), regular login UIDs,
+        and the vLLM module's default range (`300000`).
+      '';
+    };
+
+    subIdCount = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 65536;
+      description = ''
+        Size of the subordinate UID/GID range mapped into every container.
+        65536 covers the full unprivileged ID space inside the namespace.
+      '';
+    };
+
     openFilesLimit = lib.mkOption {
       type = lib.types.ints.positive;
       default = 1048576;
@@ -416,7 +443,7 @@ in
       '';
       description = ''
         Models to serve.
-        Each entry produces one rootless quadlet container; the attribute name doubles as the
+        Each entry produces one quadlet container; the attribute name doubles as the
         `model_id` advertised via `--served-model-name` and surfaced through the gateway as the
         OpenAI `model` field.
       '';
@@ -519,41 +546,27 @@ in
       }
     ];
 
-    # The gateway shares this user with the workers so it joins the same rootless
-    # podman network — no host port forwards needed between gateway and workers.
     users.users.${cfg.user} = {
       description = "SGLang User";
       isSystemUser = true;
       uid = 504;
       group = cfg.user;
-      home = cfg.dataDir;
-      # Real shell so the `sglang` helper (no args) can drop into an interactive
-      # session via machinectl. No password is set, so SSH/console login is still impossible.
-      shell = config.users.defaultUserShell;
-      # Required for `journalctl --user` inside a `machinectl shell` session.
-      extraGroups = [ "systemd-journal" ];
-      linger = true;
       subUidRanges = [
         {
-          startUid = 400000;
-          count = 65536;
+          startUid = cfg.subIdStart;
+          count = cfg.subIdCount;
         }
       ];
       subGidRanges = [
         {
-          startGid = 400000;
-          count = 65536;
+          startGid = cfg.subIdStart;
+          count = cfg.subIdCount;
         }
       ];
     };
     users.groups.${cfg.user}.gid = config.users.users.${cfg.user}.uid;
 
     systemd.tmpfiles.settings."10-sglang" = {
-      ${cfg.dataDir}.d = {
-        user = cfg.user;
-        group = cfg.user;
-        mode = "0700";
-      };
       ${cfg.cacheDir}.d = {
         user = cfg.user;
         group = cfg.user;
@@ -563,7 +576,6 @@ in
 
     virtualisation.quadlet = {
       networks.${cfg.networkName} = {
-        uid = config.users.users.${cfg.user}.uid;
         networkConfig = {
           NetworkName = cfg.networkName;
           DisableDNS = false;
@@ -574,24 +586,5 @@ in
         (lib.imap0 mkModelContainer models) ++ lib.optional cfg.gateway.enable mkGatewayContainer
       );
     };
-
-    # Drop into a shell or run a command as the `sglang` user; inside, standard
-    # tools work unmodified (e.g. `sglang systemctl --user status sglang-<model>`).
-    environment.systemPackages = [
-      (pkgs.writeShellApplication {
-        name = "sglang";
-        text = ''
-          if [ "$#" -eq 0 ]; then
-            echo "Entering the sglang user shell. Useful commands:"
-            echo "  systemctl --user status sglang-<model>    # service state"
-            echo "  journalctl --user -u sglang-<model> -f    # tail logs"
-            echo "  podman ps                                 # list containers"
-            echo "  exit                                      # back to host"
-            exec sudo machinectl --quiet shell ${cfg.user}@.host
-          fi
-          exec sudo machinectl --quiet shell ${cfg.user}@.host /usr/bin/env "$@"
-        '';
-      })
-    ];
   };
 }

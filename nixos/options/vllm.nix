@@ -1,12 +1,23 @@
 {
   lib,
   config,
-  pkgs,
   ...
 }:
 let
   cfg = config.custom.vllm;
   qcfg = config.virtualisation.quadlet;
+
+  # Container root maps to the dedicated `vllm` user so cache writes land with
+  # the right ownership; container UIDs ≥1 land in an unprivileged subordinate
+  # range so processes that drop privileges still resolve to host UIDs.
+  uidMap = [
+    "0:${toString config.users.users.${cfg.user}.uid}:1"
+    "1:${toString cfg.subIdStart}:${toString cfg.subIdCount}"
+  ];
+  gidMap = [
+    "0:${toString config.users.groups.${cfg.user}.gid}:1"
+    "1:${toString cfg.subIdStart}:${toString cfg.subIdCount}"
+  ];
 
   mkArgs =
     attrs:
@@ -145,9 +156,10 @@ let
   mkContainer =
     i: model:
     lib.nameValuePair "vllm-${model.name}" {
-      uid = config.users.users.${cfg.user}.uid;
       # Rootfs stays writable so torch's compile cache and vLLM's scratch files don't fail.
       containerConfig = {
+        UIDMap = uidMap;
+        GIDMap = gidMap;
         Image = imageRef model;
         Pull = if model.digest != null then "missing" else "newer";
         PublishPort = [ "127.0.0.1:${toString model.port}:8000" ];
@@ -200,7 +212,10 @@ in
     user = lib.mkOption {
       type = lib.types.str;
       default = "vllm";
-      description = "Dedicated system user that owns the rootless vLLM containers.";
+      description = ''
+        Dedicated system user that owns the vLLM cache directory and that container
+        root is mapped to via `--uidmap`/`--gidmap`.
+      '';
     };
 
     image = lib.mkOption {
@@ -215,15 +230,6 @@ in
       description = ''
         Default tag of the container image used for models that do not set their own `tag` or `digest`.
         Can be overridden per model via `custom.vllm.models.<name>.tag` or `.digest`.
-      '';
-    };
-
-    dataDir = lib.mkOption {
-      type = lib.types.path;
-      default = "/var/lib/vllm";
-      description = ''
-        Home directory of the `vllm` user.
-        Used by rootless podman for container storage (`~/.local/share/containers`).
       '';
     };
 
@@ -281,6 +287,25 @@ in
       '';
     };
 
+    subIdStart = lib.mkOption {
+      type = lib.types.ints.unsigned;
+      default = 300000;
+      description = ''
+        First host UID/GID of the subordinate range mapped into every container.
+        Container UIDs ≥1 are mapped to `subIdCount` consecutive host IDs starting here.
+        Default keeps clear of NixOS system users (`<1000`) and regular login UIDs.
+      '';
+    };
+
+    subIdCount = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 65536;
+      description = ''
+        Size of the subordinate UID/GID range mapped into every container.
+        65536 covers the full unprivileged ID space inside the namespace.
+      '';
+    };
+
     openFilesLimit = lib.mkOption {
       type = lib.types.ints.positive;
       default = 1048576;
@@ -310,8 +335,18 @@ in
       '';
       description = ''
         Models to serve.
-        Each entry produces one rootless quadlet container; the attribute name is the routing key.
+        Each entry produces one quadlet container; the attribute name is the routing key.
         Enabled entries are sorted by ascending `port`.
+      '';
+    };
+
+    llmhop.addModels = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Whether to register every enabled model with `services.llmhop.settings.models`,
+        pointing at its loopback `port`. The rest of the llmhop service (enable, listen,
+        TLS, etc.) is left to the user to configure separately.
       '';
     };
   };
@@ -342,34 +377,22 @@ in
       isSystemUser = true;
       uid = 503;
       group = cfg.user;
-      home = cfg.dataDir;
-      # Real shell so the `vllm` helper (no args) can drop into an interactive
-      # session via machinectl. No password is set, so SSH/console login is still impossible.
-      shell = config.users.defaultUserShell;
-      # Required for `journalctl --user` inside a `machinectl shell` session.
-      extraGroups = [ "systemd-journal" ];
-      linger = true;
       subUidRanges = [
         {
-          startUid = 300000;
-          count = 65536;
+          startUid = cfg.subIdStart;
+          count = cfg.subIdCount;
         }
       ];
       subGidRanges = [
         {
-          startGid = 300000;
-          count = 65536;
+          startGid = cfg.subIdStart;
+          count = cfg.subIdCount;
         }
       ];
     };
     users.groups.${cfg.user}.gid = config.users.users.${cfg.user}.uid;
 
     systemd.tmpfiles.settings."10-vllm" = {
-      ${cfg.dataDir}.d = {
-        user = cfg.user;
-        group = cfg.user;
-        mode = "0700";
-      };
       ${cfg.cacheDir}.d = {
         user = cfg.user;
         group = cfg.user;
@@ -384,23 +407,5 @@ in
         url = "http://127.0.0.1:${toString model.port}";
       }) (lib.filterAttrs (_: model: model.enable) cfg.models)
     );
-    # Drop into a shell or run a command as the `vllm` user; inside, standard
-    # tools work unmodified (e.g. `vllm systemctl --user status vllm-<model>`).
-    environment.systemPackages = [
-      (pkgs.writeShellApplication {
-        name = "vllm";
-        text = ''
-          if [ "$#" -eq 0 ]; then
-            echo "Entering the vllm user shell. Useful commands:"
-            echo "  systemctl --user status vllm-<model>    # service state"
-            echo "  journalctl --user -u vllm-<model> -f    # tail logs"
-            echo "  podman ps                               # list containers"
-            echo "  exit                                    # back to host"
-            exec sudo machinectl --quiet shell ${cfg.user}@.host
-          fi
-          exec sudo machinectl --quiet shell ${cfg.user}@.host /usr/bin/env "$@"
-        '';
-      })
-    ];
   };
 }
