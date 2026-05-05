@@ -40,6 +40,8 @@
           name = config.custom.admin.name;
           preferredUsername = config.custom.admin.login;
           emailVerified = true;
+          # Populated by `dex-generate-secrets` (see `options/dex.nix`) on
+          # first boot so the bcrypt hash never lands in /nix/store.
           hashFromEnv = "DEX_ADMIN_HASH";
           # Opaque, stable OIDC `sub` generated via `uuidgen`.
           # Apps key user data on this value, so do not change it.
@@ -47,47 +49,6 @@
         }
       ];
     };
-  };
-
-  systemd.services.dex-generate-secrets = lib.mkIf config.services.dex.enable {
-    description = "Generate Dex secrets if missing";
-    wantedBy = [ "dex.service" ];
-    before = [ "dex.service" ];
-    partOf = [ "dex.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      # Ephemeral tmpfs dir for the bootstrap password; gone on reboot.
-      RuntimeDirectory = "dex-bootstrap";
-      RuntimeDirectoryMode = "0700";
-    };
-    script = ''
-      set -euo pipefail
-      umask 077
-
-      install -d -m 755 /etc/dex
-
-      touch /etc/dex/config.yaml
-
-      if [ -s /etc/dex/dex.env ]; then
-        echo "/etc/dex/dex.env already populated, skipping generation"
-        exit 0
-      fi
-
-      password=$(${lib.getExe' pkgs.openssl "openssl"} rand -base64 24)
-      # mkpasswd (whois 5.6.6) requires `=` for long options; with spaces it
-      # silently ignores the value, prints the method list, and exits 0.
-      hash=$(echo -n "$password" | ${lib.getExe pkgs.mkpasswd} --method=bcrypt --rounds=14 --stdin)
-
-      if [ "''${#hash}" -ne 60 ]; then
-        echo "ERROR: bcrypt hash has unexpected length ''${#hash} (expected 60)" >&2
-        exit 1
-      fi
-
-      echo "DEX_ADMIN_HASH=$hash" > /etc/dex/dex.env
-
-      echo "$password" > /run/dex-bootstrap/admin-password
-    '';
   };
 
   systemd.services.dex.serviceConfig = lib.mkIf config.services.dex.enable {
