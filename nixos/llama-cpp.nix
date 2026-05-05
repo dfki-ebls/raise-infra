@@ -53,4 +53,7 @@
       };
     };
   };
+  systemd.services.llama-cpp = {
+    serviceConfig.EnvironmentFile = "/etc/llama-cpp/llama-cpp.env";
+  };
 }
