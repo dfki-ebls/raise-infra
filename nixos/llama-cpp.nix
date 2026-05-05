@@ -7,7 +7,8 @@
     port = 18000;
     extraFlags = [
       "--no-models-autoload"
-      "--models-max=0"
+      "--models-max"
+      "0"
     ];
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
     modelsPreset = {
