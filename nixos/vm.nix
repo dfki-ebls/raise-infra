@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, lib, ... }:
 {
   virtualisation.vmVariant = {
     custom = {
@@ -6,6 +6,7 @@
       enableWaf = false;
       enableNvidia = false;
       enableCertificates = false;
+      hivegent.enable = lib.mkForce true;
     };
     services.caddy.globalConfig = ''
       auto_https off
