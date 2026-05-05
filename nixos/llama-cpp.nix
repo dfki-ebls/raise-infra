@@ -28,9 +28,9 @@
         # keep-sorted end
       };
       # https://unsloth.ai/docs/models/qwen3.6
-      "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL" = {
+      "qwen3.6-35b-a3b" = {
         # keep-sorted start
-        alias = "qwen3.6-35b-a3b";
+        hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
         load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
@@ -42,9 +42,9 @@
         # keep-sorted end
       };
       # https://unsloth.ai/docs/models/qwen3.5
-      "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL" = {
+      "qwen3.5-0.8b" = {
         # keep-sorted start
-        alias = "qwen3.5-0.8b";
+        hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
         load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
