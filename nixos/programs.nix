@@ -1,13 +1,13 @@
 { ... }:
 {
-  environment.etc."fish/functions/fish_greeting.fish".text = ''
-    function fish_greeting
-    end
-  '';
-
   programs = {
     bash.enable = true;
-    fish.enable = true;
+    fish = {
+      enable = true;
+      interactiveShellInit = ''
+        set -g fish_greeting
+      '';
+    };
     zsh.enable = true;
     git.enable = true;
     nix-ld.enable = true;
