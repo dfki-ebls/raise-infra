@@ -1,6 +1,7 @@
 { config, lib, ... }:
 {
   virtualisation.vmVariant = {
+    disabledModules = [ ../dfki/vpn.nix ];
     custom = {
       rootDomain = "localhost";
       enableWaf = false;
