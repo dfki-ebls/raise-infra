@@ -48,7 +48,7 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   custom.vllm = {
-    enable = true;
+    enable = false;
     # https://hub.docker.com/r/vllm/vllm-openai/tags
     # https://github.com/vllm-project/vllm/releases/latest
     tag = "v0.20.1";

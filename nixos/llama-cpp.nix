@@ -1,0 +1,56 @@
+{ ... }:
+# Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
+# Workstation Blackwell is SM120 (GB20x), NOT SM100 (GB100/GB200 datacenter Blackwell).
+{
+  services.llama-cpp = {
+    enable = true;
+    port = 18000;
+    # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
+    modelsPreset = {
+      "*" = rec {
+        # keep-sorted start
+        cache-ram = 128 * 1024; # MiB
+        cache-type-k = "q4_0";
+        cache-type-v = "q4_0";
+        ctx-size = 32 * 1024 * parallel;
+        flash-attn = "on";
+        load-on-startup = true;
+        mlock = true;
+        mmap = false;
+        models-autoload = false;
+        models-max = 0;
+        n-gpu-layers = "all";
+        parallel = 4;
+        sleep-idle-seconds = -1;
+        stop-timeout = 60;
+        # keep-sorted end
+      };
+      # https://unsloth.ai/docs/models/qwen3.6
+      "qwen3.6-35b" = {
+        hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
+        # keep-sorted start
+        min-p = 0.0;
+        presence-penalty = 1.0;
+        reasoning = "on";
+        repeat-penalty = 1.0;
+        temperature = 1.0;
+        top-k = 20;
+        top-p = 0.95;
+        # keep-sorted end
+      };
+      # https://unsloth.ai/docs/models/qwen3.5
+      "qwen3.5-0.8b" = {
+        hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
+        # keep-sorted start
+        min-p = 0.0;
+        presence-penalty = 1.0;
+        reasoning = "on";
+        repeat-penalty = 1.0;
+        temperature = 1.0;
+        top-k = 20;
+        top-p = 0.95;
+        # keep-sorted end
+      };
+    };
+  };
+}
