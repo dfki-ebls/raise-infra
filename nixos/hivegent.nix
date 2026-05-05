@@ -22,15 +22,10 @@ let
   frontend = hivegentPackages.frontend.overrideAttrs {
     VITE_API_URL = "";
     VITE_OIDC_ISSUER_URI = config.services.dex.settings.issuer;
-    VITE_OIDC_CLIENT_ID = "hivegent";
+    VITE_OIDC_CLIENT_ID = "hivegent-spa";
     VITE_OIDC_USE_MOCK = "false";
   };
 
-  # Single source of truth for the MCP confidential client's shared
-  # secret. Defined as a let-bound alias so dex's `staticClients[]`,
-  # the bootstrap unit (via `custom.dex.sharedSecrets`), and hivegent's
-  # `environmentFile` all derive from the same record without restating
-  # the env-var names or the on-disk path.
   mcpSecret = config.custom.dex.sharedSecrets.hivegent-mcp;
 in
 {
