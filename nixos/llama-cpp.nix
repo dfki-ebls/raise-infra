@@ -8,7 +8,7 @@
     extraFlags = [
       "--no-models-autoload"
       "--models-max"
-      "0"
+      "100"
     ];
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
     modelsPreset = {
@@ -28,9 +28,9 @@
         # keep-sorted end
       };
       # https://unsloth.ai/docs/models/qwen3.6
-      "qwen3.6-35b" = {
-        hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
+      "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL" = {
         # keep-sorted start
+        alias = "qwen3.6-35b-a3b";
         load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
@@ -42,9 +42,9 @@
         # keep-sorted end
       };
       # https://unsloth.ai/docs/models/qwen3.5
-      "qwen3.5-0.8b" = {
-        hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
+      "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL" = {
         # keep-sorted start
+        alias = "qwen3.5-0.8b";
         load-on-startup = true;
         min-p = 0.0;
         presence-penalty = 1.0;
