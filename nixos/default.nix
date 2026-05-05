@@ -20,7 +20,10 @@
     };
   };
 
-  environment.variables.BROWSER = "echo";
+  environment = {
+    enableAllTerminfo = true;
+    variables.BROWSER = "echo";
+  };
 
   boot.loader = {
     systemd-boot.configurationLimit = 10;
