@@ -11,6 +11,11 @@ let
 
   hivegentPackages = inputs.hivegent.packages.${pkgs.stdenv.system};
 
+  # Rauthy's OIDC issuer is always `<scheme>://<pub_url>/auth/v1` — the
+  # `/auth/v1` path is a fixed mount in rauthy and shows up in the `iss`
+  # claim of issued tokens.
+  rauthyIssuer = "${caddyHelpers.mkSubHost "rauthy"}/auth/v1";
+
   # The frontend bakes its env in at build time (Vite's
   # `import.meta.env.VITE_*` is statically replaced). Setting these as
   # derivation attrs is enough — `mkDerivation` propagates them as build
@@ -21,53 +26,28 @@ let
   # avoids any cross-origin/CORS dance for the app itself.
   frontend = hivegentPackages.frontend.overrideAttrs {
     VITE_API_URL = "";
-    VITE_OIDC_ISSUER_URI = config.services.dex.settings.issuer;
+    VITE_OIDC_ISSUER_URI = rauthyIssuer;
     VITE_OIDC_CLIENT_ID = "hivegent-spa";
     VITE_OIDC_USE_MOCK = "false";
   };
-
-  mcpSecret = config.custom.dex.sharedSecrets.hivegent-mcp;
 in
 {
-  services.dex.settings = {
-    web.allowedOrigins = [ caddySubHost ];
-    staticClients = [
-      {
-        # SPA client: oidc-spa drives a public PKCE flow with the redirect
-        # landing back on the app's root URL (no callback route exists).
-        id = "hivegent-spa";
-        name = "Hivegent SPA";
-        public = true;
-        redirectURIs = [ "${caddySubHost}/" ];
-      }
-      {
-        # Confidential client for FastMCP's `OIDCProxy` — the backend
-        # validates inbound MCP tokens against dex using these credentials.
-        id = "hivegent-mcp";
-        name = "Hivegent MCP";
-        secretEnv = mcpSecret.dexVar;
-        redirectURIs = [ "${caddySubHost}/mcp" ];
-      }
-    ];
-  };
-
-  custom.dex.sharedSecrets.hivegent-mcp = {
-    dexVar = "DEX_HIVEGENT_MCP_SECRET";
-    file = "/etc/hivegent/hivegent.env";
-    var = "HIVEGENT_MCP__CLIENT_SECRET";
-  };
-
   custom.hivegent = {
     enable = false;
     package = hivegentPackages.backend;
     host = "127.0.0.1";
     port = 8000;
-    environmentFile = mcpSecret.file;
+
+    # `HIVEGENT_MCP__CLIENT_SECRET` must match the secret of the
+    # `hivegent-mcp` confidential client created post-bootstrap via
+    # the rauthy admin UI. The env file is root-owned, mode 600, and
+    # operator-managed.
+    environmentFile = "/etc/hivegent/hivegent.env";
 
     settings = {
       auth = {
-        disabled = false;
-        issuer = config.services.dex.settings.issuer;
+        enable = true;
+        issuer = rauthyIssuer;
       };
 
       # Same-origin requests don't need this, but the OIDC token endpoint
@@ -84,28 +64,65 @@ in
       };
 
       mcp = {
+        enable = false;
         client_id = "hivegent-mcp";
-        # client_secret is populated at runtime via `environmentFile`
-        # (see `mcpSecret` above) so the value never lands in /nix/store.
+        # client_secret is supplied at runtime via `environmentFile`
+        # (HIVEGENT_MCP__CLIENT_SECRET) so the value never lands in
+        # /nix/store. The matching confidential client is created
+        # operator-side via the rauthy admin UI.
         base_url = "${caddySubHost}/mcp";
       };
     };
   };
 
+  # Bootstrap only the SPA — public PKCE, no secret. The companion
+  # `hivegent-mcp` confidential client is created via the rauthy admin
+  # UI so its secret never has to live in `/nix/store`.
+  custom.rauthy.bootstrap.clients = [
+    {
+      id = "hivegent-spa";
+      name = "Hivegent";
+      secret = null;
+      redirect_uris = [ "${caddySubHost}/" ];
+      post_logout_redirect_uris = [ "${caddySubHost}/" ];
+      allowed_origins = [ caddySubHost ];
+      enabled = true;
+      flows_enabled = [
+        "authorization_code"
+        "refresh_token"
+      ];
+      access_token_alg = "EdDSA";
+      id_token_alg = "EdDSA";
+      auth_code_lifetime = 60;
+      access_token_lifetime = 1800;
+      scopes = [
+        "openid"
+        "profile"
+        "email"
+        "groups"
+      ];
+      default_scopes = [
+        "openid"
+        "profile"
+        "email"
+        "groups"
+      ];
+      challenges = [ "S256" ];
+      force_mfa = false;
+    }
+  ];
+
   systemd.services.hivegent = {
     # The backend resolves the OIDC discovery document at startup, and the
-    # issuer URL routes through Caddy → Dex — both must be reachable before
-    # hivegent boots. `dex-generate-secrets` creates the shared env file
-    # the unit reads via `EnvironmentFile`.
+    # issuer URL routes through Caddy → rauthy — both must be reachable
+    # before hivegent boots.
     after = [
       "caddy.service"
-      "dex.service"
-      "dex-generate-secrets.service"
+      "rauthy.service"
     ];
     requires = [
       "caddy.service"
-      "dex.service"
-      "dex-generate-secrets.service"
+      "rauthy.service"
     ];
   };
 

@@ -73,8 +73,8 @@ in
       example = lib.literalExpression ''
         {
           auth = {
-            disabled = false;
-            issuer = "https://dex.example.com";
+            enable = true;
+            issuer = "https://auth.example.com";
           };
           cors_origins = [ "https://hivegent.example.com" ];
           llm = {
@@ -88,10 +88,10 @@ in
         environment variables. Every path segment is uppercased and
         joined with `__`, matching pydantic's `env_nested_delimiter`
         (e.g. `llm.model` becomes `HIVEGENT_LLM__MODEL`,
-        `auth.disabled` becomes `HIVEGENT_AUTH__DISABLED`). Bools render
+        `auth.enable` becomes `HIVEGENT_AUTH__ENABLE`). Bools render
         as `true`/`false`, lists as JSON; nulls drop to an empty string.
 
-        `auth.disabled = true` bypasses JWT validation entirely and
+        `auth.enable = true` bypasses JWT validation entirely and
         treats every request as a synthetic localhost user — only use
         that on developer workstations.
 
