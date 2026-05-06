@@ -18,7 +18,9 @@
       auto_https off
     '';
     virtualisation = {
-      graphics = true;
+      graphics = false;
+      cores = 8;
+      memorySize = 16 * 1024;
       forwardPorts = [
         {
           from = "host";

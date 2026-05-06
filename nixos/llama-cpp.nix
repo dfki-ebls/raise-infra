@@ -1,7 +1,7 @@
-{ ... }:
+{ lib, config, ... }:
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
 # Workstation Blackwell is SM120 (GB20x), NOT SM100 (GB100/GB200 datacenter Blackwell).
-{
+lib.mkIf config.custom.enableNvidia {
   services.llama-cpp = {
     enable = true;
     port = 18000;
