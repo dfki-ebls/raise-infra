@@ -18,6 +18,12 @@
     services.caddy.globalConfig = ''
       auto_https off
     '';
+
+    # macOS resolves `*.localhost` to loopback for the browser, but glibc
+    # inside the guest does not by default. systemd-resolved synthesizes
+    # loopback answers for the entire `localhost` zone (RFC 6761), which
+    # lets hivegent reach the OIDC issuer at `rauthy.localhost` server-side.
+    services.resolved.enable = true;
     virtualisation = {
       graphics = false;
       cores = 8;
