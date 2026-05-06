@@ -9,11 +9,24 @@ let
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
   # Caddyfile snippet that 403s any request whose source IP isn't in `sources` (CIDRs); empty list = no restriction.
+  # Wrapped in a `handle` because the Caddyfile adapter sorts top-level
+  # `respond` after `handle`, so a bare `respond @blocked` is shadowed by
+  # any catch-all `handle { … }` in the same site. `handle` blocks are
+  # mutually exclusive and evaluated in source order — combined with
+  # `lib.mkBefore` at the call site this guarantees the deny path runs
+  # first.
+  # `client_ip` (not `remote_ip`) so that adding a CDN/edge proxy in
+  # front later is a config-only change: set `servers { trusted_proxies
+  # static <cidrs> }` in `globalConfig` and Caddy will start honouring
+  # `X-Forwarded-For` from those peers. Without `trusted_proxies` set,
+  # `client_ip` falls back to the immediate peer, so XFF can't be spoofed.
   mkAllowedSources =
     sources:
     lib.optionalString (sources != [ ]) ''
-      @blocked not remote_ip ${toString sources}
-      respond @blocked "Access denied: Your IP is not allowed to access this resource." 403
+      @blocked not client_ip ${toString sources}
+      handle @blocked {
+        respond "Access denied: Your IP is not allowed to access this resource." 403
+      }
     '';
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
