@@ -93,8 +93,20 @@ in
   };
 
   systemd.services.hivegent = {
-    after = [ "dex-generate-secrets.service" ];
-    requires = [ "dex-generate-secrets.service" ];
+    # The backend resolves the OIDC discovery document at startup, and the
+    # issuer URL routes through Caddy → Dex — both must be reachable before
+    # hivegent boots. `dex-generate-secrets` creates the shared env file
+    # the unit reads via `EnvironmentFile`.
+    after = [
+      "caddy.service"
+      "dex.service"
+      "dex-generate-secrets.service"
+    ];
+    requires = [
+      "caddy.service"
+      "dex.service"
+      "dex-generate-secrets.service"
+    ];
   };
 
   services.caddy.virtualHosts.hivegent = {
