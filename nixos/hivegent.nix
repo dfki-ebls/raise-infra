@@ -11,10 +11,11 @@ let
 
   hivegentPackages = inputs.hivegent.packages.${pkgs.stdenv.system};
 
-  # Rauthy's OIDC issuer is always `<scheme>://<pub_url>/auth/v1` — the
-  # `/auth/v1` path is a fixed mount in rauthy and shows up in the `iss`
-  # claim of issued tokens.
-  rauthyIssuer = "${caddyHelpers.mkSubHost "rauthy"}/auth/v1";
+  # Rauthy's OIDC issuer is `<scheme>://<pub_url>/auth/v1/` — the
+  # `/auth/v1` path is a fixed mount and rauthy emits the issuer with
+  # the trailing slash in the `iss` claim, so the value here has to
+  # match exactly or JWT iss validation fails.
+  rauthyIssuer = "${caddyHelpers.mkSubHost "rauthy"}/auth/v1/";
 
   # The frontend bakes its env in at build time (Vite's
   # `import.meta.env.VITE_*` is statically replaced). Setting these as
