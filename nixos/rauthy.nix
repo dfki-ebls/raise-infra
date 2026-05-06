@@ -18,7 +18,7 @@ let
 in
 {
   custom.rauthy = {
-    enable = true;
+    enable = false;
 
     settings = {
       bootstrap = {

@@ -13,6 +13,7 @@
         # or `127.0.0.1`; the default `hivegent.localhost` fails that check.
         settings.mcp.base_url = lib.mkForce "http://localhost/mcp";
       };
+      rauthy.enable = lib.mkForce true;
     };
     services.caddy.globalConfig = ''
       auto_https off
