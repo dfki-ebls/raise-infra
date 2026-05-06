@@ -119,7 +119,9 @@ in
         for secrets — API keys, MCP client secrets, OIDC client secrets —
         so they never land in the Nix store. Loaded by systemd before the
         process drops to the unit's `DynamicUser`, so the file must be
-        readable by `root`.
+        readable by `root`. Missing files are tolerated (systemd's `-`
+        prefix) so the unit still starts before an operator-managed
+        secret file has been created.
       '';
     };
 
@@ -160,7 +162,7 @@ in
         CacheDirectory = "hivegent";
         WorkingDirectory = "/var/lib/hivegent";
 
-        EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+        EnvironmentFile = lib.optional (cfg.environmentFile != null) "-${cfg.environmentFile}";
 
         ExecStart = utils.escapeSystemdExecArgs [
           (lib.getExe' cfg.package "hivegent")
