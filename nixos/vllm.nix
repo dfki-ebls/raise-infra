@@ -47,15 +47,18 @@ let
   };
 in
 lib.mkIf config.custom.enableNvidia {
-  custom.vllm = {
-    enable = false;
+  services.llmhop.vllm = {
+    enable = true;
+    uid = 503;
+    subUidStart = 300000;
     # https://hub.docker.com/r/vllm/vllm-openai/tags
     # https://github.com/vllm-project/vllm/releases/latest
-    tag = "v0.20.1";
+    tag = "v0.20.2";
     environmentFile = "/etc/vllm/vllm.env";
     environment = {
       VLLM_USE_V2_MODEL_RUNNER = "1";
     };
+
     modelSettings = {
       async-scheduling = true;
       kv-cache-dtype = "fp8";
@@ -78,6 +81,7 @@ lib.mkIf config.custom.enableNvidia {
         };
       };
     };
+
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       "gemma4-31b" = {
@@ -98,7 +102,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18003;
         settings = instantSettings // gemmaSettings;
       };
-      "qwen3-6-35b" = {
+      "qwen3.6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18005;
@@ -112,8 +116,8 @@ lib.mkIf config.custom.enableNvidia {
             moe-backend = "flashinfer_cutlass";
           };
       };
-      "qwen3-5-0-8b" = {
-        enable = true;
+      "qwen3.5-0.8b" = {
+        enable = false;
         model = "Qwen/Qwen3.5-0.8B";
         port = 18006;
         settings = instantSettings // qwenSettings;

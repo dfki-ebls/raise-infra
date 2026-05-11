@@ -17,13 +17,12 @@ let
   };
 
   # Larger thinking/tool-using profile sized for a 32 GB card. HiCache (hierarchical
-  # cache) is unavailable: it requires pure MHA or MLA, but Gemma4 uses sliding window
-  # attention and Qwen3.6 is a mamba hybrid.
+  # cache) requires pure MHA or MLA — Gemma4 uses sliding-window attention and Qwen3.6
+  # is a mamba hybrid, so we leave `--enable-hierarchical-cache` unset.
   thinkingSettings = {
     mem-fraction-static = 0.7;
     context-length = 16 * 1024;
     chunked-prefill-size = 1024;
-    enable-hierarchical-cache = false;
   };
 
   # https://docs.sglang.io/cookbook/autoregressive/Google/Gemma4
@@ -50,12 +49,29 @@ let
   };
 in
 lib.mkIf config.custom.enableNvidia {
-  custom.sglang = {
-    enable = false;
+  services.llmhop.sglang = {
+    enable = true;
+    uid = 504;
+    # Clear of NixOS system users (`<1000`), regular login UIDs, and the vLLM
+    # module's range (`300000`) on this host.
+    subUidStart = 400000;
     environmentFile = "/etc/sglang/sglang.env";
     # https://hub.docker.com/r/lmsysorg/sglang/tags
     # https://github.com/sgl-project/sglang/releases/latest
     tag = "v0.5.10.post1-cu130";
+
+    gateway = {
+      enable = false;
+      # https://hub.docker.com/r/lmsysorg/sgl-model-gateway/tags
+      tag = "v0.3.2";
+      # https://docs.sglang.io/docs/advanced_features/sgl_model_gateway
+      settings = rec {
+        policy = "cache_aware";
+        max-concurrent-requests = 8; # 2-4x worker count
+        queue-size = 2 * max-concurrent-requests;
+        request-timeout-secs = 120;
+      };
+    };
 
     modelSettings = {
       max-running-requests = 2;
@@ -77,19 +93,6 @@ lib.mkIf config.custom.enableNvidia {
       };
     };
 
-    gateway = {
-      enable = true;
-      # https://hub.docker.com/r/lmsysorg/sgl-model-gateway/tags
-      tag = "v0.3.2";
-      # https://docs.sglang.io/docs/advanced_features/sgl_model_gateway
-      settings = rec {
-        policy = "cache_aware";
-        max-concurrent-requests = 8; # 2-4x worker count
-        queue-size = 2 * max-concurrent-requests;
-        request-timeout-secs = 120;
-      };
-    };
-
     # https://docs.sglang.io/docs/advanced_features/server_arguments
     # https://docs.sglang.io/cookbook/
     models = {
@@ -97,28 +100,33 @@ lib.mkIf config.custom.enableNvidia {
         enable = false;
         tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
+        port = 19001;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-26b" = {
-        enable = true;
+        enable = false;
         tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
+        port = 19002;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-2b" = {
         enable = false;
         tag = "cu13-gemma4";
         model = "google/gemma-4-E2B-it";
+        port = 19003;
         settings = instantSettings // gemmaSettings;
       };
-      "qwen3-6-35b" = {
+      "qwen3.6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
+        port = 19005;
         settings = thinkingSettings // qwenSettings;
       };
-      "qwen3-5-0-8b" = {
-        enable = true;
+      "qwen3.5-0.8b" = {
+        enable = false;
         model = "Qwen/Qwen3.5-0.8B";
+        port = 19006;
         settings = instantSettings // qwenSettings;
       };
     };

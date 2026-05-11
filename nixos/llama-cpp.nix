@@ -2,62 +2,60 @@
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
 # Workstation Blackwell is SM120 (GB20x), NOT SM100 (GB100/GB200 datacenter Blackwell).
 lib.mkIf config.custom.enableNvidia {
-  services.llama-cpp = {
+  services.llmhop.llama-cpp = {
     enable = true;
-    port = 18000;
-    extraFlags = [
-      "--no-models-autoload"
-      "--models-max"
-      "10"
-    ];
+    environmentFile = "/etc/llama-cpp/llama-cpp.env";
+
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
-    modelsPreset = {
-      "*" = rec {
-        # keep-sorted start
-        cache-ram = 128 * 1024; # MiB
-        cache-type-k = "q8_0";
-        cache-type-v = "q8_0";
-        ctx-size = 32 * 1024 * parallel;
-        flash-attn = "on";
-        mlock = true;
-        mmap = false;
-        n-gpu-layers = "all";
-        parallel = 4;
-        sleep-idle-seconds = -1;
-        stop-timeout = 60;
-        # keep-sorted end
-      };
+    modelSettings = rec {
+      # keep-sorted start
+      cache-ram = 128 * 1024; # MiB
+      cache-type-k = "q8_0";
+      cache-type-v = "q8_0";
+      ctx-size = 32 * 1024 * parallel;
+      flash-attn = "on";
+      mlock = true;
+      mmap = false;
+      n-gpu-layers = "all";
+      parallel = 4;
+      # keep-sorted end
+    };
+
+    models = {
       # https://unsloth.ai/docs/models/qwen3.6
       "qwen3.6-35b-a3b" = {
-        # keep-sorted start
-        hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
-        load-on-startup = true;
-        min-p = 0.0;
-        presence-penalty = 1.0;
-        reasoning = "on";
-        repeat-penalty = 1.0;
-        temperature = 1.0;
-        top-k = 20;
-        top-p = 0.95;
-        # keep-sorted end
+        enable = false;
+        port = 18001;
+        settings = {
+          # keep-sorted start
+          hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
+          min-p = 0.0;
+          presence-penalty = 1.0;
+          reasoning = "on";
+          repeat-penalty = 1.0;
+          temperature = 1.0;
+          top-k = 20;
+          top-p = 0.95;
+          # keep-sorted end
+        };
       };
       # https://unsloth.ai/docs/models/qwen3.5
       "qwen3.5-0.8b" = {
-        # keep-sorted start
-        hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
-        load-on-startup = true;
-        min-p = 0.0;
-        presence-penalty = 1.0;
-        reasoning = "on";
-        repeat-penalty = 1.0;
-        temperature = 1.0;
-        top-k = 20;
-        top-p = 0.95;
-        # keep-sorted end
+        enable = true;
+        port = 18002;
+        settings = {
+          # keep-sorted start
+          hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
+          min-p = 0.0;
+          presence-penalty = 1.0;
+          reasoning = "off";
+          repeat-penalty = 1.0;
+          temperature = 1.0;
+          top-k = 20;
+          top-p = 0.95;
+          # keep-sorted end
+        };
       };
     };
-  };
-  systemd.services.llama-cpp = {
-    serviceConfig.EnvironmentFile = "/etc/llama-cpp/llama-cpp.env";
   };
 }
