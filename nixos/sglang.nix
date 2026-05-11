@@ -50,7 +50,7 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   services.llmhop.sglang = {
-    enable = true;
+    enable = false;
     uid = 504;
     # Clear of NixOS system users (`<1000`), regular login UIDs, and the vLLM
     # module's range (`300000`) on this host.
