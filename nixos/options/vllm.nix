@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 let
@@ -44,7 +45,7 @@ let
   mkContainer =
     i: model:
     lib.nameValuePair "vllm-${model.name}" (mkWorker {
-      inherit (cfg) openFilesLimit;
+      inherit cfg;
       healthPort = workerPort;
       containerConfig =
         (mkContainerArgs {
@@ -126,7 +127,7 @@ in
     lib.mkMerge [
       (mkConfig {
         backend = "vllm";
-        inherit cfg config;
+        inherit cfg config pkgs;
         description = "vLLM User";
       })
       {

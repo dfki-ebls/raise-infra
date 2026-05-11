@@ -313,6 +313,16 @@ in
           default = defaultCacheDir;
           description = "Host directory bind-mounted as the Hugging Face cache for every worker.";
         };
+        dataDir = mkOption {
+          type = types.path;
+          default = "/var/lib/${backend}";
+          description = ''
+            Home directory of `services.llmhop.${backend}.user`.
+            Used by rootless podman for container storage
+            (`~/.local/share/containers`), so it must live on a filesystem that
+            tolerates overlayfs.
+          '';
+        };
         subUidStart = mkOption {
           type = types.ints.unsigned;
           example = 300000;
@@ -411,11 +421,14 @@ in
       };
 
     # Render a Quadlet container worker fragment. Returns
-    # `{ serviceConfig, unitConfig, containerConfig }` with the shared baseline
-    # merged in; caller overrides win.
+    # `{ uid, serviceConfig, unitConfig, containerConfig }` with the shared
+    # baseline merged in; caller overrides win. The top-level `uid` is
+    # quadlet-nix's rootless-system marker — it installs the unit under the
+    # per-user rootless search path so the resulting service is owned by that
+    # UID's systemd-user instance.
     mkWorker =
       {
-        openFilesLimit,
+        cfg,
         healthPort,
         healthPath ? "/health",
         healthStartPeriod ? "30m",
@@ -424,10 +437,11 @@ in
         containerConfig ? { },
       }:
       {
+        uid = cfg.uid;
         serviceConfig =
           sharedServiceConfig
           // {
-            LimitNOFILE = openFilesLimit;
+            LimitNOFILE = cfg.openFilesLimit;
           }
           // serviceConfig;
         unitConfig = sharedUnitConfig // unitConfig;
@@ -446,9 +460,15 @@ in
       };
 
     # Common Quadlet `containerConfig` fields for a model worker — covers
-    # UID/GID mapping, image resolution, pull policy, GPU CDI device, HF cache
-    # bind-mount, env-file/env, shm size, and host ulimits. Spread together
-    # with backend-specific extras (`PublishPort`, `Exec`, ...) via `//`.
+    # image resolution, pull policy, GPU CDI device, HF cache bind-mount,
+    # env-file/env, shm size, and host ulimits. Spread together with
+    # backend-specific extras (`PublishPort`, `Exec`, ...) via `//`.
+    #
+    # Container UID 0 maps to the host backend user automatically because the
+    # quadlet runs under that user's systemd instance (rootless podman drives
+    # the userns remap from `/etc/subuid`/`/etc/subgid`), so no `UIDMap`/
+    # `GIDMap` is needed and the nvidia CDI hook's `createContainer` step can
+    # read its bundle.
     #
     # Digest-locked images stay pinned (`Pull=missing`); tag-tracking images
     # refresh on rebuild (`Pull=newer`). EnvironmentFile order is
@@ -460,14 +480,6 @@ in
         model,
       }:
       {
-        UIDMap = [
-          "0:${toString cfg.uid}:1"
-          "1:${toString cfg.subUidStart}:${toString cfg.subUidCount}"
-        ];
-        GIDMap = [
-          "0:${toString cfg.gid}:1"
-          "1:${toString cfg.subGidStart}:${toString cfg.subGidCount}"
-        ];
         Image =
           if model.tag != null && model.digest != null then
             throw "services.llmhop.${backend}.models.${model.name}: `tag` and `digest` are mutually exclusive."
@@ -492,10 +504,12 @@ in
 
     # Cross-cutting NixOS config produced by every quadlet backend: assertions
     # (quadlet-enabled + port uniqueness), llmhop registration, the port
-    # registry contribution, tmpfiles, and — when the user hasn't been
-    # customised away from the backend default — the system user/group.
-    # Compose with backend-specific config via `lib.mkMerge`; list-typed
-    # options like `assertions` concatenate naturally.
+    # registry contribution, `dataDir` + `cacheDir` tmpfiles, and — when the
+    # user hasn't been customised away from the backend default — the system
+    # user/group plus a `<backend>` helper command that drops into the
+    # rootless user's session via `machinectl shell`. Compose with
+    # backend-specific config via `lib.mkMerge`; list-typed options like
+    # `assertions` concatenate naturally.
     #
     # `extras` is a labeled attrset of auxiliary host ports (e.g.
     # `{ gateway = 30000; }`) that participates in both the local and global
@@ -511,10 +525,18 @@ in
         backend,
         cfg,
         config,
+        pkgs,
         description,
         extras ? { },
         portsMessage ? null,
       }:
+      let
+        dirSpec = {
+          user = cfg.user;
+          group = cfg.group;
+          mode = "0700";
+        };
+      in
       mkMerge [
         (mkSharedConfig {
           inherit
@@ -532,36 +554,60 @@ in
             }
           ];
 
-          systemd.tmpfiles.settings."10-${backend}".${cfg.cacheDir}.d = {
-            user = cfg.user;
-            group = cfg.group;
-            mode = "0700";
-          };
-
-          users.users = mkIf (cfg.user == backend) {
-            ${cfg.user} = {
-              inherit description;
-              uid = cfg.uid;
-              isSystemUser = true;
-              group = cfg.group;
-              subUidRanges = [
-                {
-                  startUid = cfg.subUidStart;
-                  count = cfg.subUidCount;
-                }
-              ];
-              subGidRanges = [
-                {
-                  startGid = cfg.subGidStart;
-                  count = cfg.subGidCount;
-                }
-              ];
-            };
-          };
-          users.groups = mkIf (cfg.user == backend) {
-            ${cfg.group}.gid = cfg.gid;
+          systemd.tmpfiles.settings."10-${backend}" = {
+            ${cfg.dataDir}.d = dirSpec;
+            ${cfg.cacheDir}.d = dirSpec;
           };
         }
+        # Real home + shell + linger turn the system user into something
+        # systemd-logind treats as a real session: rootless podman gets a
+        # writable `~/.local/share/containers`, `machinectl shell` works, and
+        # `systemctl --user` keeps running across logouts. `systemd-journal`
+        # makes `journalctl --user` work inside the machinectl session.
+        (mkIf (cfg.user == backend) {
+          users.users.${cfg.user} = {
+            inherit description;
+            uid = cfg.uid;
+            isSystemUser = true;
+            group = cfg.group;
+            home = cfg.dataDir;
+            shell = config.users.defaultUserShell;
+            extraGroups = [ "systemd-journal" ];
+            linger = true;
+            subUidRanges = [
+              {
+                startUid = cfg.subUidStart;
+                count = cfg.subUidCount;
+              }
+            ];
+            subGidRanges = [
+              {
+                startGid = cfg.subGidStart;
+                count = cfg.subGidCount;
+              }
+            ];
+          };
+          users.groups.${cfg.group}.gid = cfg.gid;
+
+          # Lets operators inspect the rootless services without remembering
+          # the `machinectl` incantation.
+          environment.systemPackages = [
+            (pkgs.writeShellApplication {
+              name = backend;
+              text = ''
+                if [ "$#" -eq 0 ]; then
+                  echo "Entering the ${backend} user shell. Useful commands:"
+                  echo "  systemctl --user status ${backend}-<model>    # service state"
+                  echo "  journalctl --user -u ${backend}-<model> -f    # tail logs"
+                  echo "  podman ps                                     # list containers"
+                  echo "  exit                                          # back to host"
+                  exec sudo machinectl --quiet shell ${cfg.user}@.host
+                fi
+                exec sudo machinectl --quiet shell ${cfg.user}@.host /usr/bin/env "$@"
+              '';
+            })
+          ];
+        })
       ];
   };
 

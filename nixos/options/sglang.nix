@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }:
 let
@@ -45,7 +46,7 @@ let
   mkContainer =
     i: model:
     lib.nameValuePair "sglang-${model.name}" (mkWorker {
-      inherit (cfg) openFilesLimit;
+      inherit cfg;
       healthPort = workerPort;
       containerConfig =
         (mkContainerArgs {
@@ -111,18 +112,10 @@ let
   ) models;
 
   mkGatewayContainer = lib.nameValuePair "sglang-gateway" (mkWorker {
-    inherit (cfg) openFilesLimit;
+    inherit cfg;
     healthPort = cfg.gateway.port;
     healthStartPeriod = "5m";
     containerConfig = {
-      UIDMap = [
-        "0:${toString cfg.uid}:1"
-        "1:${toString cfg.subUidStart}:${toString cfg.subUidCount}"
-      ];
-      GIDMap = [
-        "0:${toString cfg.gid}:1"
-        "1:${toString cfg.subGidStart}:${toString cfg.subGidCount}"
-      ];
       Image = resolveImageRef {
         inherit (cfg.gateway) image tag digest;
         defaultTag = "latest";
@@ -294,7 +287,7 @@ in
     lib.mkMerge [
       (mkConfig {
         backend = "sglang";
-        inherit cfg config;
+        inherit cfg config pkgs;
         description = "SGLang User";
         extras =
           lib.optionalAttrs cfg.gateway.enable { gateway = cfg.gateway.port; }
