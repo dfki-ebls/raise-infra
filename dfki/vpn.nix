@@ -4,11 +4,18 @@
   ...
 }:
 let
-  injectVpn = lib.mkBefore (caddyHelpers.mkAllowedSources [ "136.199.45.0/24" ]);
+  injectVpn = {
+    extraConfig = lib.mkBefore (
+      caddyHelpers.mkAllowedSources [
+        "136.199.45.0/24"
+        "136.199.0.0/16"
+      ]
+    );
+  };
 in
 {
   services.caddy.virtualHosts = {
-    rauthy.extraConfig = injectVpn;
-    hivegent.extraConfig = injectVpn;
+    rauthy = injectVpn;
+    hivegent = injectVpn;
   };
 }
