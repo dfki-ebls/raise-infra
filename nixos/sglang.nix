@@ -62,6 +62,7 @@ lib.mkIf config.custom.enableNvidia {
 
     gateway = {
       enable = false;
+      port = 18300;
       # https://hub.docker.com/r/lmsysorg/sgl-model-gateway/tags
       tag = "v0.3.2";
       # https://docs.sglang.io/docs/advanced_features/sgl_model_gateway
@@ -100,33 +101,33 @@ lib.mkIf config.custom.enableNvidia {
         enable = false;
         tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
-        port = 19001;
+        port = 18301;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-26b" = {
         enable = false;
         tag = "cu13-gemma4";
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
-        port = 19002;
+        port = 18302;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-2b" = {
         enable = false;
         tag = "cu13-gemma4";
         model = "google/gemma-4-E2B-it";
-        port = 19003;
+        port = 18303;
         settings = instantSettings // gemmaSettings;
       };
       "qwen3.6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
-        port = 19005;
+        port = 18305;
         settings = thinkingSettings // qwenSettings;
       };
       "qwen3.5-0.8b" = {
         enable = false;
         model = "Qwen/Qwen3.5-0.8B";
-        port = 19006;
+        port = 18306;
         settings = instantSettings // qwenSettings;
       };
     };

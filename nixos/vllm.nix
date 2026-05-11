@@ -87,25 +87,25 @@ lib.mkIf config.custom.enableNvidia {
       "gemma4-31b" = {
         enable = false;
         model = "RedHatAI/gemma-4-31B-it-NVFP4";
-        port = 18001;
+        port = 18201;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-26b" = {
         enable = true;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
-        port = 18002;
+        port = 18202;
         settings = thinkingSettings // gemmaSettings;
       };
       "gemma4-2b" = {
         enable = false;
         model = "google/gemma-4-E2B-it";
-        port = 18003;
+        port = 18203;
         settings = instantSettings // gemmaSettings;
       };
       "qwen3.6-35b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
-        port = 18005;
+        port = 18205;
         # Hybrid Mamba+attention: vLLM aligns attention block size to the
         # Mamba page size (2096 tokens), which must be <= max-num-batched-tokens.
         settings =
@@ -119,7 +119,7 @@ lib.mkIf config.custom.enableNvidia {
       "qwen3.5-0.8b" = {
         enable = false;
         model = "Qwen/Qwen3.5-0.8B";
-        port = 18006;
+        port = 18206;
         settings = instantSettings // qwenSettings;
       };
     };

@@ -25,7 +25,7 @@ lib.mkIf config.custom.enableNvidia {
       # https://unsloth.ai/docs/models/qwen3.6
       "qwen3.6-35b-a3b" = {
         enable = false;
-        port = 18001;
+        port = 18101;
         settings = {
           # keep-sorted start
           hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
@@ -42,7 +42,7 @@ lib.mkIf config.custom.enableNvidia {
       # https://unsloth.ai/docs/models/qwen3.5
       "qwen3.5-0.8b" = {
         enable = true;
-        port = 18002;
+        port = 18102;
         settings = {
           # keep-sorted start
           hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";

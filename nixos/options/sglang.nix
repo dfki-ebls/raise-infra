@@ -241,7 +241,6 @@ in
 
         port = lib.mkOption {
           type = lib.types.port;
-          default = 30000;
           description = "Host port the gateway listens on.";
         };
 
