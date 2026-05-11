@@ -148,52 +148,16 @@ let
   # iteration over their model set.
   enabledModels = cfg: filterAttrs (_: m: m.enable) cfg.models;
 
-  # Per-backend port-uniqueness assertion. Reuses `mkPortRegistry` so the
-  # local check sees exactly the same ports as the global cross-backend one.
-  mkPortsAssertion =
-    {
-      backend,
-      cfg,
-      extras ? { },
-      portsMessage ? null,
-    }:
-    let
-      ports = attrValues (mkPortRegistry {
-        inherit backend cfg extras;
-      });
-    in
-    {
-      assertion = length (unique ports) == length ports;
-      message =
-        if portsMessage != null then
-          portsMessage
-        else
-          "services.llmhop.${backend}.models: each model must use a unique `port`.";
-    };
-
-  # Labeled fragment contributed to `services.llmhop.portsRegistry` for the
-  # global cross-backend uniqueness check. Keys are `<backend>/<modelName>`
-  # for models and `<backend>/<extraLabel>` for auxiliary components.
-  mkPortRegistry =
-    {
-      backend,
-      cfg,
-      extras ? { },
-    }:
-    let
-      modelEntries = mapAttrs' (name: m: nameValuePair "${backend}/${name}" m.port) (enabledModels cfg);
-      extraEntries = mapAttrs' (name: port: nameValuePair "${backend}/${name}" port) extras;
-    in
-    modelEntries // extraEntries;
-
-  # `services.llmhop.settings.models` fragment shared by every backend.
-  mkLlmhopRegistry =
-    { cfg }: mapAttrs (_: m: { url = "http://127.0.0.1:${toString m.port}"; }) (enabledModels cfg);
-
   # Cross-cutting NixOS fragment every backend (quadlet or systemd) emits:
   # local port-uniqueness assertion plus the llmhop model + ports-registry
-  # contributions. Backend-specific extras (quadlet tmpfiles/user/group,
-  # quadlet-enabled assertion, ...) layer on top via `lib.mkMerge`.
+  # contributions, derived from a single walk over `enabledModels cfg`.
+  # Backend-specific extras (quadlet tmpfiles/user/group, quadlet-enabled
+  # assertion, ...) layer on top via `lib.mkMerge`.
+  #
+  # `portsRegistry` keys are `<backend>/<modelName>` for models and
+  # `<backend>/<extraLabel>` for auxiliary components (gateways, metrics
+  # endpoints); the labelled keys let the global cross-backend collision
+  # assertion in `llmhop.nix` name colliding owners.
   mkSharedConfig =
     {
       backend,
@@ -201,20 +165,27 @@ let
       extras ? { },
       portsMessage ? null,
     }:
+    let
+      models = enabledModels cfg;
+      modelPortEntries = mapAttrs' (name: m: nameValuePair "${backend}/${name}" m.port) models;
+      extraPortEntries = mapAttrs' (name: port: nameValuePair "${backend}/${name}" port) extras;
+      portsRegistry = modelPortEntries // extraPortEntries;
+      ports = attrValues portsRegistry;
+    in
     {
       assertions = [
-        (mkPortsAssertion {
-          inherit
-            backend
-            cfg
-            extras
-            portsMessage
-            ;
-        })
+        {
+          assertion = length (unique ports) == length ports;
+          message =
+            if portsMessage != null then
+              portsMessage
+            else
+              "services.llmhop.${backend}.models: each model must use a unique `port`.";
+        }
       ];
       services.llmhop = {
-        settings.models = mkLlmhopRegistry { inherit cfg; };
-        portsRegistry = mkPortRegistry { inherit backend cfg extras; };
+        settings.models = mapAttrs (_: m: { url = "http://127.0.0.1:${toString m.port}"; }) models;
+        inherit portsRegistry;
       };
     };
 in

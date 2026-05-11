@@ -16,8 +16,8 @@ in
       Internal registry of host ports reserved by llmhop backends and their
       auxiliary components (gateways, metrics endpoints). Keyed by
       `<backend>/<component>` so the global uniqueness assertion can name the
-      colliding owners. Written by `_llmhop-lib.nix:mkConfig`; do not set
-      directly.
+      colliding owners. Written by `_llmhop-lib.nix:mkSharedConfig`; do not
+      set directly.
     '';
   };
 
