@@ -13,8 +13,6 @@
     ];
   };
 
-  services.firewalld.enable = true;
-
   virtualisation.quadlet.networks = {
     internal.networkConfig = {
       Driver = "bridge";
