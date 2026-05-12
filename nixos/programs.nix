@@ -10,7 +10,6 @@
     };
     zsh.enable = true;
     git.enable = true;
-    nix-ld.enable = true;
     neovim = {
       enable = true;
       defaultEditor = true;
