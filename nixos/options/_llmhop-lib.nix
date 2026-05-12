@@ -447,9 +447,21 @@ in
         unitConfig = sharedUnitConfig // unitConfig;
         # `[Container]` defaults: minimal hardening (podman handles the rest at
         # the container level) plus an HTTP `/health` probe.
+        #
+        # `ReadOnly = true` keeps the image's rootfs immutable; the writable
+        # paths every supported worker needs are covered by the explicit
+        # `Tmpfs` entries below. `/root/.cache` is the catch-all for HF /
+        # Torch / Triton / SGLang kernel-lock caches; the HF bind-mount that
+        # `mkContainerArgs` installs at `/root/.cache/huggingface` layers
+        # over the tmpfs subpath without conflict.
         containerConfig = {
           NoNewPrivileges = true;
           DropCapability = "all";
+          ReadOnly = true;
+          Tmpfs = [
+            "/tmp"
+            "/root/.cache"
+          ];
           Notify = "healthy";
           HealthCmd = "curl --fail --silent --show-error http://localhost:${toString healthPort}${healthPath}";
           HealthStartPeriod = healthStartPeriod;

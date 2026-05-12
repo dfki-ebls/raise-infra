@@ -91,7 +91,7 @@ in
         `auth.enable` becomes `HIVEGENT_AUTH__ENABLE`). Bools render
         as `true`/`false`, lists as JSON; nulls drop to an empty string.
 
-        `auth.enable = true` bypasses JWT validation entirely and
+        `auth.enable = false` bypasses JWT validation entirely and
         treats every request as a synthetic localhost user — only use
         that on developer workstations.
 

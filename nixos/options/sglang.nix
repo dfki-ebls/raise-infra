@@ -122,7 +122,6 @@ let
         label = "services.llmhop.sglang.gateway";
       };
       Pull = if cfg.gateway.digest != null then "missing" else "newer";
-      ReadOnly = true;
       # Host networking lets the gateway reach each worker at
       # `127.0.0.1:<model.port>` and binds its own listeners directly on
       # `bindAddress`, so no `PublishPort` is required.
