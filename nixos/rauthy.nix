@@ -106,6 +106,7 @@ in
     hostName = caddySubHost;
     extraConfig = ''
       ${caddyHelpers.mkWaf { }}
+      ${caddyHelpers.securityHeaders}
       reverse_proxy 127.0.0.1:${toString port}
     '';
   };

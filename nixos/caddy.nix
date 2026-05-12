@@ -8,6 +8,24 @@ let
   mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
+  # Baseline response headers applied to every public vhost. HSTS is only
+  # meaningful over HTTPS — browsers ignore the header on plaintext
+  # responses per RFC 6797 §7.2, so we drop it when certificates are off
+  # to avoid noise. `frame-ancestors 'none'` is a content-agnostic
+  # framing block; if a downstream app needs framing, override with a
+  # vhost-specific `header` block after this snippet.
+  securityHeaders = ''
+    header {
+      X-Content-Type-Options nosniff
+      Referrer-Policy strict-origin-when-cross-origin
+      Content-Security-Policy "frame-ancestors 'none'"
+      -Server
+      ${lib.optionalString config.custom.enableCertificates ''
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+      ''}
+    }
+  '';
+
   # Caddyfile snippet that 403s any request whose source IP isn't in `sources` (CIDRs); empty list = no restriction.
   # Wrapped in a `handle` because the Caddyfile adapter sorts top-level
   # `respond` after `handle`, so a bare `respond @blocked` is shadowed by
@@ -98,6 +116,7 @@ in
       mkAllowedSources
       mkWaf
       defaultIncludeRules
+      securityHeaders
       ;
   };
 

@@ -130,6 +130,7 @@ in
   services.caddy.virtualHosts.hivegent = {
     hostName = caddySubHost;
     extraConfig = ''
+      ${caddyHelpers.securityHeaders}
       encode zstd gzip
 
       handle /api/* {
