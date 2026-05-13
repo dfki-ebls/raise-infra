@@ -23,6 +23,7 @@
         flake-parts.follows = "flake-parts";
         flocken.follows = "flocken";
         treefmt-nix.follows = "treefmt-nix";
+        quadlet-nix.follows = "quadlet-nix";
       };
     };
     quadlet-nix = {
