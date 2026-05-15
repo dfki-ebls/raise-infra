@@ -1,5 +1,6 @@
 {
   lib,
+  pkgs,
   config,
   utils,
   ...
@@ -7,34 +8,8 @@
 let
   cfg = config.custom.hivegent;
 
-  # Encode a leaf value for pydantic-settings: lists go through JSON
-  # (pydantic's default `list[str]` parser), null collapses to empty,
-  # and everything else goes through `mkValueStringDefault` — which
-  # already handles ints, floats, bools, strings, and store paths the way
-  # we want (no quoting, `true`/`false`, etc.).
-  encodeValue =
-    v:
-    if v == null then
-      ""
-    else if builtins.isList v then
-      builtins.toJSON v
-    else
-      lib.generators.mkValueStringDefault { } v;
-
-  # Flatten an arbitrarily nested settings tree into `{ NAME = "value"; … }`,
-  # joining every path segment with `__` (matching pydantic's
-  # `env_nested_delimiter`) and uppercasing the whole thing.
-  flattenSettings =
-    prefix: settings:
-    let
-      annotated = lib.mapAttrsRecursive (path: value: {
-        name = prefix + lib.toUpper (lib.concatStringsSep "__" path);
-        value = encodeValue value;
-      }) settings;
-    in
-    lib.listToAttrs (lib.collect (v: v ? name && v ? value) annotated);
-
-  settingsEnv = flattenSettings "HIVEGENT_" cfg.settings;
+  tomlFormat = pkgs.formats.toml { };
+  configFile = tomlFormat.generate "hivegent-config.toml" cfg.settings;
 in
 {
   options.custom.hivegent = {
@@ -68,7 +43,7 @@ in
     };
 
     settings = lib.mkOption {
-      type = lib.types.attrsOf lib.types.anything;
+      type = tomlFormat.type;
       default = { };
       example = lib.literalExpression ''
         {
@@ -84,19 +59,20 @@ in
         }
       '';
       description = ''
-        Application settings forwarded to the backend as `HIVEGENT_*`
-        environment variables. Every path segment is uppercased and
-        joined with `__`, matching pydantic's `env_nested_delimiter`
-        (e.g. `llm.model` becomes `HIVEGENT_LLM__MODEL`,
-        `auth.enable` becomes `HIVEGENT_AUTH__ENABLE`). Bools render
-        as `true`/`false`, lists as JSON; nulls drop to an empty string.
+        Hivegent TOML config rendered into the Nix store and passed via
+        `HIVEGENT_CONFIG_FILE`. Nested attribute sets become TOML tables.
+
+        Do NOT put secrets here — anything in this attrset lands in
+        `/nix/store`. Use `environmentFile` for `HIVEGENT_*` overrides
+        (e.g. `HIVEGENT_MCP__CLIENT_SECRET`); env vars take precedence
+        over the TOML file.
 
         `auth.enable = false` bypasses JWT validation entirely and
         treats every request as a synthetic localhost user — only use
         that on developer workstations.
 
-        `data_dir` defaults to the unit's `StateDirectory` and is set
-        automatically; override here only if you need a different layout.
+        `data_dir` defaults to the unit's `StateDirectory`; override
+        here only if you need a different layout.
       '';
     };
 
@@ -104,9 +80,9 @@ in
       type = lib.types.attrsOf lib.types.str;
       default = { };
       description = ''
-        Additional environment variables set on the systemd unit. Useful
-        for non-`HIVEGENT_*` overrides (e.g. `HF_TOKEN`, proxy variables).
-        Merged after `settings` and `auth`, so entries here win.
+        Plain environment variables set on the unit. Useful for non-secret
+        `HIVEGENT_*` overrides of TOML values, or for unrelated vars like
+        `HF_TOKEN` and proxy settings.
       '';
     };
 
@@ -124,7 +100,6 @@ in
         secret file has been created.
       '';
     };
-
   };
 
   config = lib.mkIf cfg.enable {
@@ -136,14 +111,14 @@ in
       after = [ "network.target" ];
 
       environment = {
-        # Pydantic settings drive the application; HOME and HF_HOME redirect
-        # libreoffice's profile and the docling/sentence-transformers cache
-        # away from /var/empty so first-run startup doesn't fail.
+        # HOME and HF_HOME redirect libreoffice's profile and the
+        # docling/sentence-transformers cache away from /var/empty so
+        # first-run startup doesn't fail.
         HOME = "/var/lib/hivegent";
         HF_HOME = "/var/cache/hivegent";
         PYTHONUNBUFFERED = "1";
+        HIVEGENT_CONFIG_FILE = "${configFile}";
       }
-      // settingsEnv
       // cfg.environment;
 
       serviceConfig = {
