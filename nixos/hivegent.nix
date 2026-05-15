@@ -51,11 +51,6 @@ in
         issuer = rauthyIssuer;
       };
 
-      # Same-origin requests don't need this, but the OIDC token endpoint
-      # is on a different subdomain — list the SPA origin so any direct
-      # cross-origin call (e.g. tooling, debugging) still works.
-      cors_origins = [ caddySubHost ];
-
       # Match `nixos/llama-cpp.nix` — both models are preloaded there and
       # llama-server exposes an OpenAI-compatible endpoint on 18000.
       llm = {
@@ -130,17 +125,81 @@ in
   services.caddy.virtualHosts.hivegent = {
     hostName = caddySubHost;
     extraConfig = ''
+      ${caddyHelpers.mkWaf {
+        # SPA + active chat sessions burn through the default 100/min
+        # quickly (asset fetches, conversation polls, SSE reconnects).
+        rateLimit = {
+          requests = 600;
+          window = "1m";
+          cleanupInterval = "5m";
+        };
+      }}
+      ${caddyHelpers.scannerHoneypots}
       ${caddyHelpers.securityHeaders}
+      header Permissions-Policy "camera=(), microphone=(self), geolocation=()"
       encode zstd gzip
 
-      handle /api/* {
-        reverse_proxy ${cfg.host}:${toString cfg.port}
+      # Defense-in-depth body cap. The `/api/*` handle below sets its
+      # own 60 MB cap and needs it for document uploads; everything
+      # else (SPA assets, honeypots, scanner paths, the static-file
+      # catch-all) has no business accepting large bodies. A bare
+      # site-wide `request_body` would not work — Caddy composes
+      # `MaxBytesReader`s by MIN, so an outer 1 MB cap would override
+      # the inner 60 MB on `/api/*`. The `not path /api/*` matcher
+      # skips the cap for API requests so the inner one wins.
+      @small_body not path /api/*
+      request_body @small_body {
+        max_size 1MB
       }
 
-      handle /mcp* {
-        reverse_proxy ${cfg.host}:${toString cfg.port} {
-          flush_interval -1
+      # Defense-in-depth: even if the backend ever exposes FastAPI docs,
+      # never let them through the edge. Wrapped in `handle` because a
+      # top-level `respond` is sorted after `handle` by the Caddyfile
+      # adapter and would be shadowed by the SPA catch-all below.
+      @docs path /docs* /redoc* /openapi.json
+      handle @docs {
+        respond 404
+      }
+
+      handle /api/* {
+        request_body {
+          max_size 60MB
         }
+        # API responses are JSON / binary and must never be rendered as
+        # HTML by a browser tab that lands on the URL directly. Tighten
+        # CSP for this path; the shared site CSP (frame-ancestors only)
+        # stays for the SPA.
+        header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        reverse_proxy ${cfg.host}:${toString cfg.port} {
+          # SSE: document conversion stage events and conversation
+          # streaming need unbuffered forwarding.
+          flush_interval -1
+          # Passive upstream health check — Caddy stops sending traffic
+          # if the backend's `/api/health` starts failing.
+          health_uri      /api/health
+          health_interval 10s
+          health_timeout  3s
+        }
+      }
+
+      ${
+        if cfg.settings.mcp.enable or false then
+          ''
+            handle /mcp* {
+              reverse_proxy ${cfg.host}:${toString cfg.port} {
+                flush_interval -1
+              }
+            }
+          ''
+        else
+          ''
+            # MCP is opt-in: refuse at the edge when the backend has it
+            # disabled so probes don't reach the upstream at all.
+            @mcp path /mcp /mcp/*
+            handle @mcp {
+              respond 404
+            }
+          ''
       }
 
       handle {

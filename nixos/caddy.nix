@@ -13,10 +13,13 @@ let
   # responses per RFC 6797 §7.2, so we drop it when certificates are off
   # to avoid noise. `frame-ancestors 'none'` is a content-agnostic
   # framing block; if a downstream app needs framing, override with a
-  # vhost-specific `header` block after this snippet.
+  # vhost-specific `header` block after this snippet. `X-Frame-Options`
+  # is redundant with `frame-ancestors` on modern browsers but cheap
+  # defense-in-depth for legacy UAs that ignore CSP framing directives.
   securityHeaders = ''
     header {
       X-Content-Type-Options nosniff
+      X-Frame-Options DENY
       Referrer-Policy strict-origin-when-cross-origin
       Content-Security-Policy "frame-ancestors 'none'"
       -Server
@@ -69,19 +72,61 @@ let
     "sensitive-files-expanded" # narrower companion to sensitive-files
   ];
 
+  # Custom rules appended on top of the curated upstream set. The plugin
+  # parses the JSON via the `Rule` struct (`types.go:71`) — note the
+  # mode field is keyed as `mode` despite the Go field being `Action`,
+  # and the upstream `rules.json` ships with the wrong key (`action`),
+  # which is why none of upstream's `"action": "block"` rules actually
+  # short-circuit — they only contribute to the anomaly score. Keep
+  # `mode` here so explicit blocks work.
+  defaultExtraRules = [
+    {
+      id = "method-disallowed";
+      phase = 1;
+      pattern = "^(TRACE|CONNECT|PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK|DEBUG|TRACK)$";
+      targets = [ "METHOD" ];
+      severity = "HIGH";
+      score = 10;
+      mode = "block";
+      priority = 100;
+      description = "Block HTTP methods the application does not use";
+    }
+  ];
+
   mkRuleFile =
-    includeRules:
+    {
+      includeRules,
+      extraRules,
+    }:
     pkgs.runCommand "waf-rules.json" { } ''
       ${lib.getExe pkgs.jq} \
         --argjson include '${lib.toJSON includeRules}' \
-        '[.[] | select(.id as $id | $include | index($id))]' \
+        --argjson extra '${lib.toJSON extraRules}' \
+        '[.[] | select(.id as $id | $include | index($id))] + $extra' \
         ${pkgs.caddy-waf}/rules.json > $out
     '';
+
+  # Default JSON block responses; nicer than the plugin's plain-text
+  # "Request blocked by WAF" body, especially for an API consumed by
+  # the SPA via fetch().
+  wafBlockedJson = pkgs.writeText "waf-blocked.json" (
+    builtins.toJSON {
+      error = "blocked";
+      detail = "Request blocked by web application firewall.";
+    }
+  );
+  wafRatelimitedJson = pkgs.writeText "waf-ratelimited.json" (
+    builtins.toJSON {
+      error = "rate_limited";
+      detail = "Too many requests.";
+    }
+  );
 
   mkWaf =
     {
       countries ? [ "DE" ],
       includeRules ? defaultIncludeRules,
+      extraRules ? defaultExtraRules,
       rateLimit ? {
         requests = 100;
         window = "1m";
@@ -89,11 +134,19 @@ let
       },
       anomalyThreshold ? 10,
       logSeverity ? "info",
+      # Optional blocklists. The plugin hot-reloads these via fsnotify
+      # when the file is rewritten, so an operator can drop in CIDRs or
+      # domains without restarting Caddy. Paths must exist at startup
+      # (caddy-waf does not tolerate missing files), so default to
+      # plugin-shipped empty stubs in /nix/store; override with a
+      # mutable path on disk to make hot-reload useful.
+      ipBlacklistFile ? null,
+      dnsBlacklistFile ? null,
       extraConfig ? "",
     }:
     lib.optionalString config.custom.enableWaf ''
       waf {
-        rule_file ${mkRuleFile includeRules}
+        rule_file ${mkRuleFile { inherit includeRules extraRules; }}
         anomaly_threshold ${toString anomalyThreshold}
         whitelist_countries ${countryDb} ${toString countries}
         log_path ${config.services.caddy.logDir}/waf.json
@@ -104,9 +157,24 @@ let
           window ${rateLimit.window}
           cleanup_interval ${rateLimit.cleanupInterval}
         }
+        custom_response 403 application/json ${wafBlockedJson}
+        custom_response 429 application/json ${wafRatelimitedJson}
+        ${lib.optionalString (ipBlacklistFile != null) "ip_blacklist_file ${ipBlacklistFile}"}
+        ${lib.optionalString (dnsBlacklistFile != null) "dns_blacklist_file ${dnsBlacklistFile}"}
         ${extraConfig}
       }
     '';
+
+  # Curated honeypot paths we never serve. WAF's `sensitive-files`
+  # rule covers /.git/, /.env, etc; this snippet kills the rest
+  # (WordPress probes, PHPMyAdmin, AWS/SSH credential paths) before
+  # the WAF burns cycles inspecting them.
+  scannerHoneypots = ''
+    @scanner path /wp-admin* /wp-login* /wp-content* /xmlrpc.php /phpmyadmin* /pma* /.aws/* /.ssh/* /administrator /admin.php /shell.php
+    handle @scanner {
+      respond 404
+    }
+  '';
 in
 {
   _module.args.caddyHelpers = {
@@ -116,6 +184,7 @@ in
       mkAllowedSources
       mkWaf
       defaultIncludeRules
+      scannerHoneypots
       securityHeaders
       ;
   };
@@ -129,6 +198,22 @@ in
       admin off
       persist_config off
       email ${config.custom.admin.mail}
+
+      # Slow-loris defense. `read_header` and `read_body` are safe to
+      # tighten site-wide — `read_body` caps any single body read, not
+      # the whole upload, so a 60 MB upload over a slow link is fine.
+      # `read` (whole-request) would break those uploads and is left
+      # unset. `write` is also unset: it'd terminate long SSE streams
+      # (LLM generations, conversion progress) since Caddy applies it
+      # to the response writer even with `flush_interval -1`. `idle`
+      # is the per-connection keep-alive cap.
+      servers {
+        timeouts {
+          read_header 10s
+          read_body   30s
+          idle        2m
+        }
+      }
     ''
     + lib.optionalString config.custom.enableWaf ''
       order waf first
