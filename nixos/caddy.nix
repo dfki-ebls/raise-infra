@@ -194,6 +194,7 @@ in
   services.caddy = {
     enable = true;
     package = pkgs.caddy-custom;
+    openFirewall = true;
     globalConfig = ''
       admin off
       persist_config off
@@ -224,15 +225,5 @@ in
   systemd.services.caddy = lib.mkIf config.custom.enableWaf {
     wants = [ "geoip-update.service" ];
     after = [ "geoip-update.service" ];
-  };
-
-  networking.firewall = {
-    allowedTCPPorts = [
-      80
-      443
-    ];
-    allowedUDPPorts = [
-      443
-    ];
   };
 }
