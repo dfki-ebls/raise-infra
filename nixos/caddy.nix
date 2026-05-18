@@ -195,10 +195,11 @@ in
     enable = true;
     package = pkgs.caddy-custom;
     openFirewall = true;
+    email = config.custom.admin.mail;
+    enableReload = false; # requires admin api
     globalConfig = ''
       admin off
       persist_config off
-      email ${config.custom.admin.mail}
 
       # Slow-loris defense. `read_header` and `read_body` are safe to
       # tighten site-wide — `read_body` caps any single body read, not
@@ -219,7 +220,6 @@ in
     + lib.optionalString config.custom.enableWaf ''
       order waf first
     '';
-    enableReload = false; # requires admin api
   };
 
   systemd.services.caddy = lib.mkIf config.custom.enableWaf {
