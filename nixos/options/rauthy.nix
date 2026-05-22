@@ -74,10 +74,12 @@ in
     };
 
     configFile = lib.mkOption {
-      type = lib.types.nullOr (lib.types.oneOf [
-        lib.types.path
-        lib.types.str
-      ]);
+      type = lib.types.nullOr (
+        lib.types.oneOf [
+          lib.types.path
+          lib.types.str
+        ]
+      );
       default = null;
       example = "/run/secrets/rauthy.toml";
       description = ''
