@@ -33,6 +33,8 @@ lib.mkIf config.custom.enableNvidia {
           presence-penalty = 1.0;
           reasoning = "on";
           repeat-penalty = 1.0;
+          spec-draft-n-max = 3;
+          spec-type = "draft-mtp";
           temperature = 1.0;
           top-k = 20;
           top-p = 0.95;
@@ -50,6 +52,8 @@ lib.mkIf config.custom.enableNvidia {
           presence-penalty = 1.0;
           reasoning = "off";
           repeat-penalty = 1.0;
+          spec-draft-n-max = 3;
+          spec-type = "draft-mtp";
           temperature = 1.0;
           top-k = 20;
           top-p = 0.95;

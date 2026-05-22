@@ -114,6 +114,10 @@ lib.mkIf config.custom.enableNvidia {
           // {
             max-num-batched-tokens = 4 * 1024;
             moe-backend = "flashinfer_cutlass";
+            speculative-config = lib.toJSON {
+              method = "mtp";
+              num_speculative_tokens = 3;
+            };
           };
       };
       "qwen3.5-0.8b" = {
