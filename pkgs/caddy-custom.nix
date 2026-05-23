@@ -4,5 +4,5 @@ caddy.withPlugins {
     # https://github.com/fabriziosalmi/caddy-waf/releases
     "github.com/fabriziosalmi/caddy-waf@v0.3.3"
   ];
-  hash = "sha256-doNAd6FDYJZ6lzj7LRHgrEdXW0AvGcsPZUFI7ZyPpl0=";
+  hash = "sha256-6pS7p9LAuwlfQzOA08DFKRqzw6livLSTaw2NDLaAJHs=";
 }
