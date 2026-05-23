@@ -22,6 +22,14 @@ jobs:
         run: |
           echo "count=$(git rev-list --count "origin/$GITHUB_REF_NAME..HEAD")" >> "$GITHUB_OUTPUT"
       - if: steps.unpushed.outputs.count != '0'
+        id: check
+        continue-on-error: true
+        run: nix flake check --show-trace
+      - if: steps.unpushed.outputs.count != '0' && steps.check.outcome == 'failure'
+        run: |
+          determinate-nixd fix hashes --auto-apply
+          git commit -m "chore(deps/nix): fix hashes" ./pkgs || true
+      - if: steps.unpushed.outputs.count != '0' && steps.check.outcome == 'failure'
         run: nix flake check --show-trace
       - if: steps.unpushed.outputs.count != '0'
         run: git push
