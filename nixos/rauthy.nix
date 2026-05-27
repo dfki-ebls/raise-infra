@@ -11,14 +11,13 @@ let
   pubUrl = "rauthy.${config.custom.rootDomain}";
 
   # Loopback port the rauthy HTTP listener binds to. Caddy reverse-proxies
-  # `<caddySubHost>` here. Hiqlite separately listens on 8100 (Raft) and
-  # 8200 (API) — both pinned to 127.0.0.1 below since this is a single-node
-  # deployment.
+  # `<caddySubHost>` here.
   port = 8080;
 in
 {
   custom.rauthy = {
     enable = false;
+    postgresql.createLocally = true;
 
     settings = {
       bootstrap = {
@@ -30,19 +29,6 @@ in
         # `<caddySubHost>/auth/v1/account` and rotate immediately; the
         # generated password is single-use.
         admin_email = config.custom.admin.mail;
-      };
-
-      cluster = {
-        # Single-node deployment. The `nodes` list mirrors the Hiqlite
-        # default — id 1 with raft on 8100 and api on 8200, both loopback.
-        node_id = 1;
-        nodes = [ "1 localhost:8100 localhost:8200" ];
-        listen_addr_api = "127.0.0.1";
-        listen_addr_raft = "127.0.0.1";
-        # Single instance: block on each Raft log fsync. Loses some
-        # throughput in exchange for the strongest consistency guarantee,
-        # which matters here since there are no peers to recover from.
-        log_sync = "immediate";
       };
 
       server = {

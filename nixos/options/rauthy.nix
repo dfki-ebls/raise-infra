@@ -123,6 +123,29 @@ in
       '';
     };
 
+    postgresql.createLocally = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to provision a local PostgreSQL database for Rauthy and
+        wire `settings.database` to it.
+
+        When enabled, defaults `settings.database` to connect to the host
+        Postgres via the Unix socket at `/var/run/postgresql` under a
+        `rauthy` role owning a `rauthy` database. Authentication relies on
+        Postgres' `peer` rule, which works out of the box because the unit
+        runs under `DynamicUser = true` (the resulting OS user name equals
+        the unit name and is matched 1:1 against the DB role).
+
+        Adds the role + database via `services.postgresql.ensureUsers` /
+        `ensureDatabases` and orders the rauthy unit after
+        `postgresql.target` so the setup oneshot has run first.
+
+        Requires `services.postgresql.enable = true` — this option only
+        wires Rauthy *into* an existing Postgres, it does not turn one on.
+      '';
+    };
+
     bootstrap =
       let
         entryType = lib.types.listOf (lib.types.attrsOf lib.types.anything);
@@ -215,116 +238,163 @@ in
 
   };
 
-  config = lib.mkIf cfg.enable {
-    assertions = [
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
       {
-        assertion = !(cfg.settings != { } && cfg.configFile != null);
-        message = "`custom.rauthy.settings` and `custom.rauthy.configFile` are mutually exclusive.";
+        assertions = [
+          {
+            assertion = !(cfg.settings != { } && cfg.configFile != null);
+            message = "`custom.rauthy.settings` and `custom.rauthy.configFile` are mutually exclusive.";
+          }
+          {
+            assertion =
+              !cfg.enableUnixSocket
+              || (
+                cfg.settings ? server.scheme
+                && (cfg.settings.server.scheme == "unix_http" || cfg.settings.server.scheme == "unix_https")
+              );
+            message =
+              "`custom.rauthy.settings.server.scheme` must be set to 'unix_http' "
+              + "or 'unix_https' when `custom.rauthy.enableUnixSocket` is enabled.";
+          }
+          {
+            assertion = cfg.postgresql.createLocally -> config.services.postgresql.enable;
+            message =
+              "`custom.rauthy.postgresql.createLocally` requires " + "`services.postgresql.enable = true`.";
+          }
+        ];
+
+        systemd.services.rauthy = {
+          description = "Rauthy";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "network-online.target" ];
+          wants = [ "network-online.target" ];
+
+          environment = lib.mkMerge [
+            # Bootstrap entries are rendered to JSON under a Nix-built dir
+            # and injected via env var, which overrides any `bootstrap_dir`
+            # set in the TOML config.
+            (lib.optionalAttrs (bootstrapData != { }) {
+              BOOTSTRAP_DIR = toString (
+                pkgs.linkFarm "rauthy-bootstrap" (
+                  lib.mapAttrsToList (name: value: {
+                    inherit name;
+                    path = pkgs.writeText name (builtins.toJSON value);
+                  }) bootstrapData
+                )
+              );
+            })
+            (lib.mkIf cfg.enableUnixSocket { LISTEN_ADDRESS = "%t/rauthy/rauthy.sock"; })
+          ];
+
+          serviceConfig = {
+            ExecStart = "${lib.getExe cfg.package} serve --config-file ${configFile}";
+            DynamicUser = true;
+            StateDirectory = "rauthy";
+            WorkingDirectory = "%S/rauthy";
+            RuntimeDirectory = lib.mkIf cfg.enableUnixSocket "rauthy";
+            RuntimeDirectoryMode = lib.mkIf cfg.enableUnixSocket "750";
+            EnvironmentFile = [
+              "/etc/rauthy/rauthy.env"
+            ]
+            ++ lib.optional (cfg.environmentFile != "") cfg.environmentFile;
+            # Hardening
+            LockPersonality = true;
+            MemoryDenyWriteExecute = true;
+            NoNewPrivileges = true;
+            PrivateDevices = true;
+            PrivateMounts = true;
+            ProtectClock = true;
+            ProtectControlGroups = true;
+            ProtectHome = true;
+            ProtectHostname = true;
+            ProtectKernelLogs = true;
+            ProtectKernelModules = true;
+            ProtectKernelTunables = true;
+            RemoveIPC = true;
+            RestrictRealtime = true;
+            RestrictSUIDSGID = true;
+            CapabilityBoundingSet = "CAP_NET_BIND_SERVICE";
+            AmbientCapabilities = "CAP_NET_BIND_SERVICE";
+            PrivateTmp = "disconnected";
+            ProcSubset = "pid";
+            ProtectProc = "invisible";
+            ProtectSystem = "strict";
+            RestrictAddressFamilies = [
+              "AF_INET"
+              "AF_INET6"
+              "AF_UNIX"
+            ];
+            RestrictNamespaces = [
+              "~cgroup"
+              "~ipc"
+              "~mnt"
+              "~net"
+              "~pid"
+              "~user"
+              "~uts"
+            ];
+            SystemCallArchitectures = "native";
+            SystemCallFilter = [
+              "~@clock"
+              "~@cpu-emulation"
+              "~@debug"
+              "~@module"
+              "~@mount"
+              "~@obsolete"
+              "~@privileged"
+              "~@raw-io"
+              "~@reboot"
+              "~@swap"
+            ];
+            UMask = "0077";
+
+            # Additional hardening on top of the upstream set.
+            PrivateIPC = true;
+            PrivateUsers = true;
+            ProtectKernelImage = true;
+            SystemCallErrorNumber = "EPERM";
+          };
+        };
       }
-      {
-        assertion =
-          !cfg.enableUnixSocket
-          || (
-            cfg.settings ? server.scheme
-            && (cfg.settings.server.scheme == "unix_http" || cfg.settings.server.scheme == "unix_https")
-          );
-        message =
-          "`custom.rauthy.settings.server.scheme` must be set to 'unix_http' "
-          + "or 'unix_https' when `custom.rauthy.enableUnixSocket` is enabled.";
-      }
-    ];
 
-    systemd.services.rauthy = {
-      description = "Rauthy";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+      (lib.mkIf cfg.postgresql.createLocally {
+        # Connection defaults for the local Postgres. `mkDefault` on every
+        # field so operators can still override the user/database name (or
+        # any other knob) via `custom.rauthy.settings.database.*`.
+        custom.rauthy.settings.database = {
+          hiqlite = lib.mkDefault false;
+          pg_host = lib.mkDefault "/var/run/postgresql";
+          pg_user = lib.mkDefault "rauthy";
+          pg_db_name = lib.mkDefault "rauthy";
+          # `validate()` in `rauthy_config.rs` panics if `pg_password` is
+          # unset, even though peer auth on the UDS makes the value
+          # meaningless — Postgres ignores what the client sends. Any
+          # non-empty string keeps the validation happy.
+          pg_password = lib.mkDefault "peer";
+          # UDS connections cannot do TLS; the default `prefer` would log
+          # a noisy fallback on every reconnect.
+          pg_tls = lib.mkDefault "disable";
+        };
 
-      environment = lib.mkMerge [
-        # Bootstrap entries are rendered to JSON under a Nix-built dir
-        # and injected via env var, which overrides any `bootstrap_dir`
-        # set in the TOML config.
-        (lib.optionalAttrs (bootstrapData != { }) {
-          BOOTSTRAP_DIR = toString (
-            pkgs.linkFarm "rauthy-bootstrap" (
-              lib.mapAttrsToList (name: value: {
-                inherit name;
-                path = pkgs.writeText name (builtins.toJSON value);
-              }) bootstrapData
-            )
-          );
-        })
-        (lib.mkIf cfg.enableUnixSocket { LISTEN_ADDRESS = "%t/rauthy/rauthy.sock"; })
-      ];
+        services.postgresql = {
+          ensureDatabases = [ cfg.settings.database.pg_db_name ];
+          ensureUsers = [
+            {
+              name = cfg.settings.database.pg_user;
+              ensureDBOwnership = true;
+            }
+          ];
+        };
 
-      serviceConfig = {
-        ExecStart = "${lib.getExe cfg.package} serve --config-file ${configFile}";
-        DynamicUser = true;
-        StateDirectory = "rauthy";
-        WorkingDirectory = "%S/rauthy";
-        RuntimeDirectory = lib.mkIf cfg.enableUnixSocket "rauthy";
-        RuntimeDirectoryMode = lib.mkIf cfg.enableUnixSocket "750";
-        EnvironmentFile = [
-          "/etc/rauthy/rauthy.env"
-        ]
-        ++ lib.optional (cfg.environmentFile != "") cfg.environmentFile;
-        # Hardening
-        LockPersonality = true;
-        MemoryDenyWriteExecute = true;
-        NoNewPrivileges = true;
-        PrivateDevices = true;
-        PrivateMounts = true;
-        ProtectClock = true;
-        ProtectControlGroups = true;
-        ProtectHome = true;
-        ProtectHostname = true;
-        ProtectKernelLogs = true;
-        ProtectKernelModules = true;
-        ProtectKernelTunables = true;
-        RemoveIPC = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
-        CapabilityBoundingSet = "CAP_NET_BIND_SERVICE";
-        AmbientCapabilities = "CAP_NET_BIND_SERVICE";
-        PrivateTmp = "disconnected";
-        ProcSubset = "pid";
-        ProtectProc = "invisible";
-        ProtectSystem = "strict";
-        RestrictAddressFamilies = [
-          "AF_INET"
-          "AF_INET6"
-          "AF_UNIX"
-        ];
-        RestrictNamespaces = [
-          "~cgroup"
-          "~ipc"
-          "~mnt"
-          "~net"
-          "~pid"
-          "~user"
-          "~uts"
-        ];
-        SystemCallArchitectures = "native";
-        SystemCallFilter = [
-          "~@clock"
-          "~@cpu-emulation"
-          "~@debug"
-          "~@module"
-          "~@mount"
-          "~@obsolete"
-          "~@privileged"
-          "~@raw-io"
-          "~@reboot"
-          "~@swap"
-        ];
-        UMask = "0077";
-
-        # Additional hardening on top of the upstream set.
-        PrivateIPC = true;
-        PrivateUsers = true;
-        ProtectKernelImage = true;
-        SystemCallErrorNumber = "EPERM";
-      };
-    };
-  };
+        # The setup oneshot inside `postgresql.target` runs the
+        # `ensureDatabases`/`ensureUsers` SQL, so peer auth has a role to
+        # bind to by the time rauthy connects.
+        systemd.services.rauthy = {
+          after = [ "postgresql.target" ];
+          requires = [ "postgresql.target" ];
+        };
+      })
+    ]
+  );
 }

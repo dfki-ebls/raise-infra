@@ -19,14 +19,13 @@ in
     # to create the env file.
     systemd.tmpfiles.rules = [ "d /etc/rauthy 0755 root root -" ];
 
-    # The Hiqlite Raft/API tokens (`HQL_SECRET_*`) and ChaCha20Poly1305
-    # encryption keys (`ENC_KEYS`/`ENC_KEY_ACTIVE`) overwrite their TOML
-    # equivalents in `[cluster]`/`[encryption]`, so they could in theory
-    # be moved into `settings` or `BOOTSTRAP_DIR`. Both options would
-    # serialize the secrets into `/nix/store` (world-readable), which we
-    # explicitly want to avoid. Keeping them in this oneshot's
-    # root-owned `0600` env file is the only place they don't leak — and
-    # the operator never has to generate or manage them by hand.
+    # The ChaCha20Poly1305 encryption keys (`ENC_KEYS`/`ENC_KEY_ACTIVE`)
+    # overwrite their TOML equivalents in `[encryption]`, so they could in
+    # theory be moved into `settings`. That would serialize the secrets
+    # into `/nix/store` (world-readable), which we explicitly want to
+    # avoid. Keeping them in this oneshot's root-owned `0600` env file is
+    # the only place they don't leak — and the operator never has to
+    # generate or manage them by hand.
     systemd.services.rauthy-generate-secrets = {
       description = "Generate Rauthy bootstrap secrets if missing";
       wantedBy = [ "rauthy.service" ];
@@ -48,19 +47,6 @@ in
         umask 077
 
         touch /etc/rauthy/rauthy.env
-
-        # `cluster.secret_raft` / `cluster.secret_api`: Hiqlite's internal
-        # auth tokens for the Raft and API layers. >= 16 chars required;
-        # we generate 48.
-        if ! grep -q '^HQL_SECRET_RAFT=' /etc/rauthy/rauthy.env; then
-          secret=$(${opensslExe} rand -hex 24)
-          echo "HQL_SECRET_RAFT=$secret" >> /etc/rauthy/rauthy.env
-        fi
-
-        if ! grep -q '^HQL_SECRET_API=' /etc/rauthy/rauthy.env; then
-          secret=$(${opensslExe} rand -hex 24)
-          echo "HQL_SECRET_API=$secret" >> /etc/rauthy/rauthy.env
-        fi
 
         # `encryption.keys` / `encryption.key_active`: ChaCha20Poly1305 key(s)
         # used for encrypting confidential client secrets, sessions, etc.
