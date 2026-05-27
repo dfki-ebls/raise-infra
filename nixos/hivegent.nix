@@ -39,6 +39,8 @@ in
     host = "127.0.0.1";
     port = 8000;
 
+    postgresql.createLocally = true;
+
     # `HIVEGENT_MCP__CLIENT_SECRET` must match the secret of the
     # `hivegent-mcp` confidential client created post-bootstrap via
     # the rauthy admin UI. The env file is root-owned, mode 600, and

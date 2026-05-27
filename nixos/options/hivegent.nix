@@ -99,101 +99,171 @@ in
         secret file has been created.
       '';
     };
-  };
 
-  config = lib.mkIf cfg.enable {
-    custom.hivegent.settings.data_dir = lib.mkDefault "/var/lib/hivegent";
+    postgresql.createLocally = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether to provision a local PostgreSQL database for Hivegent and
+        wire `settings.db.url` to it.
 
-    systemd.services.hivegent = {
-      description = "Hivegent backend";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
+        When enabled, defaults `settings.db.url` to a SQLAlchemy URL that
+        reaches the host Postgres via the Unix socket at
+        `/var/run/postgresql` as a `hivegent` role owning a `hivegent`
+        database. Authentication relies on Postgres' `peer` rule, which
+        works out of the box because the unit runs under
+        `DynamicUser = true` (the resulting OS user name equals the unit
+        name and is matched 1:1 against the DB role).
 
-      environment = {
-        # HOME and HF_HOME redirect libreoffice's profile and the
-        # docling/sentence-transformers cache away from /var/empty so
-        # first-run startup doesn't fail.
-        HOME = "/var/lib/hivegent";
-        HF_HOME = "/var/cache/hivegent";
-        PYTHONUNBUFFERED = "1";
-        HIVEGENT_CONFIG_FILE = "${configFile}";
-      }
-      // cfg.environment;
+        Adds the role + database via `services.postgresql.ensureUsers` /
+        `ensureDatabases` and orders the hivegent unit after
+        `postgresql.target` so the setup oneshot has run first. Hivegent
+        applies Alembic migrations during its FastAPI lifespan, so the
+        database schema is brought to head on every restart — no
+        separate deploy step or `ExecStartPre` is required. A failing
+        migration aborts startup and trips the unit's
+        `Restart = "on-failure"` policy.
 
-      serviceConfig = {
-        Type = "exec";
-        Restart = "on-failure";
-        RestartSec = 5;
-        TimeoutStartSec = 600;
-        UMask = "0077";
-
-        # `DynamicUser` allocates an ephemeral UID; the matching
-        # `StateDirectory`/`CacheDirectory` keep that UID stable across
-        # restarts and own the writable paths automatically (no
-        # `ReadWritePaths` needed under `ProtectSystem = "strict"`).
-        DynamicUser = true;
-        StateDirectory = "hivegent";
-        CacheDirectory = "hivegent";
-        WorkingDirectory = "/var/lib/hivegent";
-
-        EnvironmentFile = lib.optional (cfg.environmentFile != null) "-${cfg.environmentFile}";
-
-        ExecStart = utils.escapeSystemdExecArgs [
-          (lib.getExe' cfg.package "hivegent")
-          "serve"
-          "--host"
-          cfg.host
-          "--port"
-          (toString cfg.port)
-        ];
-
-        # Listen only on the configured port; everything else (outbound
-        # HTTP to llama.cpp, Hugging Face, the OIDC issuer) is unaffected
-        # because `SocketBind*` only gates `bind()`.
-        SocketBindDeny = "any";
-        SocketBindAllow = "tcp:${toString cfg.port}";
-        RestrictAddressFamilies = [
-          "AF_INET"
-          "AF_INET6"
-          "AF_UNIX"
-        ];
-
-        CapabilityBoundingSet = "";
-        AmbientCapabilities = "";
-        NoNewPrivileges = true;
-        PrivateDevices = true;
-        PrivateIPC = true;
-        PrivateMounts = true;
-        PrivateTmp = true;
-        PrivateUsers = true;
-        ProtectClock = true;
-        ProtectControlGroups = true;
-        ProtectHome = true;
-        ProtectHostname = true;
-        ProtectKernelImage = true;
-        ProtectKernelLogs = true;
-        ProtectKernelModules = true;
-        ProtectKernelTunables = true;
-        ProtectProc = "invisible";
-        ProtectSystem = "strict";
-        LockPersonality = true;
-        RemoveIPC = true;
-        RestrictNamespaces = true;
-        RestrictRealtime = true;
-        RestrictSUIDSGID = true;
-        SystemCallArchitectures = "native";
-        SystemCallFilter = [
-          "@system-service"
-          "~@privileged"
-          "~@resources"
-        ];
-        SystemCallErrorNumber = "EPERM";
-      };
-
-      unitConfig = {
-        StartLimitBurst = 5;
-        StartLimitIntervalSec = 600;
-      };
+        Requires `services.postgresql.enable = true` — this option only
+        wires Hivegent *into* an existing Postgres, it does not turn one
+        on.
+      '';
     };
   };
+
+  config = lib.mkIf cfg.enable (
+    lib.mkMerge [
+      {
+        assertions = [
+          {
+            assertion = cfg.postgresql.createLocally -> config.services.postgresql.enable;
+            message =
+              "`custom.hivegent.postgresql.createLocally` requires " + "`services.postgresql.enable = true`.";
+          }
+        ];
+
+        custom.hivegent.settings.data_dir = lib.mkDefault "/var/lib/hivegent";
+
+        systemd.services.hivegent = {
+          description = "Hivegent backend";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "network.target" ];
+
+          environment = {
+            # HOME and HF_HOME redirect libreoffice's profile and the
+            # docling/sentence-transformers cache away from /var/empty so
+            # first-run startup doesn't fail.
+            HOME = "/var/lib/hivegent";
+            HF_HOME = "/var/cache/hivegent";
+            PYTHONUNBUFFERED = "1";
+            HIVEGENT_CONFIG_FILE = "${configFile}";
+          }
+          // cfg.environment;
+
+          serviceConfig = {
+            Type = "exec";
+            Restart = "on-failure";
+            RestartSec = 5;
+            TimeoutStartSec = 600;
+            UMask = "0077";
+
+            # `DynamicUser` allocates an ephemeral UID; the matching
+            # `StateDirectory`/`CacheDirectory` keep that UID stable across
+            # restarts and own the writable paths automatically (no
+            # `ReadWritePaths` needed under `ProtectSystem = "strict"`).
+            DynamicUser = true;
+            StateDirectory = "hivegent";
+            CacheDirectory = "hivegent";
+            WorkingDirectory = "/var/lib/hivegent";
+
+            EnvironmentFile = lib.optional (cfg.environmentFile != null) "-${cfg.environmentFile}";
+
+            ExecStart = utils.escapeSystemdExecArgs [
+              (lib.getExe' cfg.package "hivegent")
+              "serve"
+              "--host"
+              cfg.host
+              "--port"
+              (toString cfg.port)
+            ];
+
+            # Listen only on the configured port; everything else (outbound
+            # HTTP to llama.cpp, Hugging Face, the OIDC issuer) is unaffected
+            # because `SocketBind*` only gates `bind()`.
+            SocketBindDeny = "any";
+            SocketBindAllow = "tcp:${toString cfg.port}";
+            RestrictAddressFamilies = [
+              "AF_INET"
+              "AF_INET6"
+              "AF_UNIX"
+            ];
+
+            CapabilityBoundingSet = "";
+            AmbientCapabilities = "";
+            NoNewPrivileges = true;
+            PrivateDevices = true;
+            PrivateIPC = true;
+            PrivateMounts = true;
+            PrivateTmp = true;
+            PrivateUsers = true;
+            ProtectClock = true;
+            ProtectControlGroups = true;
+            ProtectHome = true;
+            ProtectHostname = true;
+            ProtectKernelImage = true;
+            ProtectKernelLogs = true;
+            ProtectKernelModules = true;
+            ProtectKernelTunables = true;
+            ProtectProc = "invisible";
+            ProtectSystem = "strict";
+            LockPersonality = true;
+            RemoveIPC = true;
+            RestrictNamespaces = true;
+            RestrictRealtime = true;
+            RestrictSUIDSGID = true;
+            SystemCallArchitectures = "native";
+            SystemCallFilter = [
+              "@system-service"
+              "~@privileged"
+              "~@resources"
+            ];
+            SystemCallErrorNumber = "EPERM";
+          };
+
+          unitConfig = {
+            StartLimitBurst = 5;
+            StartLimitIntervalSec = 600;
+          };
+        };
+      }
+
+      (lib.mkIf cfg.postgresql.createLocally {
+        # asyncpg accepts an absolute directory in the `host` query param
+        # and resolves it to `<dir>/.s.PGSQL.<port>` — the standard libpq
+        # convention. Peer auth makes the user-info portion meaningless
+        # (Postgres ignores what the client sends), but the role name
+        # still has to be present so SQLAlchemy can build the URL.
+        custom.hivegent.settings.db.url =
+          lib.mkDefault "postgresql+psycopg://hivegent@/hivegent?host=/var/run/postgresql";
+
+        services.postgresql = {
+          ensureDatabases = [ "hivegent" ];
+          ensureUsers = [
+            {
+              name = "hivegent";
+              ensureDBOwnership = true;
+            }
+          ];
+        };
+
+        # The setup oneshot inside `postgresql.target` runs the
+        # `ensureDatabases`/`ensureUsers` SQL, so peer auth has a role to
+        # bind to by the time hivegent connects.
+        systemd.services.hivegent = {
+          after = [ "postgresql.target" ];
+          requires = [ "postgresql.target" ];
+        };
+      })
+    ]
+  );
 }
