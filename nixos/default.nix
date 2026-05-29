@@ -21,7 +21,6 @@
   };
 
   environment = {
-    enableAllTerminfo = true;
     variables.BROWSER = "echo";
   };
 
