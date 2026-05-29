@@ -222,6 +222,7 @@
         "process-compose": "process-compose",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
+        "services-flake": "services-flake",
         "systems": "systems_2",
         "treefmt-nix": [
           "treefmt-nix"
@@ -229,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1779896886,
-        "narHash": "sha256-9beYVPROrpWg9rVeU5oI8LQzYDc4IueHWBbU7FzVMRQ=",
+        "lastModified": 1780061989,
+        "narHash": "sha256-CZoBO1GUorLvaq0wIREr8n4YHlHFYJa4cwWmv+bVZSM=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "0d886b615993e72f9de595b5d24084327525f612",
+        "rev": "3b2abc773a1cf08353d5d3e3aa258b1b9c51d0b6",
         "type": "github"
       },
       "original": {
@@ -262,11 +263,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1779133095,
-        "narHash": "sha256-lS5u/p9bo7iyhN98Etun4ClVN2P4ugdVp8qVbaKlYJY=",
+        "lastModified": 1780062188,
+        "narHash": "sha256-ajuzj5NPI58L2xBP0SluFHDcg9b437FAQrANCKzVWkQ=",
         "owner": "mirkolenz",
         "repo": "llmhop",
-        "rev": "b292a2f9c15c068faa3a4e9da6f7865edc300724",
+        "rev": "e4c0aae62fb2427127c1c1ce5fb3118bef2f7175",
         "type": "github"
       },
       "original": {
@@ -552,6 +553,21 @@
         "systems": "systems_6",
         "treefmt-nix": "treefmt-nix",
         "website": "website"
+      }
+    },
+    "services-flake": {
+      "locked": {
+        "lastModified": 1779042632,
+        "narHash": "sha256-WgQZ1AsDMCTL+0x0yZEd1g3yMQbgEwAq0VUg73YU50M=",
+        "owner": "juspay",
+        "repo": "services-flake",
+        "rev": "b0012dbf955efc3f6e2decd61610da5cea17dce6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "juspay",
+        "repo": "services-flake",
+        "type": "github"
       }
     },
     "systems": {
