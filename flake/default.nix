@@ -75,6 +75,7 @@ in
         inherit (nixosSystem.config.system.build) vm image;
       }
       // pkgs.custom;
+      legacyPackages = pkgs;
       treefmt = {
         projectRootFile = "flake.nix";
         programs = {
