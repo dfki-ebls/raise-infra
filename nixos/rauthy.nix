@@ -16,7 +16,7 @@ let
 in
 {
   custom.rauthy = {
-    enable = false;
+    enable = true;
     postgresql.createLocally = true;
 
     settings = {
