@@ -64,6 +64,9 @@ In **Clients → Add Client** set:
 - **Scopes**: `openid` is enough; a client-credentials token carries no user, so it has no `groups` claim and the integration operates only on its own knowledge namespace (`user:hivegent-integration`), never shared group knowledge.
 
 `access.client_credentials_map_sub` is already enabled in the Rauthy config, so the token's `sub` is the client id, which becomes the integration's identity in Hivegent.
+The client secret is long lived until rotated, deleted, or the client is disabled.
+Each returned bearer token is short lived and the token response includes `expires_in`.
+The default token lifetime for a newly created Rauthy client is 1800 seconds unless changed in the client settings.
 
 Fetch a token and call the API:
 
@@ -74,6 +77,73 @@ token=$(curl -fsS https://rauthy.<domain>/auth/v1/oidc/token \
   -d client_secret=<secret> | jq -r .access_token)
 
 curl -fsS https://hivegent.<domain>/api/documents -H "Authorization: Bearer $token"
+```
+
+For Python services, cache the token and refresh it shortly before it expires:
+
+```python
+from dataclasses import dataclass
+from time import monotonic
+
+import httpx
+
+
+@dataclass(slots=True)
+class ClientCredentialsAuth:
+    token_url: str
+    client_id: str
+    client_secret: str
+    access_token: str | None = None
+    expires_at: float = 0.0
+
+    async def headers(self, client: httpx.AsyncClient) -> dict[str, str]:
+        access_token = self.access_token
+        if access_token is None or monotonic() >= self.expires_at - 60:
+            response = await client.post(
+                self.token_url,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+            token = response.json()
+            access_token = str(token["access_token"])
+            self.access_token = access_token
+            self.expires_at = monotonic() + int(token["expires_in"])
+
+        return {"Authorization": f"Bearer {access_token}"}
+
+
+async def list_documents(client: httpx.AsyncClient, auth: ClientCredentialsAuth) -> object:
+    response = await client.get(
+        "https://hivegent.<domain>/api/documents",
+        headers=await auth.headers(client),
+    )
+    response.raise_for_status()
+    return response.json()
+```
+
+Any service that already depends on Authlib can use its HTTPX OAuth client instead:
+When the client stays open, Authlib renews expired client credentials tokens from `token_endpoint` before protected requests.
+
+```python
+from authlib.integrations.httpx_client import AsyncOAuth2Client
+
+
+async def list_documents() -> object:
+    async with AsyncOAuth2Client(
+        "hivegent-integration",
+        "<secret>",
+        token_endpoint="https://rauthy.<domain>/auth/v1/oidc/token",
+        token_endpoint_auth_method="client_secret_post",
+    ) as client:
+        await client.fetch_token(grant_type="client_credentials")
+        response = await client.get("https://hivegent.<domain>/api/documents")
+        response.raise_for_status()
+        return response.json()
 ```
 
 Rotate the secret from the same admin UI screen; nothing in the Nix store needs to change.
