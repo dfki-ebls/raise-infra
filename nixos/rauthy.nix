@@ -23,6 +23,12 @@ in
         admin_email = config.custom.admin.mail;
       };
 
+      cluster = {
+        # https://sebadob.github.io/rauthy/config/ha.html
+        node_id = 1;
+        nodes = [ "1 localhost:8100 localhost:8200" ];
+      };
+
       server = {
         listen_address = "127.0.0.1";
         port_http = port;
