@@ -23,6 +23,11 @@ in
         admin_email = config.custom.admin.mail;
       };
 
+      # Put the client id into the `sub` of client_credentials tokens.
+      # Without it those tokens carry no `sub`, and downstream APIs that key
+      # a principal on `sub` (Hivegent) reject them.
+      access.client_credentials_map_sub = true;
+
       cluster = {
         # https://sebadob.github.io/rauthy/config/ha.html
         node_id = 1;

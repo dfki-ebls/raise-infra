@@ -38,6 +38,7 @@ in
       auth = {
         enable = true;
         issuer = rauthyIssuer;
+        audience = [ "hivegent-*" ];
       };
 
       llm = {
