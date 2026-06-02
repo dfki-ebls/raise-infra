@@ -32,8 +32,6 @@ let
       }
     '';
 
-  countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
-
   mkGeoblock =
     {
       countries ? [ "DE" ],
@@ -42,7 +40,7 @@ let
       @geoblocked {
         not {
           maxmind_geolocation {
-            db_path ${countryDb}
+            db_path ${pkgs.dbip-country-lite.mmdb}
             allow_countries ${toString countries}
           }
         }
@@ -72,8 +70,6 @@ in
       ;
   };
 
-  custom.geoip.enable = config.custom.enableGeoblocking;
-
   services.caddy = {
     enable = true;
     package = pkgs.caddy-custom;
@@ -93,10 +89,5 @@ in
         }
       }
     '';
-  };
-
-  systemd.services.caddy = lib.mkIf config.custom.enableGeoblocking {
-    wants = [ "geoip-update.service" ];
-    after = [ "geoip-update.service" ];
   };
 }
