@@ -192,7 +192,8 @@ in
             CapabilityBoundingSet = "";
             AmbientCapabilities = "";
             NoNewPrivileges = true;
-            PrivateDevices = true;
+            # CUDA-backed document/OCR models need the host NVIDIA character devices.
+            PrivateDevices = false;
             PrivateIPC = true;
             PrivateMounts = true;
             PrivateTmp = true;
