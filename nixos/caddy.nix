@@ -34,95 +34,21 @@ let
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
 
-  # Curated caddy-waf upstream rules.
-  defaultIncludeRules = [
-    "block-scanners" # nikto/sqlmap/nmap/burpsuite/etc. User-Agents
-    "crlf-injection-headers" # %0d%0a in headers
-    "header-attacks-consolidated" # SQLi/XSS/path-traversal payloads in headers
-    "http-request-smuggling" # Transfer-Encoding/Content-Length games
-    "insecure-deserialization-java" # rO0AB / aced0005 magic bytes
-    "jwt-tampering" # forged JWTs in Authorization/Cookie
-    "path-traversal" # ../, %2e%2e, etc/passwd, /proc/self/environ
-    "sensitive-files" # /.git/, /.env, /.htaccess, server-status, *.bak
-    "sensitive-files-expanded" # narrower companion to sensitive-files
-  ];
-
-  # caddy-waf uses `mode`, not upstream's broken `action` key.
-  defaultExtraRules = [
-    {
-      id = "method-disallowed";
-      phase = 1;
-      pattern = "^(TRACE|CONNECT|PROPFIND|PROPPATCH|MKCOL|COPY|MOVE|LOCK|UNLOCK|DEBUG|TRACK)$";
-      targets = [ "METHOD" ];
-      severity = "HIGH";
-      score = 10;
-      mode = "block";
-      priority = 100;
-      description = "Block HTTP methods the application does not use";
-    }
-  ];
-
-  mkRuleFile =
-    {
-      includeRules,
-      extraRules,
-    }:
-    pkgs.runCommand "waf-rules.json" { } ''
-      ${lib.getExe pkgs.jq} \
-        --argjson include '${lib.toJSON includeRules}' \
-        --argjson extra '${lib.toJSON extraRules}' \
-        '[.[] | select(.id as $id | $include | index($id))] + $extra' \
-        ${pkgs.caddy-waf}/rules.json > $out
-    '';
-
-  wafBlockedJson = pkgs.writeText "waf-blocked.json" (
-    builtins.toJSON {
-      error = "blocked";
-      detail = "Request blocked by web application firewall.";
-    }
-  );
-  wafRatelimitedJson = pkgs.writeText "waf-ratelimited.json" (
-    builtins.toJSON {
-      error = "rate_limited";
-      detail = "Too many requests.";
-    }
-  );
-
-  mkWaf =
+  mkGeoblock =
     {
       countries ? [ "DE" ],
-      includeRules ? defaultIncludeRules,
-      extraRules ? defaultExtraRules,
-      rateLimit ? {
-        requests = 100;
-        window = "1m";
-        cleanupInterval = "5m";
-      },
-      anomalyThreshold ? 10,
-      logSeverity ? "info",
-      # Optional caddy-waf blocklist files.
-      ipBlacklistFile ? null,
-      dnsBlacklistFile ? null,
-      extraConfig ? "",
     }:
-    lib.optionalString config.custom.enableWaf ''
-      waf {
-        rule_file ${mkRuleFile { inherit includeRules extraRules; }}
-        anomaly_threshold ${toString anomalyThreshold}
-        whitelist_countries ${countryDb} ${toString countries}
-        log_path ${config.services.caddy.logDir}/waf.json
-        log_severity ${logSeverity}
-        redact_sensitive_data
-        rate_limit {
-          requests ${toString rateLimit.requests}
-          window ${rateLimit.window}
-          cleanup_interval ${rateLimit.cleanupInterval}
+    lib.optionalString config.custom.enableGeoblocking ''
+      @geoblocked {
+        not {
+          maxmind_geolocation {
+            db_path ${countryDb}
+            allow_countries ${toString countries}
+          }
         }
-        custom_response 403 application/json ${wafBlockedJson}
-        custom_response 429 application/json ${wafRatelimitedJson}
-        ${lib.optionalString (ipBlacklistFile != null) "ip_blacklist_file ${ipBlacklistFile}"}
-        ${lib.optionalString (dnsBlacklistFile != null) "dns_blacklist_file ${dnsBlacklistFile}"}
-        ${extraConfig}
+      }
+      handle @geoblocked {
+        respond "Access denied: Your location is not allowed to access this resource." 403
       }
     '';
 
@@ -140,14 +66,13 @@ in
       mkHost
       mkSubHost
       mkAllowedSources
-      mkWaf
-      defaultIncludeRules
+      mkGeoblock
       scannerHoneypots
       securityHeaders
       ;
   };
 
-  custom.geoip.enable = config.custom.enableWaf;
+  custom.geoip.enable = config.custom.enableGeoblocking;
 
   services.caddy = {
     enable = true;
@@ -167,13 +92,10 @@ in
           idle        2m
         }
       }
-    ''
-    + lib.optionalString config.custom.enableWaf ''
-      order waf first
     '';
   };
 
-  systemd.services.caddy = lib.mkIf config.custom.enableWaf {
+  systemd.services.caddy = lib.mkIf config.custom.enableGeoblocking {
     wants = [ "geoip-update.service" ];
     after = [ "geoip-update.service" ];
   };

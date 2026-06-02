@@ -62,7 +62,7 @@ in
   services.caddy.virtualHosts.rauthy = lib.mkIf cfg.enable {
     hostName = caddySubHost;
     extraConfig = ''
-      ${caddyHelpers.mkWaf { }}
+      ${caddyHelpers.mkGeoblock { }}
       ${caddyHelpers.securityHeaders}
       reverse_proxy 127.0.0.1:${toString port}
     '';

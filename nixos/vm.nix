@@ -4,7 +4,7 @@
     disabledModules = [ ../dfki/vpn.nix ];
     custom = {
       rootDomain = "localhost";
-      enableWaf = false;
+      enableGeoblocking = false;
       enableNvidia = false;
       enableCertificates = false;
       hivegent = {

@@ -1,8 +1,7 @@
 { caddy }:
 caddy.withPlugins {
   plugins = [
-    # https://github.com/fabriziosalmi/caddy-waf/releases
-    "github.com/fabriziosalmi/caddy-waf@v0.3.3"
+    "github.com/porech/caddy-maxmind-geolocation@v1.0.3"
   ];
-  hash = "sha256-6pS7p9LAuwlfQzOA08DFKRqzw6livLSTaw2NDLaAJHs=";
+  hash = "sha256-uUYds3PGZ4b/MR81ZzzodRhnr38WAwQqmRvOzeo0bXU=";
 }

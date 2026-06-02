@@ -104,13 +104,7 @@ in
   services.caddy.virtualHosts.hivegent = {
     hostName = caddySubHost;
     extraConfig = ''
-      ${caddyHelpers.mkWaf {
-        rateLimit = {
-          requests = 600;
-          window = "1m";
-          cleanupInterval = "5m";
-        };
-      }}
+      ${caddyHelpers.mkGeoblock { }}
       ${caddyHelpers.scannerHoneypots}
       ${caddyHelpers.securityHeaders}
       header Permissions-Policy "camera=(), microphone=(self), geolocation=()"

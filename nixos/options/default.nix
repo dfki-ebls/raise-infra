@@ -7,7 +7,7 @@
       type = lib.types.str;
       description = "The root domain for all services.";
     };
-    enableWaf = lib.mkEnableOption "web application firewall for Caddy" // {
+    enableGeoblocking = lib.mkEnableOption "country geoblocking for Caddy" // {
       default = true;
     };
     enableNvidia = lib.mkEnableOption "NVIDIA drivers for GPU support" // {
