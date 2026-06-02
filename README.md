@@ -11,30 +11,22 @@ sudo nixos-rebuild --flake github:dfki-ebls/raise-infra#x86_64 --refresh switch
 ssh -o StrictHostKeychecking=no -o UserKnownHostsFile=/dev/null -A -p 2222 127.0.0.1
 ```
 
-## Dex OIDC
+## Rauthy
 
-Dex is the OIDC identity provider for local user authentication.
-Secrets in `/etc/dex/dex.env` are generated automatically on first start.
-The plaintext admin password is saved to `/etc/dex/admin-password.txt`.
+Rauthy is the OIDC identity provider.
+Encryption and cluster secrets in `/etc/rauthy/bootstrap.env` are generated automatically on first start.
 
-To regenerate secrets, delete the env file and restart:
-
-```bash
-rm /etc/dex/dex.env && systemctl restart dex-generate-secrets dex
-```
-
-To add extra users, edit `/etc/dex/config.yaml` on the server (Dex restarts automatically on changes):
-
-```yaml
-staticPasswords:
-  - email: alice@example.com
-    username: alice
-    hash: "$2a$12$..."
-    userID: alice
-```
-
-Generate a bcrypt hash for a user password:
+To regenerate them, delete the file and restart:
 
 ```bash
-mkpasswd --method bcrypt --rounds 12
+rm /etc/rauthy/bootstrap.env && systemctl restart rauthy-generate-secrets rauthy
+```
+
+User-managed secrets live in `/etc/rauthy/rauthy.env`, loaded after the generated file so it can override it.
+Rauthy sends mail through the uni Trier relay (`mail.wi2.uni-trier.de:465`, implicit TLS), and the SMTP password is the only secret kept out of the Nix store.
+Provision it on the server, then restart:
+
+```bash
+printf 'SMTP_PASSWORD=%s\n' '<secret>' > /etc/rauthy/rauthy.env
+systemctl restart rauthy
 ```
