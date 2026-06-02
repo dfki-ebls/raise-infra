@@ -54,9 +54,6 @@ lib.mkIf config.custom.enableNvidia {
     # https://github.com/vllm-project/vllm/releases/latest
     tag = "v0.22.0";
     environmentFile = "/etc/vllm/vllm.env";
-    environment = {
-      VLLM_USE_V2_MODEL_RUNNER = "1";
-    };
 
     modelSettings = {
       async-scheduling = true;
@@ -85,7 +82,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18201;
         settings = thinkingSettings // gemmaSettings;
       };
-      "gemma4-26b" = {
+      "gemma4-26b-a4b" = {
         enable = true;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         port = 18202;
@@ -97,7 +94,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18203;
         settings = instantSettings // gemmaSettings;
       };
-      "qwen3.6-35b" = {
+      "qwen3.6-35b-a3b" = {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18205;
