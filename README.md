@@ -30,3 +30,23 @@ Provision it on the server, then restart:
 printf 'SMTP_PASSWORD=%s\n' '<secret>' > /etc/rauthy/rauthy.env
 systemctl restart rauthy
 ```
+
+## Hivegent
+
+Hivegent keeps its state in a local Postgres database shared with Rauthy.
+It re-applies its Alembic migrations on every startup, so dropping the database is enough to start over.
+
+Stop the backend, drop and recreate an empty database owned by the `hivegent` role, then start it again:
+
+```bash
+systemctl stop hivegent
+sudo -u postgres psql \
+  -c 'DROP DATABASE hivegent WITH (FORCE);' \
+  -c 'CREATE DATABASE hivegent OWNER hivegent;'
+systemctl start hivegent
+```
+
+Do not restart the `postgresql` service, since Rauthy shares the same instance.
+To also wipe local files for a full reset, clear the state and cache while stopped: `rm -rf /var/lib/hivegent/* /var/cache/hivegent/*`.
+
+Runtime secrets live in `/etc/hivegent/hivegent.env`, created empty on activation so startup never blocks before they are provisioned.
