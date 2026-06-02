@@ -27,7 +27,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18101;
         settings = {
           # keep-sorted start
-          hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
+          hf-repo = "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_XL";
           min-p = 0.0;
           presence-penalty = 1.0;
           reasoning = "on";
@@ -46,7 +46,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18102;
         settings = {
           # keep-sorted start
-          hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
+          hf-repo = "unsloth/Qwen3.5-0.8B-MTP-GGUF:UD-Q4_K_XL";
           min-p = 0.0;
           presence-penalty = 1.0;
           reasoning = "off";
