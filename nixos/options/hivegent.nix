@@ -201,7 +201,6 @@ in
             ProtectControlGroups = true;
             ProtectHome = true;
             ProtectHostname = true;
-            ProtectKernelImage = true;
             ProtectKernelLogs = true;
             ProtectKernelModules = true;
             ProtectKernelTunables = true;

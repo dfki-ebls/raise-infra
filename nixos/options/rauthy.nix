@@ -343,7 +343,6 @@ in
 
             PrivateIPC = true;
             PrivateUsers = true;
-            ProtectKernelImage = true;
             SystemCallErrorNumber = "EPERM";
           };
         };
