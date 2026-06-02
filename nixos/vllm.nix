@@ -1,6 +1,5 @@
 { lib, config, ... }:
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
-# Workstation Blackwell is SM120 (GB20x), NOT SM100 (GB100/GB200 datacenter Blackwell).
 let
   imgSize = 1024;
 
@@ -71,13 +70,9 @@ lib.mkIf config.custom.enableNvidia {
         };
         video = {
           count = 0;
-          # num_frames = 32;
-          # width = 512;
-          # height = 512;
         };
         audio = {
           count = 0;
-          # length = 480000; # ~30s at 16kH
         };
       };
     };
@@ -106,8 +101,7 @@ lib.mkIf config.custom.enableNvidia {
         enable = false;
         model = "RedHatAI/Qwen3.6-35B-A3B-NVFP4";
         port = 18205;
-        # Hybrid Mamba+attention: vLLM aligns attention block size to the
-        # Mamba page size (2096 tokens), which must be <= max-num-batched-tokens.
+        # Keep batched tokens above the Mamba page size.
         settings =
           thinkingSettings
           // qwenSettings

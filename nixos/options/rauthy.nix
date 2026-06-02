@@ -11,10 +11,6 @@ let
   settingsFile = format.generate "rauthy-config.toml" cfg.settings;
   configFile = if cfg.configFile != null then cfg.configFile else settingsFile;
 
-  # JSON files Rauthy reads from `BOOTSTRAP_DIR` on first DB init.
-  # Each entry maps the on-disk filename (snake_case, fixed by rauthy)
-  # to the matching option (camelCase). Empty lists are dropped so we
-  # only emit the files that actually have entries.
   bootstrapData = lib.filterAttrs (_: v: v != [ ]) {
     "clients.json" = cfg.bootstrap.clients;
     "users.json" = cfg.bootstrap.users;
@@ -271,9 +267,6 @@ in
           wants = [ "network-online.target" ];
 
           environment = lib.mkMerge [
-            # Bootstrap entries are rendered to JSON under a Nix-built dir
-            # and injected via env var, which overrides any `bootstrap_dir`
-            # set in the TOML config.
             (lib.optionalAttrs (bootstrapData != { }) {
               BOOTSTRAP_DIR = toString (
                 pkgs.linkFarm "rauthy-bootstrap" (
@@ -298,7 +291,6 @@ in
               "/etc/rauthy/rauthy.env"
             ]
             ++ lib.optional (cfg.environmentFile != "") cfg.environmentFile;
-            # Hardening
             LockPersonality = true;
             MemoryDenyWriteExecute = true;
             NoNewPrivileges = true;
@@ -349,7 +341,6 @@ in
             ];
             UMask = "0077";
 
-            # Additional hardening on top of the upstream set.
             PrivateIPC = true;
             PrivateUsers = true;
             ProtectKernelImage = true;
@@ -359,21 +350,13 @@ in
       }
 
       (lib.mkIf cfg.postgresql.createLocally {
-        # Connection defaults for the local Postgres. `mkDefault` on every
-        # field so operators can still override the user/database name (or
-        # any other knob) via `custom.rauthy.settings.database.*`.
         custom.rauthy.settings.database = {
           hiqlite = lib.mkDefault false;
           pg_host = lib.mkDefault "/var/run/postgresql";
           pg_user = lib.mkDefault "rauthy";
           pg_db_name = lib.mkDefault "rauthy";
-          # `validate()` in `rauthy_config.rs` panics if `pg_password` is
-          # unset, even though peer auth on the UDS makes the value
-          # meaningless — Postgres ignores what the client sends. Any
-          # non-empty string keeps the validation happy.
+          # Rauthy validates this even though peer auth ignores it.
           pg_password = lib.mkDefault "peer";
-          # UDS connections cannot do TLS; the default `prefer` would log
-          # a noisy fallback on every reconnect.
           pg_tls = lib.mkDefault "disable";
         };
 
@@ -387,9 +370,6 @@ in
           ];
         };
 
-        # The setup oneshot inside `postgresql.target` runs the
-        # `ensureDatabases`/`ensureUsers` SQL, so peer auth has a role to
-        # bind to by the time rauthy connects.
         systemd.services.rauthy = {
           after = [ "postgresql.target" ];
           requires = [ "postgresql.target" ];

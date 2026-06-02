@@ -8,14 +8,7 @@ let
   mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
-  # Baseline response headers applied to every public vhost. HSTS is only
-  # meaningful over HTTPS — browsers ignore the header on plaintext
-  # responses per RFC 6797 §7.2, so we drop it when certificates are off
-  # to avoid noise. `frame-ancestors 'none'` is a content-agnostic
-  # framing block; if a downstream app needs framing, override with a
-  # vhost-specific `header` block after this snippet. `X-Frame-Options`
-  # is redundant with `frame-ancestors` on modern browsers but cheap
-  # defense-in-depth for legacy UAs that ignore CSP framing directives.
+  # Baseline response headers for public vhosts.
   securityHeaders = ''
     header {
       X-Content-Type-Options nosniff
@@ -29,18 +22,7 @@ let
     }
   '';
 
-  # Caddyfile snippet that 403s any request whose source IP isn't in `sources` (CIDRs); empty list = no restriction.
-  # Wrapped in a `handle` because the Caddyfile adapter sorts top-level
-  # `respond` after `handle`, so a bare `respond @blocked` is shadowed by
-  # any catch-all `handle { … }` in the same site. `handle` blocks are
-  # mutually exclusive and evaluated in source order — combined with
-  # `lib.mkBefore` at the call site this guarantees the deny path runs
-  # first.
-  # `client_ip` (not `remote_ip`) so that adding a CDN/edge proxy in
-  # front later is a config-only change: set `servers { trusted_proxies
-  # static <cidrs> }` in `globalConfig` and Caddy will start honouring
-  # `X-Forwarded-For` from those peers. Without `trusted_proxies` set,
-  # `client_ip` falls back to the immediate peer, so XFF can't be spoofed.
+  # Empty source lists mean no restriction.
   mkAllowedSources =
     sources:
     lib.optionalString (sources != [ ]) ''
@@ -52,14 +34,7 @@ let
 
   countryDb = "${config.custom.geoip.databaseDir}/GeoLite2-Country.mmdb";
 
-  # Curated allowlist of high-confidence rules from caddy-waf's upstream rules.json.
-  # The per-category community rule files (rules/*.json) are too noisy for this
-  # deployment and several have outright bugs (e.g. REQUEST_COOKIES is not a
-  # valid extraction target in v0.3.3). The author's own rules.json is denser
-  # and tighter, but contains its own broken rules — most notably four
-  # browser-integrity rules that target invented pseudo-headers and would 403
-  # every request. We keep only the rules that are tight, useful, and add
-  # genuine defense-in-depth on top of the country whitelist + rate limit.
+  # Curated caddy-waf upstream rules.
   defaultIncludeRules = [
     "block-scanners" # nikto/sqlmap/nmap/burpsuite/etc. User-Agents
     "crlf-injection-headers" # %0d%0a in headers
@@ -72,13 +47,7 @@ let
     "sensitive-files-expanded" # narrower companion to sensitive-files
   ];
 
-  # Custom rules appended on top of the curated upstream set. The plugin
-  # parses the JSON via the `Rule` struct (`types.go:71`) — note the
-  # mode field is keyed as `mode` despite the Go field being `Action`,
-  # and the upstream `rules.json` ships with the wrong key (`action`),
-  # which is why none of upstream's `"action": "block"` rules actually
-  # short-circuit — they only contribute to the anomaly score. Keep
-  # `mode` here so explicit blocks work.
+  # caddy-waf uses `mode`, not upstream's broken `action` key.
   defaultExtraRules = [
     {
       id = "method-disallowed";
@@ -106,9 +75,6 @@ let
         ${pkgs.caddy-waf}/rules.json > $out
     '';
 
-  # Default JSON block responses; nicer than the plugin's plain-text
-  # "Request blocked by WAF" body, especially for an API consumed by
-  # the SPA via fetch().
   wafBlockedJson = pkgs.writeText "waf-blocked.json" (
     builtins.toJSON {
       error = "blocked";
@@ -134,12 +100,7 @@ let
       },
       anomalyThreshold ? 10,
       logSeverity ? "info",
-      # Optional blocklists. The plugin hot-reloads these via fsnotify
-      # when the file is rewritten, so an operator can drop in CIDRs or
-      # domains without restarting Caddy. Paths must exist at startup
-      # (caddy-waf does not tolerate missing files), so default to
-      # plugin-shipped empty stubs in /nix/store; override with a
-      # mutable path on disk to make hot-reload useful.
+      # Optional caddy-waf blocklist files.
       ipBlacklistFile ? null,
       dnsBlacklistFile ? null,
       extraConfig ? "",
@@ -165,10 +126,7 @@ let
       }
     '';
 
-  # Curated honeypot paths we never serve. WAF's `sensitive-files`
-  # rule covers /.git/, /.env, etc; this snippet kills the rest
-  # (WordPress probes, PHPMyAdmin, AWS/SSH credential paths) before
-  # the WAF burns cycles inspecting them.
+  # Curated honeypot paths we never serve.
   scannerHoneypots = ''
     @scanner path /wp-admin* /wp-login* /wp-content* /xmlrpc.php /phpmyadmin* /pma* /.aws/* /.ssh/* /administrator /admin.php /shell.php
     handle @scanner {
@@ -201,14 +159,7 @@ in
       admin off
       persist_config off
 
-      # Slow-loris defense. `read_header` and `read_body` are safe to
-      # tighten site-wide — `read_body` caps any single body read, not
-      # the whole upload, so a 60 MB upload over a slow link is fine.
-      # `read` (whole-request) would break those uploads and is left
-      # unset. `write` is also unset: it'd terminate long SSE streams
-      # (LLM generations, conversion progress) since Caddy applies it
-      # to the response writer even with `flush_interval -1`. `idle`
-      # is the per-connection keep-alive cap.
+      # Slow-loris limits.
       servers {
         timeouts {
           read_header 10s

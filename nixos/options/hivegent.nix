@@ -150,9 +150,7 @@ in
           after = [ "network.target" ];
 
           environment = {
-            # HOME and HF_HOME redirect libreoffice's profile and the
-            # docling/sentence-transformers cache away from /var/empty so
-            # first-run startup doesn't fail.
+            # Avoid tool caches under `/var/empty`.
             HOME = "/var/lib/hivegent";
             HF_HOME = "/var/cache/hivegent";
             PYTHONUNBUFFERED = "1";
@@ -167,10 +165,6 @@ in
             TimeoutStartSec = 600;
             UMask = "0077";
 
-            # `DynamicUser` allocates an ephemeral UID; the matching
-            # `StateDirectory`/`CacheDirectory` keep that UID stable across
-            # restarts and own the writable paths automatically (no
-            # `ReadWritePaths` needed under `ProtectSystem = "strict"`).
             DynamicUser = true;
             StateDirectory = "hivegent";
             CacheDirectory = "hivegent";
@@ -187,9 +181,6 @@ in
               (toString cfg.port)
             ];
 
-            # Listen only on the configured port; everything else (outbound
-            # HTTP to llama.cpp, Hugging Face, the OIDC issuer) is unaffected
-            # because `SocketBind*` only gates `bind()`.
             SocketBindDeny = "any";
             SocketBindAllow = "tcp:${toString cfg.port}";
             RestrictAddressFamilies = [
@@ -238,11 +229,7 @@ in
       }
 
       (lib.mkIf cfg.postgresql.createLocally {
-        # asyncpg accepts an absolute directory in the `host` query param
-        # and resolves it to `<dir>/.s.PGSQL.<port>` — the standard libpq
-        # convention. Peer auth makes the user-info portion meaningless
-        # (Postgres ignores what the client sends), but the role name
-        # still has to be present so SQLAlchemy can build the URL.
+        # asyncpg resolves the `host` directory to the Postgres socket.
         custom.hivegent.settings.db.url =
           lib.mkDefault "postgresql+psycopg://hivegent@/hivegent?host=/var/run/postgresql";
 
@@ -256,9 +243,6 @@ in
           ];
         };
 
-        # The setup oneshot inside `postgresql.target` runs the
-        # `ensureDatabases`/`ensureUsers` SQL, so peer auth has a role to
-        # bind to by the time hivegent connects.
         systemd.services.hivegent = {
           after = [ "postgresql.target" ];
           requires = [ "postgresql.target" ];

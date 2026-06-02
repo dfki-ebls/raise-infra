@@ -16,8 +16,7 @@
       '';
     };
     website = {
-      # In production, the website is served at raise.dfki.de (not raise.dfki.dev).
-      # Locally (rootDomain = "localhost"), the website is served at localhost.
+      # Production uses raise.dfki.de.
       hostName = caddyHelpers.mkHost (
         if config.custom.rootDomain == "raise.dfki.dev" then "raise.dfki.de" else config.custom.rootDomain
       );

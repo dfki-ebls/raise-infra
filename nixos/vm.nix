@@ -9,8 +9,7 @@
       enableCertificates = false;
       hivegent = {
         enable = lib.mkForce true;
-        # MCP SDK's `validate_issuer_url` only accepts HTTP for `localhost`
-        # or `127.0.0.1`; the default `hivegent.localhost` fails that check.
+        # The MCP SDK only accepts HTTP issuers on `localhost` or `127.0.0.1`.
         settings.mcp.base_url = lib.mkForce "http://localhost/mcp";
       };
       rauthy.enable = lib.mkForce true;
@@ -19,10 +18,7 @@
       auto_https off
     '';
 
-    # macOS resolves `*.localhost` to loopback for the browser, but glibc
-    # inside the guest does not by default. systemd-resolved synthesizes
-    # loopback answers for the entire `localhost` zone (RFC 6761), which
-    # lets hivegent reach the OIDC issuer at `rauthy.localhost` server-side.
+    # glibc needs resolved for wildcard localhost names inside the guest.
     services.resolved.enable = true;
     virtualisation = {
       graphics = false;
