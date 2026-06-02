@@ -8,11 +8,17 @@ let
   cfg = config.custom.rauthy;
 
   opensslExe = lib.getExe' pkgs.openssl "openssl";
+
+  # Auto-generated secrets, kept out of the Nix store. Loaded before the
+  # operator-managed `environmentFile` so user secrets can override them.
+  envFile = "/etc/rauthy/bootstrap.env";
 in
 {
   config = lib.mkIf cfg.enable {
     # `ReadWritePaths` needs the target directory to exist.
     systemd.tmpfiles.rules = [ "d /etc/rauthy 0755 root root -" ];
+
+    systemd.services.rauthy.serviceConfig.EnvironmentFile = lib.mkBefore [ envFile ];
 
     # Keep generated secrets out of the Nix store.
     systemd.services.rauthy-generate-secrets = {
@@ -34,23 +40,23 @@ in
         set -euo pipefail
         umask 077
 
-        touch /etc/rauthy/rauthy.env
+        touch ${envFile}
 
         # Rauthy encryption keys.
-        if ! grep -q '^ENC_KEYS=' /etc/rauthy/rauthy.env; then
+        if ! grep -q '^ENC_KEYS=' ${envFile}; then
           enc_id=$(${opensslExe} rand -hex 4)
           enc_key=$(${opensslExe} rand -base64 32)
-          echo "ENC_KEYS=$enc_id/$enc_key" >> /etc/rauthy/rauthy.env
-          echo "ENC_KEY_ACTIVE=$enc_id" >> /etc/rauthy/rauthy.env
+          echo "ENC_KEYS=$enc_id/$enc_key" >> ${envFile}
+          echo "ENC_KEY_ACTIVE=$enc_id" >> ${envFile}
         fi
 
         # Hiqlite authentication secrets.
-        if ! grep -q '^HQL_SECRET_RAFT=' /etc/rauthy/rauthy.env; then
-          echo "HQL_SECRET_RAFT=$(${opensslExe} rand -hex 24)" >> /etc/rauthy/rauthy.env
+        if ! grep -q '^HQL_SECRET_RAFT=' ${envFile}; then
+          echo "HQL_SECRET_RAFT=$(${opensslExe} rand -hex 24)" >> ${envFile}
         fi
 
-        if ! grep -q '^HQL_SECRET_API=' /etc/rauthy/rauthy.env; then
-          echo "HQL_SECRET_API=$(${opensslExe} rand -hex 24)" >> /etc/rauthy/rauthy.env
+        if ! grep -q '^HQL_SECRET_API=' ${envFile}; then
+          echo "HQL_SECRET_API=$(${opensslExe} rand -hex 24)" >> ${envFile}
         fi
       '';
     };

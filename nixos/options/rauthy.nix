@@ -96,7 +96,7 @@ in
       description = ''
         Optional `KEY=VALUE` env file forwarded via `EnvironmentFile`,
         useful for operator-managed secrets like `SMTP_PASSWORD`. Loaded
-        *after* the auto-generated `/etc/rauthy/rauthy.env`, so entries
+        *after* the auto-generated `/etc/rauthy/bootstrap.env`, so entries
         here win on conflicts. Must be readable by `root` (systemd reads
         it before dropping to the unit's `DynamicUser`).
 
@@ -287,10 +287,7 @@ in
             WorkingDirectory = "%S/rauthy";
             RuntimeDirectory = lib.mkIf cfg.enableUnixSocket "rauthy";
             RuntimeDirectoryMode = lib.mkIf cfg.enableUnixSocket "750";
-            EnvironmentFile = [
-              "/etc/rauthy/rauthy.env"
-            ]
-            ++ lib.optional (cfg.environmentFile != "") cfg.environmentFile;
+            EnvironmentFile = lib.optional (cfg.environmentFile != "") cfg.environmentFile;
             LockPersonality = true;
             MemoryDenyWriteExecute = true;
             NoNewPrivileges = true;
