@@ -282,6 +282,8 @@ in
 
           serviceConfig = {
             ExecStart = "${lib.getExe cfg.package} serve --config-file ${configFile}";
+            Restart = "on-failure";
+            RestartSec = 5;
             DynamicUser = true;
             StateDirectory = "rauthy";
             WorkingDirectory = "%S/rauthy";
@@ -341,6 +343,14 @@ in
             PrivateIPC = true;
             PrivateUsers = true;
             SystemCallErrorNumber = "EPERM";
+          };
+
+          unitConfig = {
+            # Give up after three failed starts within the window so a
+            # persistent fault surfaces as a stopped unit instead of an
+            # endless crash loop.
+            StartLimitIntervalSec = 600;
+            StartLimitBurst = 3;
           };
         };
       }
