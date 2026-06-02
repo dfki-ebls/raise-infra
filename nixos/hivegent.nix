@@ -89,6 +89,13 @@ in
     }
   ];
 
+  # Provision the operator-managed secrets env file empty (0600, root) on
+  # activation so the unit's `EnvironmentFile` does not block startup before
+  # secrets are provisioned via:
+  #   printf 'HIVEGENT_MCP__CLIENT_SECRET=%s\n' '<secret>' > /etc/hivegent/hivegent.env
+  #   systemctl restart hivegent
+  systemd.tmpfiles.rules = [ "f ${cfg.environmentFile} 0600 root root -" ];
+
   systemd.services.hivegent = {
     # OIDC discovery must be reachable during backend startup.
     after = [
