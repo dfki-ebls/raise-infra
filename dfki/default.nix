@@ -14,6 +14,7 @@
   system.autoUpgrade = {
     enable = true;
     flake = "github:dfki-ebls/raise-infra#default";
+    upgrade = false;
   };
 
   networking.hostName = "raise";
