@@ -52,7 +52,7 @@ lib.mkIf config.custom.enableNvidia {
     subUidStart = 300000;
     # https://hub.docker.com/r/vllm/vllm-openai/tags
     # https://github.com/vllm-project/vllm/releases/latest
-    tag = "v0.22.0";
+    tag = "v0.22.1";
     environmentFile = "/etc/vllm/vllm.env";
 
     modelSettings = {
