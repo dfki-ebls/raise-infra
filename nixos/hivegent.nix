@@ -75,6 +75,7 @@ in
       id_token_alg = "EdDSA";
       auth_code_lifetime = 60;
       access_token_lifetime = 1800;
+      # Rauthy emits roles without a dedicated scope, while groups need the groups scope.
       scopes = [
         "openid"
         "profile"
@@ -118,6 +119,15 @@ in
       ${caddyHelpers.scannerHoneypots}
       ${caddyHelpers.securityHeaders}
       header Permissions-Policy "camera=(), microphone=(self), geolocation=()"
+
+      # oidc-spa restores sessions through a hidden same-origin iframe (the SPA
+      # and Rauthy share a parent domain, so its "auto" mode picks the iframe
+      # path). The shared securityHeaders send X-Frame-Options DENY and CSP
+      # frame-ancestors 'none', which block that iframe; relax to same-origin
+      # for this vhost only so silent session restoration works.
+      header X-Frame-Options SAMEORIGIN
+      header Content-Security-Policy "frame-ancestors 'self'"
+
       encode zstd gzip
 
       # Keep large uploads limited to API routes.
