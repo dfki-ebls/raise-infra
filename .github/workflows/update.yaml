@@ -28,7 +28,7 @@ jobs:
       - if: steps.unpushed.outputs.count != '0' && steps.check.outcome == 'failure'
         run: |
           determinate-nixd fix hashes --auto-apply
-          git commit -m "chore(deps/nix): fix hashes" ./pkgs || true
+          git commit -m "chore(deps/pkgs): fix hashes" ./pkgs || true
       - if: steps.unpushed.outputs.count != '0' && steps.check.outcome == 'failure'
         run: nix flake check --show-trace
       - if: steps.unpushed.outputs.count != '0'
