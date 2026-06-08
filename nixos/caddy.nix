@@ -8,20 +8,35 @@ let
   mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
-  # Baseline response headers for public vhosts. Same-origin framing is opt-in
-  # so SPAs like Hivegent can run oidc-spa's hidden session-restoration iframe.
+  # Baseline response headers for public vhosts. Framing is denied by default,
+  # and vhosts can opt into the specific ancestors required by their flows.
   # Browsers enforce every CSP header and apply the intersection, so the frame
   # policy must be emitted once here rather than overridden by a later header.
   securityHeaders =
     {
-      allowSameOriginFraming ? false,
+      frameAncestors ? [ "none" ],
     }:
+    let
+      formatFrameAncestor =
+        source:
+        if lib.elem source [ "none" "self" ] then
+          "'${source}'"
+        else
+          source;
+      xFrameOptions =
+        if frameAncestors == [ "none" ] then
+          "DENY"
+        else if frameAncestors == [ "self" ] then
+          "SAMEORIGIN"
+        else
+          "-X-Frame-Options";
+    in
     ''
       header {
         X-Content-Type-Options nosniff
-        X-Frame-Options ${if allowSameOriginFraming then "SAMEORIGIN" else "DENY"}
+        ${if xFrameOptions == "-X-Frame-Options" then xFrameOptions else "X-Frame-Options ${xFrameOptions}"}
         Referrer-Policy strict-origin-when-cross-origin
-        Content-Security-Policy "frame-ancestors ${if allowSameOriginFraming then "'self'" else "'none'"}"
+        Content-Security-Policy "frame-ancestors ${lib.concatStringsSep " " (map formatFrameAncestor frameAncestors)}"
         -Server
         ${lib.optionalString config.custom.enableCertificates ''
           Strict-Transport-Security "max-age=31536000; includeSubDomains"

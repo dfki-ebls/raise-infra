@@ -8,6 +8,7 @@ let
   cfg = config.custom.rauthy;
 
   caddySubHost = caddyHelpers.mkSubHost "rauthy";
+  hivegentSubHost = caddyHelpers.mkSubHost "hivegent";
   pubUrl = "rauthy.${config.custom.rootDomain}";
 
   port = 8080;
@@ -68,7 +69,9 @@ in
     hostName = caddySubHost;
     extraConfig = ''
       ${caddyHelpers.mkGeoblock { }}
-      ${caddyHelpers.securityHeaders { }}
+      # oidc-spa restores sessions through a hidden authorization iframe, so
+      # Rauthy must allow the Hivegent SPA origin to frame auth responses.
+      ${caddyHelpers.securityHeaders { frameAncestors = [ hivegentSubHost ]; }}
       reverse_proxy 127.0.0.1:${toString port}
     '';
   };

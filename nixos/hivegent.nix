@@ -118,7 +118,7 @@ in
       ${caddyHelpers.scannerHoneypots}
       # oidc-spa restores sessions through a hidden same-origin iframe, so this
       # vhost must permit framing by itself for silent session restoration.
-      ${caddyHelpers.securityHeaders { allowSameOriginFraming = true; }}
+      ${caddyHelpers.securityHeaders { frameAncestors = [ "self" ]; }}
       header Permissions-Policy "camera=(), microphone=(self), geolocation=()"
 
       encode zstd gzip
