@@ -24,7 +24,7 @@ let
 in
 {
   custom.hivegent = {
-    enable = false;
+    enable = true;
     package = hivegentPackages.backend;
     host = "127.0.0.1";
     port = 8000;
