@@ -243,6 +243,17 @@ in
           ];
         };
 
+        # pgvector's `vector` extension is untrusted, so the non-superuser
+        # `hivegent` role cannot create it during its Alembic migrations.
+        # Create it as the `postgres` superuser right after the database is
+        # provisioned (this runs in the same oneshot that `ensureDatabases`
+        # uses); hivegent's `CREATE EXTENSION IF NOT EXISTS vector` then
+        # short-circuits before its privilege check and succeeds. Requires
+        # `services.postgresql.extensions` to provide `pgvector`.
+        systemd.services.postgresql-setup.script = lib.mkAfter ''
+          psql -d hivegent -tAc 'CREATE EXTENSION IF NOT EXISTS vector'
+        '';
+
         systemd.services.hivegent = {
           after = [ "postgresql.target" ];
           requires = [ "postgresql.target" ];
