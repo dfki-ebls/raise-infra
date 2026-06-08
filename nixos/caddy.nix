@@ -19,7 +19,12 @@ let
     let
       formatFrameAncestor =
         source:
-        if lib.elem source [ "none" "self" ] then
+        if
+          lib.elem source [
+            "none"
+            "self"
+          ]
+        then
           "'${source}'"
         else
           source;
@@ -34,7 +39,9 @@ let
     ''
       header {
         X-Content-Type-Options nosniff
-        ${if xFrameOptions == "-X-Frame-Options" then xFrameOptions else "X-Frame-Options ${xFrameOptions}"}
+        ${
+          if xFrameOptions == "-X-Frame-Options" then xFrameOptions else "X-Frame-Options ${xFrameOptions}"
+        }
         Referrer-Policy strict-origin-when-cross-origin
         Content-Security-Policy "frame-ancestors ${lib.concatStringsSep " " (map formatFrameAncestor frameAncestors)}"
         -Server
