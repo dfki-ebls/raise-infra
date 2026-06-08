@@ -11,7 +11,7 @@
     websiteAlias = lib.mkIf (config.custom.rootDomain == "raise.dfki.dev") {
       hostName = caddyHelpers.mkHost "raise.dfki.dev";
       extraConfig = ''
-        ${caddyHelpers.securityHeaders}
+        ${caddyHelpers.securityHeaders { }}
         redir https://raise.dfki.de{uri}
       '';
     };
@@ -21,7 +21,7 @@
         if config.custom.rootDomain == "raise.dfki.dev" then "raise.dfki.de" else config.custom.rootDomain
       );
       extraConfig = ''
-        ${caddyHelpers.securityHeaders}
+        ${caddyHelpers.securityHeaders { }}
         root * ${inputs.website.packages.${pkgs.stdenv.system}.default}
         encode zstd gzip
 

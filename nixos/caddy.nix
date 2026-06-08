@@ -8,19 +8,26 @@ let
   mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
-  # Baseline response headers for public vhosts.
-  securityHeaders = ''
-    header {
-      X-Content-Type-Options nosniff
-      X-Frame-Options DENY
-      Referrer-Policy strict-origin-when-cross-origin
-      Content-Security-Policy "frame-ancestors 'none'"
-      -Server
-      ${lib.optionalString config.custom.enableCertificates ''
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-      ''}
-    }
-  '';
+  # Baseline response headers for public vhosts. Same-origin framing is opt-in
+  # so SPAs like Hivegent can run oidc-spa's hidden session-restoration iframe.
+  # Browsers enforce every CSP header and apply the intersection, so the frame
+  # policy must be emitted once here rather than overridden by a later header.
+  securityHeaders =
+    {
+      allowSameOriginFraming ? false,
+    }:
+    ''
+      header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options ${if allowSameOriginFraming then "SAMEORIGIN" else "DENY"}
+        Referrer-Policy strict-origin-when-cross-origin
+        Content-Security-Policy "frame-ancestors ${if allowSameOriginFraming then "'self'" else "'none'"}"
+        -Server
+        ${lib.optionalString config.custom.enableCertificates ''
+          Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        ''}
+      }
+    '';
 
   # Empty source lists mean no restriction.
   mkAllowedSources =

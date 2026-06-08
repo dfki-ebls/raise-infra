@@ -16,7 +16,7 @@ in
   services.caddy.virtualHosts.ragold = {
     hostName = caddyHelpers.mkSubHost "ragold";
     extraConfig = ''
-      ${caddyHelpers.securityHeaders}
+      ${caddyHelpers.securityHeaders { }}
       root * ${ragold}
       encode zstd gzip
 

@@ -116,16 +116,10 @@ in
     extraConfig = ''
       ${caddyHelpers.mkGeoblock { }}
       ${caddyHelpers.scannerHoneypots}
-      ${caddyHelpers.securityHeaders}
+      # oidc-spa restores sessions through a hidden same-origin iframe, so this
+      # vhost must permit framing by itself for silent session restoration.
+      ${caddyHelpers.securityHeaders { allowSameOriginFraming = true; }}
       header Permissions-Policy "camera=(), microphone=(self), geolocation=()"
-
-      # oidc-spa restores sessions through a hidden same-origin iframe (the SPA
-      # and Rauthy share a parent domain, so its "auto" mode picks the iframe
-      # path). The shared securityHeaders send X-Frame-Options DENY and CSP
-      # frame-ancestors 'none', which block that iframe; relax to same-origin
-      # for this vhost only so silent session restoration works.
-      header X-Frame-Options SAMEORIGIN
-      header Content-Security-Policy "frame-ancestors 'self'"
 
       encode zstd gzip
 
