@@ -2,7 +2,7 @@
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
 lib.mkIf config.custom.enableNvidia {
   services.llmhop.llama-cpp = {
-    enable = true;
+    enable = false;
     environmentFile = "/etc/llama-cpp/llama-cpp.env";
 
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
@@ -42,7 +42,7 @@ lib.mkIf config.custom.enableNvidia {
       };
       # https://unsloth.ai/docs/models/qwen3.5
       "qwen3.5-0.8b" = {
-        enable = true;
+        enable = false;
         port = 18102;
         settings = {
           # keep-sorted start

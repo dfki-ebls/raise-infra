@@ -42,8 +42,7 @@ in
       };
 
       llm = {
-        model = "qwen3.6-35b-a3b";
-        aux_model = "qwen3.5-0.8b";
+        model = "gemma4-31b";
         base_url = "http://127.0.0.1:18000/v1";
       };
 

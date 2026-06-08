@@ -77,13 +77,21 @@ lib.mkIf config.custom.enableNvidia {
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       "gemma4-31b" = {
-        enable = false;
-        model = "RedHatAI/gemma-4-31B-it-NVFP4";
+        enable = true;
+        model = "google/gemma-4-31B-it-qat-w4a16-ct";
         port = 18201;
-        settings = thinkingSettings // gemmaSettings;
+        settings =
+          thinkingSettings
+          // gemmaSettings
+          // {
+            speculative-config = lib.toJSON {
+              model = "google/gemma-4-31B-it-assistant";
+              num_speculative_tokens = 4;
+            };
+          };
       };
       "gemma4-26b-a4b" = {
-        enable = true;
+        enable = false;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         port = 18202;
         settings = thinkingSettings // gemmaSettings;
