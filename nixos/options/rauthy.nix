@@ -26,6 +26,17 @@ in
 
     package = lib.mkPackageOption pkgs "rauthy" { };
 
+    issuer = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      example = "https://sso.example.com/auth/v1/";
+      description = ''
+        Public OIDC issuer URL including the trailing `/auth/v1/`, set by the
+        deployment so relying-party modules can reference it instead of
+        hardcoding Rauthy's public host.
+      '';
+    };
+
     settings = lib.mkOption {
       type = format.type;
       default = { };

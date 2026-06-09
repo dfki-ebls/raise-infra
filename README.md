@@ -71,7 +71,7 @@ The default token lifetime for a newly created Rauthy client is 1800 seconds unl
 Fetch a token and call the API:
 
 ```bash
-token=$(curl -fsS https://rauthy.<domain>/auth/v1/oidc/token \
+token=$(curl -fsS https://sso.<domain>/auth/v1/oidc/token \
   -d grant_type=client_credentials \
   -d client_id=hivegent-integration \
   -d client_secret=<secret> | jq -r .access_token)
@@ -137,7 +137,7 @@ async def list_documents() -> object:
     async with AsyncOAuth2Client(
         "hivegent-integration",
         "<secret>",
-        token_endpoint="https://rauthy.<domain>/auth/v1/oidc/token",
+        token_endpoint="https://sso.<domain>/auth/v1/oidc/token",
         token_endpoint_auth_method="client_secret_post",
     ) as client:
         await client.fetch_token(grant_type="client_credentials")

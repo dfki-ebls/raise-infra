@@ -7,15 +7,18 @@
 let
   cfg = config.custom.rauthy;
 
-  caddySubHost = caddyHelpers.mkSubHost "rauthy";
+  caddySubHost = caddyHelpers.mkSubHost "sso";
   hivegentSubHost = caddyHelpers.mkSubHost "hivegent";
-  pubUrl = "rauthy.${config.custom.rootDomain}";
+  pubUrl = "sso.${config.custom.rootDomain}";
 
   port = 8080;
 in
 {
   custom.rauthy = {
     enable = true;
+    # Public OIDC issuer, exposed so relying parties (Hivegent) need not
+    # hardcode Rauthy's public host.
+    issuer = "${caddySubHost}/auth/v1/";
     postgresql.createLocally = true;
 
     settings = {
@@ -50,7 +53,7 @@ in
         rp_id = pubUrl;
         # Rauthy expects `rp_origin` to include the port.
         rp_origin = "${caddySubHost}:${if config.custom.enableCertificates then "443" else "80"}";
-        rp_name = "RAISE IAM";
+        rp_name = "RAISE Single Sign-On";
         # Require PIN or biometric verification for passkey MFA.
         force_uv = true;
       };

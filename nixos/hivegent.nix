@@ -11,8 +11,7 @@ let
 
   hivegentPackages = inputs.hivegent.packages.${pkgs.stdenv.system};
 
-  # The issuer must include Rauthy's fixed path and trailing slash.
-  rauthyIssuer = "${caddyHelpers.mkSubHost "rauthy"}/auth/v1/";
+  rauthyIssuer = config.custom.rauthy.issuer;
 
   # Vite reads these variables at build time.
   frontend = hivegentPackages.frontend.overrideAttrs {
