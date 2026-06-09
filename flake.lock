@@ -230,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1780944354,
-        "narHash": "sha256-to06/pbWWSX9E6N23vke1n2EmsmQ7pOLtXjX+kYxoe8=",
+        "lastModified": 1780998101,
+        "narHash": "sha256-T3vwbPw2OrX+DpNnvCRAME3a/oF2dqgW9tbCZjLzOyQ=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "21e9845c70e2ec0eeb5ddcd45de678207ccd53a6",
+        "rev": "beb2bcb29eb6bd9b8cc03bf99908f9db432b547e",
         "type": "github"
       },
       "original": {
@@ -407,11 +407,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1780747962,
-        "narHash": "sha256-IX7G1dlKrOqPOImfbo7ADDfV5yU1+j+MRChI3TL4tAA=",
+        "lastModified": 1780930886,
+        "narHash": "sha256-rppURzHviaQN131F+nLiLdGfcb0uCd9gGP0E5+iw9MI=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "cbb5cf358f50aa6acc9efd6113b7bcfbc352cd73",
+        "rev": "8c3cede7ddc26bd659d2d383b5610efbd2c7a16e",
         "type": "github"
       },
       "original": {
