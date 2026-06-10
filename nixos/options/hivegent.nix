@@ -10,6 +10,13 @@ let
 
   tomlFormat = pkgs.formats.toml { };
   configFile = tomlFormat.generate "hivegent-config.toml" cfg.settings;
+
+  # `enableTorchCompile` is an argument of the hivegent backend derivation:
+  # it puts the C toolchain TorchInductor needs for runtime codegen on the
+  # wrapper's PATH and flips the DOCLING_INFERENCE_COMPILE_TORCH_MODELS
+  # default — the toolchain must match the torch wheels pinned in the
+  # backend, so it is the package's concern, not the unit's.
+  package = if cfg.torchCompile then cfg.package.override { enableTorchCompile = true; } else cfg.package;
 in
 {
   options.custom.hivegent = {
@@ -85,6 +92,21 @@ in
       '';
     };
 
+    torchCompile = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Whether docling may wrap its torch document models in
+        `torch.compile`. Rebuilds `package` with the toolchain
+        TorchInductor needs for runtime codegen on the wrapper's PATH
+        (`enableTorchCompile`) and persists the codegen cache under the
+        unit's `CacheDirectory` so models compile once per torch version
+        rather than on every restart. Off by default: eager inference is
+        fast enough for these small models and avoids compile latency
+        after every deploy.
+      '';
+    };
+
     environmentFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -156,6 +178,9 @@ in
             PYTHONUNBUFFERED = "1";
             HIVEGENT_CONFIG_FILE = "${configFile}";
           }
+          // lib.optionalAttrs cfg.torchCompile {
+            TORCHINDUCTOR_CACHE_DIR = "/var/cache/hivegent/inductor";
+          }
           // cfg.environment;
 
           serviceConfig = {
@@ -173,7 +198,7 @@ in
             EnvironmentFile = lib.optional (cfg.environmentFile != null) "-${cfg.environmentFile}";
 
             ExecStart = utils.escapeSystemdExecArgs [
-              (lib.getExe' cfg.package "hivegent")
+              (lib.getExe' package "hivegent")
               "serve"
               "--host"
               cfg.host
