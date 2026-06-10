@@ -13,11 +13,11 @@ let
   };
 
   thinkingSettings = {
-    gpu-memory-utilization = 0.7;
-    max-model-len = "16K";
+    gpu-memory-utilization = 0.8;
+    max-model-len = "64K";
     enable-auto-tool-choice = true;
     enable-prefix-caching = true;
-    kv-cache-memory-bytes = "2G";
+    kv-cache-memory-bytes = "4G";
     default-chat-template-kwargs = lib.toJSON {
       enable_thinking = true;
     };
@@ -77,7 +77,7 @@ lib.mkIf config.custom.enableNvidia {
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models = {
       "gemma4-31b" = {
-        enable = true;
+        enable = false;
         model = "google/gemma-4-31B-it-qat-w4a16-ct";
         port = 18201;
         settings =
@@ -91,7 +91,7 @@ lib.mkIf config.custom.enableNvidia {
           };
       };
       "gemma4-26b-a4b" = {
-        enable = false;
+        enable = true;
         model = "RedHatAI/gemma-4-26B-A4B-it-NVFP4";
         port = 18202;
         settings = thinkingSettings // gemmaSettings;

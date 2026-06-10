@@ -45,7 +45,7 @@ in
       conversion.ocr_languages = [ "deu" ];
 
       llm = {
-        model = "gemma4-31b";
+        model = "gemma4-26b-a4b";
         base_url = "http://127.0.0.1:18000/v1";
       };
 
