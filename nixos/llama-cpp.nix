@@ -19,7 +19,7 @@ lib.mkIf config.custom.enableNvidia {
       cache-ram = 128 * 1024; # MiB
       cache-type-k = "q8_0";
       cache-type-v = "q8_0";
-      ctx-size = 64 * 1024 * parallel;
+      ctx-size = 96 * 1024 * parallel;
       flash-attn = "on";
       mlock = true;
       mmap = false;
