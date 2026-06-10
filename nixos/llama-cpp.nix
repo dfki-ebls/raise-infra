@@ -19,12 +19,13 @@ lib.mkIf config.custom.enableNvidia {
       cache-ram = 128 * 1024; # MiB
       cache-type-k = "q8_0";
       cache-type-v = "q8_0";
-      ctx-size = 128 * 1024 * parallel;
+      ctx-size = 64 * 1024 * parallel;
       flash-attn = "on";
       mlock = true;
       mmap = false;
       n-gpu-layers = "all";
-      parallel = 3;
+      parallel = 2;
+      reasoning = "on";
       # keep-sorted end
     };
 
@@ -35,7 +36,6 @@ lib.mkIf config.custom.enableNvidia {
         port = 18101;
         settings = qwenSettings // {
           hf-repo = "unsloth/Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL";
-          reasoning = "on";
           spec-draft-n-max = 4;
           spec-type = "draft-mtp";
         };
@@ -45,18 +45,16 @@ lib.mkIf config.custom.enableNvidia {
         port = 18102;
         settings = qwenSettings // {
           hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
-          reasoning = "on";
         };
       };
       # https://unsloth.ai/docs/models/qwen3.5
       "qwen3.5-0.8b" = {
-        enable = true;
+        enable = false;
         port = 18103;
-        settings = qwenSettings // rec {
+        settings = qwenSettings // {
           hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
-          reasoning = "off";
-          ctx-size = 8 * 1024 * parallel;
-          parallel = 3;
+          cache-ram = 1024;
+          ctx-size = 4 * 1024 * qwenSettings.parallel;
         };
       };
     };
