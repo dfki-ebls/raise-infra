@@ -16,7 +16,8 @@ let
   # wrapper's PATH and flips the DOCLING_INFERENCE_COMPILE_TORCH_MODELS
   # default — the toolchain must match the torch wheels pinned in the
   # backend, so it is the package's concern, not the unit's.
-  package = if cfg.torchCompile then cfg.package.override { enableTorchCompile = true; } else cfg.package;
+  package =
+    if cfg.torchCompile then cfg.package.override { enableTorchCompile = true; } else cfg.package;
 in
 {
   options.custom.hivegent = {
