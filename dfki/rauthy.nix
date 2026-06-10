@@ -28,8 +28,8 @@ in
         smtp_url = "mail.wi2.uni-trier.de";
         smtp_port = 465;
         smtp_username = mail;
-        smtp_from = "RAISE IAM <${mail}>";
-        sub_prefix = "RAISE IAM";
+        smtp_from = "RAISE Single Sign-On <${mail}>";
+        sub_prefix = "RAISE Single Sign-On";
       };
     };
   };
