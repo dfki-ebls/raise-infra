@@ -40,6 +40,10 @@ in
         audience = [ "hivegent-*" ];
       };
 
+      # The corpus is German-only; each extra OCR language widens
+      # Tesseract's beam search (~25% slower with deu+eng).
+      conversion.ocr_languages = [ "deu" ];
+
       llm = {
         model = "gemma4-31b";
         base_url = "http://127.0.0.1:18000/v1";
