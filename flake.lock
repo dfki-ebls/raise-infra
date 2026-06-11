@@ -230,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1781176930,
-        "narHash": "sha256-0lN7LOvJDXFD+CHepxfwnIhjsp95lImMojBUecDEz18=",
+        "lastModified": 1781209279,
+        "narHash": "sha256-h6RapixqQJc/uRksGVx8CHhzlX5cwzO4KFRoWloClz0=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "b6c16f1499d0002ed977646847c2af1c8825f919",
+        "rev": "68bb28b8ee7cf0eb0fc37db5467714453bc3f5d5",
         "type": "github"
       },
       "original": {
