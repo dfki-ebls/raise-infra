@@ -50,6 +50,10 @@ in
         base_url = "http://${config.services.llmhop.settings.listen}/v1";
       };
 
+      network = {
+        websearch_region = "de-de";
+      };
+
       mcp = {
         enable = false;
         client_id = "hivegent-mcp";
