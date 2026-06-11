@@ -7,6 +7,7 @@
 lib.mkIf config.custom.enableNvidia {
   services.xserver.videoDrivers = [ "nvidia" ];
   hardware.nvidia = {
+    branch = "latest";
     open = true;
     nvidiaPersistenced = true;
     nvidiaSettings = false;
