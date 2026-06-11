@@ -51,10 +51,11 @@ lib.mkIf config.custom.enableNvidia {
       "qwen3.5-0.8b" = {
         enable = true;
         port = 18103;
-        settings = qwenSettings // {
+        settings = qwenSettings // rec {
           hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
           cache-ram = 1024;
-          ctx-size = 4 * 1024 * qwenSettings.parallel;
+          ctx-size = 4 * 1024 * parallel;
+          parallel = 2;
         };
       };
     };
