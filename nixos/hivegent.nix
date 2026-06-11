@@ -46,8 +46,8 @@ in
 
       llm = {
         model = "qwen3.6-27b";
-        # aux_model = "qwen3.5-0.8b";
-        base_url = "http://127.0.0.1:18000/v1";
+        aux_model = "qwen3.5-0.8b";
+        base_url = "http://${config.services.llmhop.settings.listen}/v1";
       };
 
       mcp = {
