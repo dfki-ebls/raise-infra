@@ -56,6 +56,7 @@ lib.mkIf config.custom.enableNvidia {
           cache-ram = 1024;
           ctx-size = 4 * 1024 * parallel;
           parallel = 2;
+          reasoning = "off";
         };
       };
     };
