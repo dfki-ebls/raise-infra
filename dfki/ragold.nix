@@ -20,19 +20,21 @@ in
       root * ${ragold}
       encode zstd gzip
 
-      @immutable path /assets/*
-      header @immutable Cache-Control "public, max-age=31536000, immutable"
-
-      @html not path /assets/*
-      header @html Cache-Control "no-store"
-
       header {
         -ETag
         -Last-Modified
       }
 
-      try_files {path} /index.html
-      file_server
+      handle /assets/* {
+        header Cache-Control "public, max-age=31536000, immutable"
+        file_server
+      }
+
+      handle {
+        header Cache-Control "no-store"
+        try_files {path} /index.html
+        file_server
+      }
     '';
   };
 }

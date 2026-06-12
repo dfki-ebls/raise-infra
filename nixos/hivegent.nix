@@ -173,20 +173,23 @@ in
           ''
       }
 
-      handle {
+      handle /assets/* {
         root * ${frontend}
-
-        @immutable path /assets/*
-        header @immutable Cache-Control "public, max-age=31536000, immutable"
-
-        @html not path /assets/*
-        header @html Cache-Control "no-store"
-
+        header Cache-Control "public, max-age=31536000, immutable"
         header {
           -ETag
           -Last-Modified
         }
+        file_server
+      }
 
+      handle {
+        root * ${frontend}
+        header Cache-Control "no-store"
+        header {
+          -ETag
+          -Last-Modified
+        }
         try_files {path} /index.html
         file_server
       }
