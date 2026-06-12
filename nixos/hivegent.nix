@@ -51,7 +51,9 @@ in
       };
 
       network = {
-        websearch_region = "de-de";
+        websearch_language = "de";
+        # Advertised in the web tools' User-Agent for traffic questions.
+        contact_email = config.custom.admin.mail;
       };
 
       mcp = {
