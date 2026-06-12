@@ -230,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1781211644,
-        "narHash": "sha256-Bg0kcgqUC80zhNcRJ77w8+MNJckV5SPHv2TsIx1zLf8=",
+        "lastModified": 1781254257,
+        "narHash": "sha256-MNer11B63tWOyyp0RBww9RMPVOpuJ9Q7cIkEOd5plTk=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "8e1fbd5be3d41424e13a0cc52081d07a0df712ca",
+        "rev": "52cd28040a1220c28f1d14b8835f3c9eae9b5e53",
         "type": "github"
       },
       "original": {
@@ -525,11 +525,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781186283,
-        "narHash": "sha256-vBrYJv0+Q5w7zQdWkJG5rOO6SUvw8wDkwn3Nc+GKVn4=",
+        "lastModified": 1781254774,
+        "narHash": "sha256-3PIK2anih6J/4YLo+uUr4RZLCE5j9TiqwtmtQSUQims=",
         "owner": "dfki-ebls",
         "repo": "ragold",
-        "rev": "5faa8fe7aaf436c3ca50f917d7acb8d32581486d",
+        "rev": "cfb0913f632816b153189073359b9f71dcafa011",
         "type": "github"
       },
       "original": {
