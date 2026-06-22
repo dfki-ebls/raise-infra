@@ -1,37 +1,21 @@
 {
-  pkgs,
-  inputs,
   config,
   caddyHelpers,
   ...
 }:
 let
-  cfg = config.custom.hivegent;
   caddySubHost = caddyHelpers.mkSubHost "hivegent";
-
-  hivegentPackages = inputs.hivegent.packages.${pkgs.stdenv.system};
-
   rauthyIssuer = config.custom.rauthy.issuer;
-
-  # Vite reads these variables at build time.
-  frontend = hivegentPackages.frontend.overrideAttrs {
-    VITE_API_URL = "";
-    VITE_OIDC_ISSUER_URI = rauthyIssuer;
-    VITE_OIDC_CLIENT_ID = "hivegent-spa";
-    VITE_OIDC_USE_MOCK = "false";
-  };
+  environmentFile = "/etc/hivegent/hivegent.env";
 in
 {
-  custom.hivegent = {
+  services.hivegent = {
     enable = true;
-    package = hivegentPackages.backend;
-    host = "127.0.0.1";
-    port = 8000;
 
     postgresql.createLocally = true;
 
     # Runtime secrets stay outside the Nix store.
-    environmentFile = "/etc/hivegent/hivegent.env";
+    inherit environmentFile;
 
     settings = {
       auth = {
@@ -61,6 +45,20 @@ in
         client_id = "hivegent-mcp";
         base_url = "${caddySubHost}/mcp";
       };
+    };
+
+    caddy = {
+      enable = true;
+      hostName = caddySubHost;
+      hsts = config.custom.enableCertificates;
+      # The SPA reads its OIDC config from the backend's `/api/config` (issuer
+      # from `settings.auth.issuer` above, client id `hivegent-spa` by default),
+      # so there is no per-deployment frontend build.
+      # Site-wide hardening the reusable module intentionally leaves out.
+      extraConfig = ''
+        ${caddyHelpers.mkGeoblock { }}
+        ${caddyHelpers.scannerHoneypots}
+      '';
     };
   };
 
@@ -107,7 +105,7 @@ in
   # secrets are provisioned via:
   #   printf 'HIVEGENT_MCP__CLIENT_SECRET=%s\n' '<secret>' > /etc/hivegent/hivegent.env
   #   systemctl restart hivegent
-  systemd.tmpfiles.rules = [ "f ${cfg.environmentFile} 0600 root root -" ];
+  systemd.tmpfiles.rules = [ "f ${environmentFile} 0600 root root -" ];
 
   systemd.services.hivegent = {
     # OIDC discovery must be reachable during backend startup.
@@ -119,82 +117,5 @@ in
       "caddy.service"
       "rauthy.service"
     ];
-  };
-
-  services.caddy.virtualHosts.hivegent = {
-    hostName = caddySubHost;
-    extraConfig = ''
-      ${caddyHelpers.mkGeoblock { }}
-      ${caddyHelpers.scannerHoneypots}
-      # oidc-spa restores sessions through a hidden same-origin iframe, so this
-      # vhost must permit framing by itself for silent session restoration.
-      ${caddyHelpers.securityHeaders { frameAncestors = [ "self" ]; }}
-      header Permissions-Policy "camera=(), microphone=(self), geolocation=()"
-
-      encode zstd gzip
-
-      # Keep large uploads limited to API routes.
-      @small_body not path /api/*
-      request_body @small_body {
-        max_size 1MB
-      }
-
-      @docs path /docs* /redoc* /openapi.json
-      handle @docs {
-        respond 404
-      }
-
-      handle /api/* {
-        request_body {
-          max_size 60MB
-        }
-        header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
-        reverse_proxy ${cfg.host}:${toString cfg.port} {
-          flush_interval -1
-          health_uri      /api/health
-          health_interval 10s
-          health_timeout  3s
-        }
-      }
-
-      ${
-        if cfg.settings.mcp.enable or false then
-          ''
-            handle /mcp* {
-              reverse_proxy ${cfg.host}:${toString cfg.port} {
-                flush_interval -1
-              }
-            }
-          ''
-        else
-          ''
-            @mcp path /mcp /mcp/*
-            handle @mcp {
-              respond 404
-            }
-          ''
-      }
-
-      handle /assets/* {
-        root * ${frontend}
-        header Cache-Control "public, max-age=31536000, immutable"
-        header {
-          -ETag
-          -Last-Modified
-        }
-        file_server
-      }
-
-      handle {
-        root * ${frontend}
-        header Cache-Control "no-store"
-        header {
-          -ETag
-          -Last-Modified
-        }
-        try_files {path} /index.html
-        file_server
-      }
-    '';
   };
 }

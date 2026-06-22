@@ -4,6 +4,7 @@
     inputs.quadlet-nix.nixosModules.default
     inputs.determinate.nixosModules.default
     inputs.llmhop.nixosModules.default
+    inputs.hivegent.nixosModules.default
   ]
   ++ lib'.flocken.getModules ./.;
 

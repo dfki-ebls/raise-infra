@@ -7,12 +7,12 @@
       enableGeoblocking = false;
       enableNvidia = false;
       enableCertificates = false;
-      hivegent = {
-        enable = lib.mkForce true;
-        # The MCP SDK only accepts HTTP issuers on `localhost` or `127.0.0.1`.
-        settings.mcp.base_url = lib.mkForce "http://localhost/mcp";
-      };
       rauthy.enable = lib.mkForce true;
+    };
+    services.hivegent = {
+      enable = lib.mkForce true;
+      # The MCP SDK only accepts HTTP issuers on `localhost` or `127.0.0.1`.
+      settings.mcp.base_url = lib.mkForce "http://localhost/mcp";
     };
     services.caddy.globalConfig = ''
       auto_https off
