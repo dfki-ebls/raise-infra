@@ -9,11 +9,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1781815324,
-        "narHash": "sha256-5pDiPOe2tLKDOH59TkzP3MNiCCCbGxw3giDyRrSdP4E=",
+        "lastModified": 1782108802,
+        "narHash": "sha256-M+zkc/9IcncWN0Zn5knVmOG/epArpPgEpjYgEqmTRnQ=",
         "owner": "determinatesystems",
         "repo": "determinate",
-        "rev": "fdef7e382e042b1fe418f65770c3acda5933b155",
+        "rev": "8240cc3ac41060542b308f25becb068d0cc9059a",
         "type": "github"
       },
       "original": {
@@ -230,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1781767908,
-        "narHash": "sha256-jbrRqHoQseeWMlaGUJl6VMe95nSouuXZDNG/T2IkG74=",
+        "lastModified": 1782110867,
+        "narHash": "sha256-+3JG1KwwG32j06edH7j75y9CiIgBl364cpfmGGSr/EM=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "8d37a7fa672c5fa8b7e8f205098f3113167cbf56",
+        "rev": "fe4dad0dc785f0e73d2f1826529a5211d016facf",
         "type": "github"
       },
       "original": {
