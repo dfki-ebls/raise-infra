@@ -7,7 +7,7 @@
 let
   mkNixosSystem =
     module:
-    inputs.nixpkgs-unstable.lib.nixosSystem {
+    inputs.nixpkgs.lib.nixosSystem {
       system = null;
       specialArgs = {
         inherit inputs lib';

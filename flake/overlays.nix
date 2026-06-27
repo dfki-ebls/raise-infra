@@ -19,7 +19,7 @@
         inherit (prev.stdenv.hostPlatform) system;
         config = self.nixpkgsConfig;
       };
-      unstable = import inputs.nixpkgs-unstable {
+      unstable = import inputs.nixpkgs {
         inherit (prev.stdenv.hostPlatform) system;
         config = self.nixpkgsConfig;
       };
