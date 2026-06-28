@@ -17,6 +17,14 @@ in
     # Runtime secrets stay outside the Nix store.
     inherit environmentFile;
 
+    # Device placement for every torch / onnxruntime model (dense embeddings,
+    # the model-based chunkers, docling) is decided centrally by the process
+    # environment rather than per-library config — the backend uses `auto`
+    # detection everywhere. Hide the GPU for now so the whole VRAM budget
+    # stays with the llama-server; `auto` then resolves to CPU for all of
+    # them. Drop this once there is GPU headroom to offload onto.
+    environment.CUDA_VISIBLE_DEVICES = "";
+
     settings = {
       auth = {
         enable = true;
@@ -24,9 +32,18 @@ in
         audience = [ "hivegent-*" ];
       };
 
-      # The corpus is German-only; each extra OCR language widens
-      # Tesseract's beam search (~25% slower with deu+eng).
-      conversion.ocr_languages = [ "deu" ];
+      compute = {
+        # 64-core host: lift the CPU-thread default for the OCR / PDF-parse
+        # and (with the GPU hidden) the neural stages without oversubscribing,
+        # as Tesseract's OpenMP scales sublinearly past ~16.
+        num_threads = 16;
+      };
+
+      conversion = {
+        # The corpus is German-only; each extra OCR language widens
+        # Tesseract's beam search (~25% slower with deu+eng).
+        ocr.languages = [ "deu" ];
+      };
 
       llm = {
         model = "qwen3.6-27b";
