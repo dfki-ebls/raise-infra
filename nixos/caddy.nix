@@ -51,16 +51,6 @@ let
       }
     '';
 
-  # Empty source lists mean no restriction.
-  mkAllowedSources =
-    sources:
-    lib.optionalString (sources != [ ]) ''
-      @blocked not client_ip ${toString sources}
-      handle @blocked {
-        respond "Access denied: Your IP is not allowed to access this resource." 403
-      }
-    '';
-
   mkGeoblock =
     {
       countries ? [ "DE" ],
@@ -92,7 +82,6 @@ in
     inherit
       mkHost
       mkSubHost
-      mkAllowedSources
       mkGeoblock
       scannerHoneypots
       securityHeaders
