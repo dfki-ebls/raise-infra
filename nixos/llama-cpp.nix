@@ -21,6 +21,7 @@ lib.mkIf config.custom.enableNvidia {
       cache-type-v = "q8_0";
       ctx-size = 96 * 1024 * parallel;
       flash-attn = "on";
+      kv-unified = false;
       mlock = true;
       mmap = false;
       n-gpu-layers = "all";
