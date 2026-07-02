@@ -3,6 +3,7 @@
 let
   qwenSettings = {
     min-p = 0.00;
+    presence-penalty = 1.0;
     temperature = 1.0;
     top-k = 20;
     top-p = 0.95;
