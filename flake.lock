@@ -230,11 +230,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1782814240,
-        "narHash": "sha256-sdMO2gohHtA4svuhsJz2yrIaHGoKPNV02DVoXiSMt5g=",
+        "lastModified": 1783068865,
+        "narHash": "sha256-BQBuODC20/kCpotcBnDh39UgRwI0ZfvMyzmdw0Y0ozs=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "201abf1b352004ec15552480319ff172db2787d3",
+        "rev": "f5b6fe52b2a21e5d36eeb962a66a7ac784138d5b",
         "type": "github"
       },
       "original": {
@@ -457,11 +457,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782808548,
-        "narHash": "sha256-9+XcLOzFo3tXSgH5xpd5g2i65cx4q6zvfNVEMV7hyEs=",
+        "lastModified": 1782905613,
+        "narHash": "sha256-SvXJcAemihifkTn4BGvyE5K1FJX9bl4U8DQ5pqKvD0s=",
         "owner": "pyproject-nix",
         "repo": "pyproject.nix",
-        "rev": "4de7c126c1a3e76e9ec9e3ced900aaa6d8847757",
+        "rev": "7af23cfe91064865ecf2e835da28b45b3c6f49fd",
         "type": "github"
       },
       "original": {
@@ -540,11 +540,11 @@
     },
     "services-flake": {
       "locked": {
-        "lastModified": 1782710091,
-        "narHash": "sha256-aEPI6PgLDgMrift6mhoRbaEk9igQITTbaMrxbTS2M2I=",
+        "lastModified": 1782839360,
+        "narHash": "sha256-P/kgBngHwtHNrD+gtkjdnsREbmWSS3DLiHP5lAWGYPs=",
         "owner": "juspay",
         "repo": "services-flake",
-        "rev": "2996e13bd9d4166ddfb6a3d45bcc53c02c48c9a9",
+        "rev": "0aa582aefbb900ea1c464239b7bfa2a96bf1a878",
         "type": "github"
       },
       "original": {
