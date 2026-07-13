@@ -17,7 +17,7 @@ lib.mkIf config.custom.enableNvidia {
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
     modelSettings = rec {
       # keep-sorted start
-      cache-ram = 128 * 1024; # MiB
+      cache-ram = 0; # MiB
       cache-type-k = "q8_0";
       cache-type-v = "q8_0";
       ctx-size = 96 * 1024 * parallel;
@@ -38,7 +38,7 @@ lib.mkIf config.custom.enableNvidia {
         port = 18101;
         settings = qwenSettings // {
           hf-repo = "unsloth/Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL";
-          spec-draft-n-max = 4;
+          spec-draft-n-max = 2;
           spec-type = "draft-mtp";
         };
       };
