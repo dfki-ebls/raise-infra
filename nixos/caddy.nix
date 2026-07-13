@@ -5,7 +5,7 @@
   ...
 }:
 let
-  mkHost = domain: "${if config.custom.enableCertificates then "https" else "http"}://${domain}";
+  mkHost = domain: if config.custom.enableCertificates then domain else "http://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
   # Baseline response headers for public vhosts. Framing is denied by default,
