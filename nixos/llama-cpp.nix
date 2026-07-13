@@ -46,7 +46,7 @@ lib.mkIf config.custom.enableNvidia {
         enable = false;
         port = 18102;
         settings = qwenSettings // {
-          hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
+          hf-repo = "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_XL";
         };
       };
       # https://unsloth.ai/docs/models/qwen3.5
@@ -54,7 +54,7 @@ lib.mkIf config.custom.enableNvidia {
         enable = true;
         port = 18103;
         settings = qwenSettings // rec {
-          hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
+          hf-repo = "unsloth/Qwen3.5-0.8B-MTP-GGUF:UD-Q4_K_XL";
           cache-ram = 1024;
           ctx-size = 4 * 1024 * parallel;
           parallel = 2;
