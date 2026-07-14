@@ -8,6 +8,12 @@ let
   mkHost = domain: if config.custom.enableCertificates then domain else "http://${domain}";
   mkSubHost = prefix: mkHost "${prefix}.${config.custom.rootDomain}";
 
+  # Absolute URL with a scheme, for consumers that need a real URL rather than a
+  # Caddy site address (OIDC issuers, redirect URIs, origins).
+  scheme = if config.custom.enableCertificates then "https" else "http";
+  mkUrl = domain: "${scheme}://${domain}";
+  mkSubUrl = prefix: mkUrl "${prefix}.${config.custom.rootDomain}";
+
   # Baseline response headers for public vhosts. Framing is denied by default,
   # and vhosts can opt into the specific ancestors required by their flows.
   # Browsers enforce every CSP header and apply the intersection, so the frame
@@ -82,6 +88,8 @@ in
     inherit
       mkHost
       mkSubHost
+      mkUrl
+      mkSubUrl
       mkGeoblock
       scannerHoneypots
       securityHeaders

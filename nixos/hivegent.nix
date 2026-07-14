@@ -5,6 +5,7 @@
 }:
 let
   caddySubHost = caddyHelpers.mkSubHost "hivegent";
+  hivegentUrl = caddyHelpers.mkSubUrl "hivegent";
   rauthyIssuer = config.custom.rauthy.issuer;
   environmentFile = "/etc/hivegent/hivegent.env";
 in
@@ -60,7 +61,7 @@ in
       mcp = {
         enable = false;
         client_id = "hivegent-mcp";
-        base_url = "${caddySubHost}/mcp";
+        base_url = "${hivegentUrl}/mcp";
       };
     };
 
@@ -85,11 +86,11 @@ in
       id = "hivegent-spa";
       name = "Hivegent";
       secret = null;
-      client_uri = caddySubHost;
+      client_uri = hivegentUrl;
       contacts = [ config.custom.admin.mail ];
-      redirect_uris = [ "${caddySubHost}/" ];
-      post_logout_redirect_uris = [ "${caddySubHost}/" ];
-      allowed_origins = [ caddySubHost ];
+      redirect_uris = [ "${hivegentUrl}/" ];
+      post_logout_redirect_uris = [ "${hivegentUrl}/" ];
+      allowed_origins = [ hivegentUrl ];
       enabled = true;
       flows_enabled = [
         "authorization_code"

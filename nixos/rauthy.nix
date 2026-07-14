@@ -10,6 +10,7 @@ let
   caddySubHost = caddyHelpers.mkSubHost "sso";
   hivegentSubHost = caddyHelpers.mkSubHost "hivegent";
   pubUrl = "sso.${config.custom.rootDomain}";
+  pubOrigin = caddyHelpers.mkSubUrl "sso";
 
   port = 8080;
 in
@@ -18,7 +19,7 @@ in
     enable = true;
     # Public OIDC issuer, exposed so relying parties (Hivegent) need not
     # hardcode Rauthy's public host.
-    issuer = "${caddySubHost}/auth/v1/";
+    issuer = "${pubOrigin}/auth/v1/";
     postgresql.createLocally = true;
 
     settings = {
@@ -51,8 +52,7 @@ in
       # Populating WebAuthn enables passkeys in Rauthy.
       webauthn = {
         rp_id = pubUrl;
-        # Rauthy expects `rp_origin` to include the port.
-        rp_origin = "${caddySubHost}:${if config.custom.enableCertificates then "443" else "80"}";
+        rp_origin = "${pubOrigin}:${if config.custom.enableCertificates then "443" else "80"}";
         rp_name = "RAISE Single Sign-On";
         # Require PIN or biometric verification for passkey MFA.
         force_uv = true;
