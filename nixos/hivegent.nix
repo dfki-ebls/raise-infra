@@ -125,12 +125,15 @@ in
   systemd.tmpfiles.rules = [ "f ${environmentFile} 0600 root root -" ];
 
   systemd.services.hivegent = {
-    # OIDC discovery must be reachable during backend startup.
+    # The backend fetches OIDC discovery from the Rauthy issuer during startup,
+    # and that public issuer URL is served through Caddy, so order the backend
+    # behind both to reach discovery on the first try. Ordering only, never
+    # `requires`: Caddy restarts on every vhost change on this host (all sites
+    # share one instance, and `enableReload = false` turns each change into a
+    # full restart), and a requirement dependency would propagate that restart
+    # into the backend, needlessly reloading its ML models. `after` carries no
+    # such stop/restart propagation, and both units are independently enabled.
     after = [
-      "caddy.service"
-      "rauthy.service"
-    ];
-    requires = [
       "caddy.service"
       "rauthy.service"
     ];
