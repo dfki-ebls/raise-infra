@@ -2,8 +2,20 @@
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
 let
   qwenSettings = {
+    dry-allowed-length = 16;
     dry-multiplier = 0.8;
-    min-p = 0.00;
+    dry-penalty-last-n = 4096;
+    dry-sequence-breaker = [
+      "\n"
+      ":"
+      "\""
+      "*"
+      "/"
+      "_"
+      "-"
+      "."
+    ];
+    min-p = 0.0;
     presence-penalty = 0.5;
     temperature = 1.0;
     top-k = 20;
