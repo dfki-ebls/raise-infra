@@ -2,6 +2,7 @@
 {
   services.llmhop = {
     enable = true;
-    settings.listen = "127.0.0.1:18000";
+    host = "127.0.0.1";
+    port = 18000;
   };
 }

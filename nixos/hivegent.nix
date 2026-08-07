@@ -48,8 +48,8 @@ in
 
       llm = {
         model = "qwen3.6-27b";
+        base_url = "http://${config.services.llmhop.host}:${toString config.services.llmhop.port}/v1";
         aux_model = "qwen3.5-0.8b";
-        base_url = "http://${config.services.llmhop.settings.listen}/v1";
       };
 
       network = {
