@@ -52,23 +52,6 @@ lib.mkIf config.custom.enableNvidia {
           hf-repo = "unsloth/Qwen3.6-27B-GGUF:UD-Q4_K_XL";
         };
       };
-      "qwen3.6-35b-a3b" = {
-        enable = false;
-        port = 18102;
-        settings = qwenSettings // {
-          hf-repo = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL";
-        };
-      };
-      # https://unsloth.ai/docs/models/qwen3.5
-      "qwen3.5-0.8b" = {
-        enable = true;
-        port = 18103;
-        settings = qwenSettings // rec {
-          hf-repo = "unsloth/Qwen3.5-0.8B-GGUF:UD-Q4_K_XL";
-          ctx-size = 4 * 1024 * parallel;
-          parallel = 2;
-        };
-      };
     };
   };
 }
