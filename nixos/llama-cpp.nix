@@ -24,7 +24,7 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   services.llmhop.llama-cpp = {
-    enable = true;
+    enable = false;
     environmentFile = "/etc/llama-cpp/llama-cpp.env";
 
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
@@ -46,7 +46,6 @@ lib.mkIf config.custom.enableNvidia {
     models = {
       # https://unsloth.ai/docs/models/qwen3.6
       "qwen3.6-27b" = {
-        enable = true;
         port = 18101;
         settings = qwenSettings // {
           hf-repo = "unsloth/Qwen3.6-27B-GGUF:UD-Q4_K_XL";

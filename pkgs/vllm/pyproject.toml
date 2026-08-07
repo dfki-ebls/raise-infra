@@ -1,0 +1,14 @@
+[project]
+name = "vllm-env"
+version = "0.0.0"
+requires-python = "==3.14.*"
+dependencies = ["vllm==0.27.1"]
+
+[tool.uv]
+# The environment is only ever built for the inference host, so resolving for
+# other platforms would only pull in wheels that are never used.
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+exclude-newer = "3 days"
+
+[tool.uv.exclude-newer-package]
+vllm = "1 day"

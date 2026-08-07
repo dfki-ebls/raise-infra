@@ -1,6 +1,7 @@
 {
   inputs,
   self,
+  lib,
   lib',
   ...
 }:
@@ -48,6 +49,7 @@ in
     }:
     let
       cpu = pkgs.stdenv.hostPlatform.parsed.cpu.name;
+      custom = lib.filterAttrs (_: lib.meta.availableOn pkgs.stdenv.hostPlatform) pkgs.custom;
       nixosSystem = mkNixosSystem {
         imports = [
           self.nixosModules.proxmox
@@ -68,13 +70,13 @@ in
           self.overlays.default
         ];
       };
-      checks = pkgs.custom;
+      checks = custom;
       apps.default.program = config.packages.vm;
       packages = {
         default = config.packages.image;
         inherit (nixosSystem.config.system.build) vm image;
       }
-      // pkgs.custom;
+      // custom;
       legacyPackages = pkgs;
       treefmt = {
         projectRootFile = "flake.nix";

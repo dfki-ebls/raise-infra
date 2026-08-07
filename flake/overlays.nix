@@ -9,7 +9,9 @@
     final: prev:
     let
       custom = lib.packagesFromDirectoryRecursive {
-        inherit (final) callPackage;
+        callPackage = final.newScope {
+          inherit (inputs.llmhop.legacyPackages.${prev.stdenv.hostPlatform.system}) mkUvEnv;
+        };
         directory = ../pkgs;
       };
     in
