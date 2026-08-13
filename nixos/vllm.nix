@@ -14,6 +14,10 @@ lib.mkIf config.custom.enableNvidia {
     package = pkgs.vllm;
     environmentFile = "/etc/vllm/vllm.env";
 
+    # Triton probes `/sbin/ldconfig -p` for `libcuda.so.1`, which does not exist
+    # on NixOS. Drop once llmhop sets this itself.
+    environment.TRITON_LIBCUDA_PATH = "/run/opengl-driver/lib";
+
     # https://docs.vllm.ai/en/stable/cli/serve/
     modelSettings = {
       attention-backend = "flashinfer";
