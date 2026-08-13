@@ -49,6 +49,9 @@ lib.mkIf config.custom.enableNvidia {
       port = 18206;
       # https://recipes.vllm.ai/Qwen/Qwen3.6-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
+      # psutil reads /proc/meminfo, which the unit's `ProcSubset = "pid"` hides.
+      # Drop once llmhop relaxes this for the uv workers.
+      serviceConfig.ProcSubset = "all";
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
