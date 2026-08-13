@@ -38,47 +38,13 @@ let
   };
 in
 lib.mkIf config.custom.enableNvidia {
-  # Triton builds its CUDA driver shim on the first kernel launch and flashinfer
-  # JITs through ninja, which nixpkgs patches to look up `sh` on `PATH`. Drop
-  # once llmhop puts a toolchain there itself.
-  systemd.services."vllm-qwen3.6-27b".path = with pkgs; [
-    stdenv.cc
-    ninja
-    bash
-  ];
-
-  # `DynamicUser` puts the state and cache directories under `/var/*/private`,
-  # which makes systemd chown them to `nobody` and hand them over as ID-mapped
-  # mounts, and those are always `noexec`. The JIT caches are the whole point of
-  # that directory here, so the worker needs a static user instead. Drop once
-  # llmhop offers one.
-  users.users.vllm = {
-    description = "vLLM inference server";
-    uid = 503; # the uid the quadlet-based deployment used
-    isSystemUser = true;
-    group = "vllm";
-  };
-  users.groups.vllm.gid = config.users.users.vllm.uid;
-  systemd.services."vllm-qwen3.6-27b".serviceConfig = {
-    DynamicUser = lib.mkForce false;
-    User = "vllm";
-    Group = "vllm";
-  };
-
   services.llmhop.vllm = {
     enable = true;
     package = pkgs.vllm;
     environmentFile = "/etc/vllm/vllm.env";
+    uid = 503; # the uid the quadlet-based deployment used
 
-    environment = {
-      CUDA_HOME = "${cudaHome}";
-
-      # Both drop once llmhop ships them itself: triton probes `/sbin/ldconfig
-      # -p` for `libcuda.so.1`, which does not exist on NixOS, and the
-      # DynamicUser has no home, so `~/.cache` resolves to a read-only `/.cache`.
-      TRITON_LIBCUDA_PATH = "/run/opengl-driver/lib";
-      HOME = "/var/cache/vllm/qwen3.6-27b";
-    };
+    environment.CUDA_HOME = "${cudaHome}";
 
     # https://docs.vllm.ai/en/stable/cli/serve/
     modelSettings = {
@@ -119,9 +85,6 @@ lib.mkIf config.custom.enableNvidia {
       port = 18206;
       # https://recipes.vllm.ai/Qwen/Qwen3.6-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
-      # psutil reads /proc/meminfo, which the unit's `ProcSubset = "pid"` hides.
-      # Drop once llmhop relaxes this for the uv workers.
-      serviceConfig.ProcSubset = "all";
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
