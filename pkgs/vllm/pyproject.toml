@@ -7,7 +7,29 @@ dependencies = [
   # Keeps nvcc on torch's CUDA line, which flashinfer's JIT requires. Pulled in
   # via humming-kernels otherwise, whose leaf wheels carry no version bounds.
   "cuda-toolkit[nvcc]",
+  # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every
+  # cold start. Neither declares any dependency, so the version has to be kept
+  # equal to the flashinfer-python one vllm pins by hand; a mismatch silently
+  # reverts to JIT.
+  "flashinfer-cubin==0.6.16.post3",
+  "flashinfer-jit-cache==0.6.16.post3",
 ]
+
+# Neither package is on PyPI: jit-cache never can be, since its version carries
+# a `+cu130` local identifier, and the cubin mirror stopped at 0.6.13.
+[[tool.uv.index]]
+name = "flashinfer"
+url = "https://flashinfer.ai/whl"
+explicit = true
+
+[[tool.uv.index]]
+name = "flashinfer-cu130"
+url = "https://flashinfer.ai/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+flashinfer-cubin = { index = "flashinfer" }
+flashinfer-jit-cache = { index = "flashinfer-cu130" }
 
 [tool.uv]
 # The environment is only ever built for the inference host, so resolving for
@@ -17,3 +39,7 @@ exclude-newer = "3 days"
 
 [tool.uv.exclude-newer-package]
 vllm = "1 day"
+# flashinfer's index serves no upload dates, so the global cutoff filters these
+# out entirely. Both are pinned exactly, which is the control that matters.
+flashinfer-cubin = false
+flashinfer-jit-cache = false

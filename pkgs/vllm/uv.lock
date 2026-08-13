@@ -14,6 +14,8 @@ exclude-newer-span = "P3D"
 
 [options.exclude-newer-package]
 vllm = { timestamp = "0001-01-01T00:00:00Z", span = "P1D" }
+flashinfer-cubin = false
+flashinfer-jit-cache = false
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -559,6 +561,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f6/57/3ba6e6cb097f85b855b00163d169f35365f44277df044dcf96d55b8f62a3/filelock-3.32.2.tar.gz", hash = "sha256:c33351e1f49cae33414acbc6d56784e6ecee82514ec90795da1161fc4836b5b8", size = 217172, upload-time = "2026-07-29T22:46:04.895Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/e8/72f8cef9fdfeffe06213fe8508039396ee48daa0e3259457ed766173bfd6/filelock-3.32.2-py3-none-any.whl", hash = "sha256:87dd94cf281e586d135fa51132b8e3d9a598b316e90377a288663c9321036c82", size = 98830, upload-time = "2026-07-29T22:46:03.52Z" },
+]
+
+[[package]]
+name = "flashinfer-cubin"
+version = "0.6.16.post3"
+source = { registry = "https://flashinfer.ai/whl" }
+wheels = [
+    { url = "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.16.post3/flashinfer_cubin-0.6.16.post3-py3-none-any.whl", hash = "sha256:c79fba990aee2a7c7ef64208bb65900e45fe23c3a223f3dfc21eef225f43cba2" },
+]
+
+[[package]]
+name = "flashinfer-jit-cache"
+version = "0.6.16.post3+cu130"
+source = { registry = "https://flashinfer.ai/whl/cu130" }
+wheels = [
+    { url = "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.16.post3/flashinfer_jit_cache-0.6.16.post3+cu130-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:abcca93faa2fbbc9a98394ccc44ab657627b91e49da2624efd26a6ff669264ab" },
 ]
 
 [[package]]
@@ -2496,12 +2514,16 @@ version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "cuda-toolkit", extra = ["nvcc"] },
+    { name = "flashinfer-cubin" },
+    { name = "flashinfer-jit-cache" },
     { name = "vllm" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "cuda-toolkit", extras = ["nvcc"] },
+    { name = "flashinfer-cubin", specifier = "==0.6.16.post3", index = "https://flashinfer.ai/whl" },
+    { name = "flashinfer-jit-cache", specifier = "==0.6.16.post3", index = "https://flashinfer.ai/whl/cu130" },
     { name = "vllm", specifier = "==0.27.1" },
 ]
 
