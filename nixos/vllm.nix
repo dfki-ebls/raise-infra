@@ -55,6 +55,7 @@ lib.mkIf config.custom.enableNvidia {
     modelSettings = {
       attention-backend = "flashinfer";
       enable-auto-tool-choice = true;
+      enable-prefix-caching = true;
       gpu-memory-utilization = 0.9;
       kv-cache-dtype = "fp8";
       kv-offloading-size = 64; # GiB
