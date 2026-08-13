@@ -9,6 +9,10 @@ let
   imgSize = 1024;
 in
 lib.mkIf config.custom.enableNvidia {
+  # Triton builds its CUDA driver shim on the first kernel launch and needs a
+  # compiler on `PATH`. Drop once llmhop puts one there itself.
+  systemd.services."vllm-qwen3.6-27b".path = [ pkgs.stdenv.cc ];
+
   services.llmhop.vllm = {
     enable = true;
     package = pkgs.vllm;
