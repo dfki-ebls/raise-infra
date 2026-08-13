@@ -85,9 +85,9 @@ lib.mkIf config.custom.enableNvidia {
       attention-backend = "flashinfer";
       enable-auto-tool-choice = true;
       enable-prefix-caching = true;
-      gpu-memory-utilization = 0.9;
+      gpu-memory-utilization = 0.95;
       kv-cache-dtype = "fp8";
-      kv-offloading-size = 64; # GiB
+      kv-offloading-size = 16; # GiB
       max-model-len = "128K";
       max-num-batched-tokens = 4096;
       max-num-seqs = 3;
@@ -108,7 +108,14 @@ lib.mkIf config.custom.enableNvidia {
 
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models."qwen3.6-27b" = {
-      model = "nvidia/Qwen3.6-27B-NVFP4";
+      # The unsloth checkpoint over nvidia's: nvidia quantizes the MLPs to
+      # `W4A16_NVFP4`, weight-only 4-bit, and vLLM hard-forces the Marlin
+      # dequant kernel for anything weight-only regardless of GPU. unsloth
+      # quantizes activations too (`nvfp4-pack-quantized`, group size 16), which
+      # is what the sm120 FP4 tensor cores need, and puts the attention
+      # projections on FP8 W8A8. Costs ~1.4 GiB more weights, see
+      # `gpu-memory-utilization`.
+      model = "unsloth/Qwen3.6-27B-NVFP4";
       port = 18206;
       # https://recipes.vllm.ai/Qwen/Qwen3.6-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
@@ -118,6 +125,10 @@ lib.mkIf config.custom.enableNvidia {
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
+        speculative-config = lib.toJSON {
+          method = "mtp";
+          num_speculative_tokens = 1;
+        };
         mm-processor-kwargs = lib.toJSON {
           images_kwargs.size = {
             longest_edge = imgSize * imgSize;
