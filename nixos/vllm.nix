@@ -14,10 +14,12 @@ lib.mkIf config.custom.enableNvidia {
     package = pkgs.vllm;
     environmentFile = "/etc/vllm/vllm.env";
 
-    # Both drop once llmhop ships them itself: triton probes `/sbin/ldconfig -p`
-    # for `libcuda.so.1`, which does not exist on NixOS, and the DynamicUser has
-    # no home, so flashinfer's JIT workspace lands in a read-only `/.cache`.
     environment = {
+      CUDA_HOME = pkgs.vllm.cudaHome;
+
+      # Both drop once llmhop ships them itself: triton probes `/sbin/ldconfig
+      # -p` for `libcuda.so.1`, which does not exist on NixOS, and the
+      # DynamicUser has no home, so `~/.cache` resolves to a read-only `/.cache`.
       TRITON_LIBCUDA_PATH = "/run/opengl-driver/lib";
       HOME = "/var/cache/vllm/qwen3.6-27b";
     };

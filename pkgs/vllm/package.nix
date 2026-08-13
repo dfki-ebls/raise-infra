@@ -12,8 +12,8 @@
 # The lock resolves linux wheels only, so the environment does not even
 # evaluate elsewhere; `lazyDerivation` keeps `meta` readable regardless, which
 # is what lets the flake outputs filter it out by platform.
-lib.lazyDerivation {
-  derivation = mkUvEnv {
+let
+  env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
     python = python314;
@@ -24,6 +24,13 @@ lib.lazyDerivation {
       z3.lib # tilelang's TVM analyzer
     ];
   };
+in
+lib.lazyDerivation {
+  derivation = env;
+  # Toolkit root of the bundled CUDA wheels. deep_gemm and flashinfer both JIT
+  # kernels through nvcc and locate it via `CUDA_HOME`, falling back to `which
+  # nvcc` and `/usr/local/cuda` — neither of which exists on NixOS.
+  passthru.cudaHome = "${env}/${python314.sitePackages}/nvidia/cu13";
   meta = {
     description = "Python environment providing the vLLM inference server";
     homepage = "https://github.com/vllm-project/vllm";
