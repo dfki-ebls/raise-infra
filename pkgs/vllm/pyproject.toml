@@ -2,7 +2,12 @@
 name = "vllm-env"
 version = "0.0.0"
 requires-python = "==3.14.*"
-dependencies = ["vllm==0.27.1"]
+dependencies = [
+  "vllm==0.27.1",
+  # Keeps nvcc on torch's CUDA line, which flashinfer's JIT requires. Pulled in
+  # via humming-kernels otherwise, whose leaf wheels carry no version bounds.
+  "cuda-toolkit[nvcc]",
+]
 
 [tool.uv]
 # The environment is only ever built for the inference host, so resolving for
