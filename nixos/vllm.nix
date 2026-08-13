@@ -9,9 +9,13 @@ let
   imgSize = 1024;
 in
 lib.mkIf config.custom.enableNvidia {
-  # Triton builds its CUDA driver shim on the first kernel launch and needs a
-  # compiler on `PATH`. Drop once llmhop puts one there itself.
-  systemd.services."vllm-qwen3.6-27b".path = [ pkgs.stdenv.cc ];
+  # Triton builds its CUDA driver shim on the first kernel launch and flashinfer
+  # JITs through ninja, so both want a toolchain on `PATH`. Drop once llmhop
+  # puts one there itself.
+  systemd.services."vllm-qwen3.6-27b".path = with pkgs; [
+    stdenv.cc
+    ninja
+  ];
 
   # `DynamicUser` puts the state and cache directories under `/var/*/private`,
   # which makes systemd chown them to `nobody` and hand them over as ID-mapped
