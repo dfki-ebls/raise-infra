@@ -10,11 +10,12 @@ let
 in
 lib.mkIf config.custom.enableNvidia {
   # Triton builds its CUDA driver shim on the first kernel launch and flashinfer
-  # JITs through ninja, so both want a toolchain on `PATH`. Drop once llmhop
-  # puts one there itself.
+  # JITs through ninja, which nixpkgs patches to look up `sh` on `PATH`. Drop
+  # once llmhop puts a toolchain there itself.
   systemd.services."vllm-qwen3.6-27b".path = with pkgs; [
     stdenv.cc
     ninja
+    bash
   ];
 
   # `DynamicUser` puts the state and cache directories under `/var/*/private`,
