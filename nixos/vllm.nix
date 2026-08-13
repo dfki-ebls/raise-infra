@@ -13,6 +13,24 @@ lib.mkIf config.custom.enableNvidia {
   # compiler on `PATH`. Drop once llmhop puts one there itself.
   systemd.services."vllm-qwen3.6-27b".path = [ pkgs.stdenv.cc ];
 
+  # `DynamicUser` puts the state and cache directories under `/var/*/private`,
+  # which makes systemd chown them to `nobody` and hand them over as ID-mapped
+  # mounts, and those are always `noexec`. The JIT caches are the whole point of
+  # that directory here, so the worker needs a static user instead. Drop once
+  # llmhop offers one.
+  users.users.vllm = {
+    description = "vLLM inference server";
+    uid = 503; # the uid the quadlet-based deployment used
+    isSystemUser = true;
+    group = "vllm";
+  };
+  users.groups.vllm.gid = config.users.users.vllm.uid;
+  systemd.services."vllm-qwen3.6-27b".serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    User = "vllm";
+    Group = "vllm";
+  };
+
   services.llmhop.vllm = {
     enable = true;
     package = pkgs.vllm;
@@ -59,14 +77,9 @@ lib.mkIf config.custom.enableNvidia {
       port = 18206;
       # https://recipes.vllm.ai/Qwen/Qwen3.6-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
-      # Both drop once llmhop relaxes them for the uv workers: psutil reads
-      # /proc/meminfo, which `ProcSubset = "pid"` hides, and `PrivateUsers`
-      # hands the cache directory over as an ID-mapped mount, which systemd
-      # always stamps `noexec` — so triton cannot load the kernels it compiles.
-      serviceConfig = {
-        ProcSubset = "all";
-        PrivateUsers = false;
-      };
+      # psutil reads /proc/meminfo, which the unit's `ProcSubset = "pid"` hides.
+      # Drop once llmhop relaxes this for the uv workers.
+      serviceConfig.ProcSubset = "all";
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
