@@ -88,10 +88,10 @@ lib.mkIf config.custom.enableNvidia {
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
-        speculative-config = lib.toJSON {
-          method = "mtp";
-          num_speculative_tokens = 1;
-        };
+        # speculative-config = lib.toJSON {
+        #   method = "mtp";
+        #   num_speculative_tokens = 1;
+        # };
         mm-processor-kwargs = lib.toJSON {
           images_kwargs.size = {
             longest_edge = imgSize * imgSize;
