@@ -9,8 +9,8 @@ dependencies = [
   "cuda-toolkit[nvcc]",
   # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every
   # cold start. Neither declares any dependency, so the version has to be kept
-  # equal to the flashinfer-python one vllm pins by hand; a mismatch silently
-  # reverts to JIT.
+  # equal to the flashinfer-python one vllm pins by hand; flashinfer refuses to
+  # start on a mismatch.
   "flashinfer-cubin==0.6.16.post3",
   "flashinfer-jit-cache==0.6.16.post3",
 ]

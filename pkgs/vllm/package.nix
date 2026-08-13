@@ -23,6 +23,17 @@ let
       tbb_2022 # numba's threading layer
       z3.lib # tilelang's TVM analyzer
     ];
+    # `libcudnn.so.9` only dispatches: it `dlopen`s the engine libraries next to
+    # it through its own `$ORIGIN` runpath, which auto-patchelf drops when it
+    # rewrites the runpath to absolute store paths. Drop once llmhop preserves
+    # those entries for every wheel.
+    overlays = [
+      (_final: prev: {
+        nvidia-cudnn-cu13 = prev.nvidia-cudnn-cu13.overrideAttrs (old: {
+          autoPatchelfFlags = (old.autoPatchelfFlags or [ ]) ++ [ "--preserve-origin" ];
+        });
+      })
+    ];
   };
 in
 lib.lazyDerivation {
