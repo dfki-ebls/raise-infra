@@ -82,12 +82,14 @@ lib.mkIf config.custom.enableNvidia {
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
-        min-p = 0.0;
-        presence-penalty = 0.0;
-        repetition-penalty = 1.0;
-        temperature = 1.0;
-        top-k = 20;
-        top-p = 0.95;
+        override-generation-config = lib.toJSON {
+          min_p = 0.0;
+          presence_penalty = 0.0;
+          repetition_penalty = 1.0;
+          temperature = 1.0;
+          top_k = 20;
+          top_p = 0.95;
+        };
         speculative-config = lib.toJSON {
           method = "mtp";
           num_speculative_tokens = 1;
