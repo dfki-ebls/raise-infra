@@ -44,11 +44,11 @@ lib.mkIf config.custom.enableNvidia {
     };
 
     models = {
-      # https://unsloth.ai/docs/models/qwen3.6
-      "qwen3.6-27b" = {
+      # https://unsloth.ai/docs/models/qwen3.8
+      "qwen3.8-27b" = {
         port = 18101;
         settings = qwenSettings // {
-          hf-repo = "unsloth/Qwen3.6-27B-GGUF:UD-Q4_K_XL";
+          hf-repo = "unsloth/Qwen3.8-27B-GGUF:UD-Q4_K_XL";
         };
       };
     };

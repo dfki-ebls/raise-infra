@@ -47,7 +47,7 @@ in
       };
 
       llm = {
-        model = "qwen3.6-27b";
+        model = "qwen3.8-27b";
         base_url = "http://${config.services.llmhop.host}:${toString config.services.llmhop.port}/v1";
       };
 

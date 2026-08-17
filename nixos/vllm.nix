@@ -73,11 +73,11 @@ lib.mkIf config.custom.enableNvidia {
     };
 
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
-    models."qwen3.6-27b" = {
+    models."qwen3.8-27b" = {
       model = "unsloth/Qwen3.8-27B-NVFP4";
       port = 18206;
       # https://unsloth.ai/docs/models/qwen3.8
-      # https://recipes.vllm.ai/Qwen/Qwen3.6-27B
+      # https://recipes.vllm.ai/Qwen/Qwen3.8-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
       settings = {
         reasoning-parser = "qwen3";
