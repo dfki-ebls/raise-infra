@@ -2,11 +2,11 @@
 {
   system.autoUpgrade = {
     enable = lib.mkDefault false;
-    dates = "hourly";
+    dates = "04:00";
     allowReboot = true;
     runGarbageCollection = true;
     rebootWindow = {
-      lower = "03:00";
+      lower = "04:00";
       upper = "05:00";
     };
   };
