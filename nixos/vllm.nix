@@ -57,7 +57,7 @@ lib.mkIf config.custom.enableNvidia {
       max-model-len = "128K";
       max-num-batched-tokens = 4096;
       max-num-seqs = 3;
-      limit-mm-per-prompt = lib.toJSON {
+      limit-mm-per-prompt = {
         image = {
           count = 1;
           width = imgSize;
@@ -82,7 +82,7 @@ lib.mkIf config.custom.enableNvidia {
       settings = {
         reasoning-parser = "qwen3";
         tool-call-parser = "qwen3_xml";
-        override-generation-config = lib.toJSON {
+        override-generation-config = {
           min_p = 0.0;
           presence_penalty = 0.0;
           repetition_penalty = 1.0;
@@ -90,11 +90,11 @@ lib.mkIf config.custom.enableNvidia {
           top_k = 20;
           top_p = 0.95;
         };
-        speculative-config = lib.toJSON {
+        speculative-config = {
           method = "mtp";
           num_speculative_tokens = 1;
         };
-        mm-processor-kwargs = lib.toJSON {
+        mm-processor-kwargs = {
           images_kwargs.size = {
             longest_edge = imgSize * imgSize;
             shortest_edge = 4096;
