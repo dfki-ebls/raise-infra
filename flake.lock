@@ -226,11 +226,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1787045869,
-        "narHash": "sha256-YfI8EhRrb63/paapAxus4zxinnOFi3stX/h0LpwolHU=",
+        "lastModified": 1787316050,
+        "narHash": "sha256-pPPswHnTyPNmNWv3zqBDYpTDPmjB2vUIZuOu/DbsKO0=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "e882069b1d12cb10a67af3c7eee4c9b9acbe6d0f",
+        "rev": "3c24c5ff8278ac6cca5370a01572d3b7c7acfdba",
         "type": "github"
       },
       "original": {
@@ -366,11 +366,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1787101114,
-        "narHash": "sha256-BA7sSNjLDuPGSOYBGpr6WQjke1MQ8AZpJ8GlYZM/mOc=",
-        "rev": "b18a4b905f8d028dc4476412e6d6891728695379",
+        "lastModified": 1787204541,
+        "narHash": "sha256-Rb7J0ykni6QA+m5ZC6t5gbBBgkS0xn3bf2fgKpSSbFE=",
+        "rev": "5880666fd9eb563038431edb35c2d0aa595884e6",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8045.b18a4b905f8d/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8111.5880666fd9eb/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
@@ -435,11 +435,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1785730568,
-        "narHash": "sha256-NjSPsgjJ7MSpBtTkUcmNhRe6AFZ96+zsca2M8YuQi8Y=",
+        "lastModified": 1786936886,
+        "narHash": "sha256-8SFyOdmcG6Nsh/JzlH812lTI/v+ur06fpQhj/acNn8k=",
         "owner": "pyproject-nix",
         "repo": "build-system-pkgs",
-        "rev": "90fde00db3687922d39d95fc591475fd0bbbcd72",
+        "rev": "90ffdeee1a4929b231913df067448cd9803d3e07",
         "type": "github"
       },
       "original": {
@@ -588,11 +588,11 @@
     },
     "services-flake": {
       "locked": {
-        "lastModified": 1786235567,
-        "narHash": "sha256-BqhsROQCUEn5c5bkikupjBp7Z4iu8MaSRFBHWXFTjX4=",
+        "lastModified": 1787074068,
+        "narHash": "sha256-z0CqDCjs+xU/Yw2/VkS8Mz7qzw4AsZ+AMwEMmqSSKh0=",
         "owner": "juspay",
         "repo": "services-flake",
-        "rev": "aaa1f30f04c8b70c3d46ad053246865394262d13",
+        "rev": "4f56c8f1cbd09c774a491a47acd3605a6eb7adfa",
         "type": "github"
       },
       "original": {
@@ -738,11 +738,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1786026603,
-        "narHash": "sha256-payw8w/aqR/Vr7LvDp14jxa5egFrZN7g8INsPzn7rN0=",
+        "lastModified": 1786615403,
+        "narHash": "sha256-U++y7nM/6xiEcWI7q4fQoPZjPvRaTwkSqzBOVoEBjUE=",
         "owner": "pyproject-nix",
         "repo": "uv2nix",
-        "rev": "0dfa8388dc855b1774f509725d8ea6806291571d",
+        "rev": "4b59abb2ae1896d2a0e1abfc47fbc9bf985ea730",
         "type": "github"
       },
       "original": {
