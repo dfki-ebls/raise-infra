@@ -54,9 +54,9 @@ lib.mkIf config.custom.enableNvidia {
       gpu-memory-utilization = 0.95;
       kv-cache-dtype = "fp8";
       kv-offloading-size = 16; # GiB
-      max-model-len = "128K";
+      max-model-len = "160K";
       max-num-batched-tokens = 4096;
-      max-num-seqs = 3;
+      max-num-seqs = 2;
       limit-mm-per-prompt = {
         image = {
           count = 1;
