@@ -226,11 +226,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1787321792,
-        "narHash": "sha256-LbO7qk4pjie5iLPLoR/eU9DrR5GSgXscZ2hNmi0NVHo=",
+        "lastModified": 1787689084,
+        "narHash": "sha256-Tq0CBRtb9mH6h1v+3gaaLIskgSj/I761I1+QF3FAlOc=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "012d73312f628f7ebc5047b169562babc906920e",
+        "rev": "d045591d50808a1de88d04b36a3923df830f8b6e",
         "type": "github"
       },
       "original": {
@@ -366,11 +366,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1787525875,
-        "narHash": "sha256-025An4mAUD6c++o1CFnUhajUJZQJSXRjIxhIGbsPOQ8=",
-        "rev": "a3b98866eecd08edac6e61a3081e69540a35020f",
+        "lastModified": 1787640266,
+        "narHash": "sha256-tbu/95O8ZRmCj0kfSiDvz3YT7GSnD0fO6cxLRVYtXnU=",
+        "rev": "f4f698677b11021a8f84f452e23ae9ef2427bec3",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8334.a3b98866eecd/nixexprs.tar.zst"
+        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8409.f4f698677b11/nixexprs.tar.zst"
       },
       "original": {
         "type": "tarball",
