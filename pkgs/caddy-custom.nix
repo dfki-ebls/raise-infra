@@ -3,5 +3,5 @@ caddy.withPlugins {
   plugins = [
     "github.com/porech/caddy-maxmind-geolocation@v1.0.3"
   ];
-  hash = "sha256-1rf07EO7hF0vqh+MOSZDfh+iS3V13nQ4D8Jf2HKlO/k=";
+  hash = "sha256-uJVSRaSTc6ecT20et8ejFfojtvPk5HP2ovYGkkzPeJE=";
 }
