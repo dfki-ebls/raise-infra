@@ -36,8 +36,7 @@ lib.mkIf config.custom.enableNvidia {
       ctx-size = 96 * 1024 * parallel;
       flash-attn = "on";
       kv-unified = false;
-      mlock = true;
-      mmap = false;
+      load-mode = "mlock";
       n-gpu-layers = "all";
       parallel = 2;
       # keep-sorted end
