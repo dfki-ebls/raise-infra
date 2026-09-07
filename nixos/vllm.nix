@@ -92,7 +92,7 @@ lib.mkIf config.custom.enableNvidia {
         };
         speculative-config = {
           method = "mtp";
-          num_speculative_tokens = 1;
+          num_speculative_tokens = 3;
         };
         mm-processor-kwargs = {
           images_kwargs.size = {
