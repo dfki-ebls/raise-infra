@@ -54,13 +54,12 @@ lib.mkIf config.custom.enableNvidia {
       gpu-memory-utilization = 0.95;
       kv-cache-dtype = "fp8";
       kv-offloading-size = 16; # GiB
-      max-model-len = "144K";
+      max-model-len = "160K";
       max-num-batched-tokens = 4096;
-      max-num-seqs = 1;
+      max-num-seqs = 2;
       limit-mm-per-prompt = {
         image = {
-          # image.count * image.size * max-num-seqs <= max-num-batched-tokens
-          count = 2;
+          count = 1;
           width = imgSize;
           height = imgSize;
         };
@@ -93,7 +92,7 @@ lib.mkIf config.custom.enableNvidia {
         };
         speculative-config = {
           method = "mtp";
-          num_speculative_tokens = 2;
+          num_speculative_tokens = 1;
         };
         mm-processor-kwargs = {
           images_kwargs.size = {

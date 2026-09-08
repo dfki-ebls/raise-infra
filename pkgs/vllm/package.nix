@@ -32,6 +32,6 @@ lib.lazyDerivation {
     homepage = "https://github.com/vllm-project/vllm";
     license = lib.licenses.asl20;
     mainProgram = "vllm";
-    platforms = [ "x86_64-linux" ];
+    platforms = lib.platforms.linux;
   };
 }
