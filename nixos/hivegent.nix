@@ -52,6 +52,11 @@ in
         inference_provider = "vllm";
       };
 
+      multimodal = {
+        # depends on image limit in vllm.nix
+        max_images = 2;
+      };
+
       network = {
         websearch_language = "de";
         # Advertised in the web tools' User-Agent for traffic questions.
