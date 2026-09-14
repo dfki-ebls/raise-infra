@@ -3,20 +3,18 @@ name = "vllm-env"
 version = "0.0.0"
 requires-python = "==3.14.*"
 dependencies = [
-  "vllm==0.27.1",
-  # Keeps nvcc on torch's CUDA line, which flashinfer's JIT requires. Pulled in
-  # via humming-kernels otherwise, whose leaf wheels carry no version bounds.
+  "vllm==0.29.0",
+  # Provides the nvcc runtime JIT toolchain on torch's CUDA line.
   "cuda-toolkit[nvcc]",
   # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every
   # cold start. Neither declares any dependency, so the version has to be kept
   # equal to the flashinfer-python one vllm pins by hand; flashinfer refuses to
   # start on a mismatch.
-  "flashinfer-cubin==0.6.16.post3",
-  "flashinfer-jit-cache==0.6.16.post3",
+  "flashinfer-cubin==0.6.18",
+  "flashinfer-jit-cache==0.6.18",
 ]
 
-# Neither package is on PyPI: jit-cache never can be, since its version carries
-# a `+cu130` local identifier, and the cubin mirror stopped at 0.6.13.
+# Neither package is available from PyPI.
 [[tool.uv.index]]
 name = "flashinfer"
 url = "https://flashinfer.ai/whl"
