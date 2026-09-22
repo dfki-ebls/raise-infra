@@ -3,18 +3,17 @@ name = "vllm-env"
 version = "0.0.0"
 requires-python = "==3.14.*"
 dependencies = [
-  "vllm==0.29.0",
-  # Provides the nvcc runtime JIT toolchain on torch's CUDA line.
-  "cuda-toolkit[nvcc]",
-  # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every
-  # cold start. Neither declares any dependency, so the version has to be kept
-  # equal to the flashinfer-python one vllm pins by hand; flashinfer refuses to
-  # start on a mismatch.
+  # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every cold start.
   "flashinfer-cubin==0.6.18",
   "flashinfer-jit-cache==0.6.18",
+  "flashinfer-python==0.6.18",
+  "vllm==0.29.0",
 ]
 
-# Neither package is available from PyPI.
+[tool.uv]
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
+exclude-newer = "3 days"
+
 [[tool.uv.index]]
 name = "flashinfer"
 url = "https://flashinfer.ai/whl"
@@ -29,15 +28,7 @@ explicit = true
 flashinfer-cubin = { index = "flashinfer" }
 flashinfer-jit-cache = { index = "flashinfer-cu130" }
 
-[tool.uv]
-# The environment is only ever built for the inference host, so resolving for
-# other platforms would only pull in wheels that are never used.
-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
-exclude-newer = "3 days"
-
 [tool.uv.exclude-newer-package]
 vllm = "1 day"
-# flashinfer's index serves no upload dates, so the global cutoff filters these
-# out entirely. Both are pinned exactly, which is the control that matters.
 flashinfer-cubin = false
 flashinfer-jit-cache = false

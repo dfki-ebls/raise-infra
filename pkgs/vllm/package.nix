@@ -1,22 +1,17 @@
 {
   lib,
+  pkgs,
   mkUvEnv,
-  python314,
+  mkCudaHome,
   ffmpeg-headless,
   rdma-core,
   tbb_2022,
   z3,
 }:
-# vLLM ships no one-derivation-fits-all build, so the version is pinned in the
-# uv workspace next to this file: edit pyproject.toml and run `uv lock`.
-# The lock resolves linux wheels only, so the environment does not even
-# evaluate elsewhere; `lazyDerivation` keeps `meta` readable regardless, which
-# is what lets the flake outputs filter it out by platform.
 let
   env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
-    python = python314;
     buildInputs = [
       ffmpeg-headless # torchcodec
       rdma-core # nvshmem's InfiniBand transport
@@ -24,9 +19,31 @@ let
       z3.lib # tilelang's TVM analyzer
     ];
   };
+  # `CUDA_HOME` for the JIT compilers, which otherwise look for `which nvcc` and
+  # `/usr/local/cuda`. Not the bundled wheels: those are a runtime toolkit, with
+  # no `libcudart.so` namelink and no driver stub to link against. The set vLLM's
+  # own image installs for runtime JIT (docker/Dockerfile: nvcc, cudart, nvrtc,
+  # cuobjdump, cublas, curand), on the CUDA line the lock resolved.
+  cudaHome = mkCudaHome {
+    name = "vllm-cuda-home";
+    packages = with pkgs.${env.cudaPackagesAttr}; [
+      cuda_nvcc
+      cuda_cudart
+      cuda_crt
+      cccl
+      cuda_nvrtc
+      cuda_cuobjdump
+      libcublas
+      libcurand
+    ];
+  };
 in
 lib.lazyDerivation {
   derivation = env;
+  passthru = {
+    inherit cudaHome;
+    inherit (env) sdists python cudaPackagesAttr;
+  };
   meta = {
     description = "Python environment providing the vLLM inference server";
     homepage = "https://github.com/vllm-project/vllm";

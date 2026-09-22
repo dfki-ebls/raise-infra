@@ -10,7 +10,10 @@
     let
       custom = lib.packagesFromDirectoryRecursive {
         callPackage = final.newScope {
-          inherit (inputs.llmhop.legacyPackages.${prev.stdenv.hostPlatform.system}) mkUvEnv;
+          inherit (inputs.llmhop.legacyPackages.${prev.stdenv.hostPlatform.system})
+            mkUvEnv
+            mkCudaHome
+            ;
         };
         directory = ../pkgs;
       };
