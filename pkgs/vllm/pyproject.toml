@@ -12,7 +12,7 @@ dependencies = [
 
 [tool.uv]
 environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
-exclude-newer = "3 days"
+exclude-newer = "1 day"
 
 [[tool.uv.index]]
 name = "flashinfer"
@@ -29,6 +29,5 @@ flashinfer-cubin = { index = "flashinfer" }
 flashinfer-jit-cache = { index = "flashinfer-cu130" }
 
 [tool.uv.exclude-newer-package]
-vllm = "1 day"
 flashinfer-cubin = false
 flashinfer-jit-cache = false
