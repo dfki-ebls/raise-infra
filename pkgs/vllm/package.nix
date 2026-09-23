@@ -3,20 +3,24 @@
   pkgs,
   mkUvEnv,
   mkCudaHome,
-  ffmpeg-headless,
+  ffmpeg_8-headless,
   rdma-core,
   tbb_2022,
-  z3,
 }:
 let
   env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
     buildInputs = [
-      ffmpeg-headless # torchcodec
-      rdma-core # nvshmem's InfiniBand transport
+      ffmpeg_8-headless # torchcodec, which supports FFmpeg 4 to 8
+      rdma-core # InfiniBand for cuFile and nvshmem
       tbb_2022 # numba's threading layer
-      z3.lib # tilelang's TVM analyzer
+    ];
+    venvOptionalLibs = [
+      # Variants for the FFmpeg majors not supplied above.
+      "*/torchcodec/libtorchcodec_*[!8].so"
+      # nvshmem plugins for the launchers and fabrics of multi-node jobs.
+      "*/nvidia/nvshmem/lib/nvshmem_*.so.3"
     ];
   };
   # `CUDA_HOME` for the JIT compilers, which otherwise look for `which nvcc` and
