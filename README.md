@@ -70,7 +70,27 @@ systemctl start hivegent
 Do not restart the `postgresql` service, since Rauthy shares the same instance.
 To also wipe local files for a full reset, clear the state and cache while stopped: `rm -rf /var/lib/hivegent/* /var/cache/hivegent/*`.
 
-Runtime secrets live in `/etc/hivegent/hivegent.env`, created empty on activation so startup never blocks before they are provisioned.
+Runtime secrets are systemd credentials named like the setting they replace, and the unit imports every `HIVEGENT_*` credential from the system credential store.
+Store each one as a plain file in `/etc/credstore`, which systemd keeps readable by root only, and restart:
+
+```bash
+(umask 077; systemd-ask-password -n "MCP client secret:" > /etc/credstore/HIVEGENT_MCP__CLIENT_SECRET)
+systemctl restart hivegent
+```
+
+List the credentials the unit receives, without printing their values:
+
+```bash
+systemd-run --pipe --wait --quiet --property=ImportCredential='HIVEGENT_*' systemd-creds list
+```
+
+To keep a secret encrypted at rest with the host key, and the TPM if present, write it to `/etc/credstore.encrypted` instead:
+
+```bash
+systemd-ask-password -n "MCP client secret:" | systemd-creds encrypt --name=HIVEGENT_MCP__CLIENT_SECRET - /etc/credstore.encrypted/HIVEGENT_MCP__CLIENT_SECRET
+```
+
+Remove a secret by deleting its file and restarting.
 
 ### Service integrations (client credentials)
 

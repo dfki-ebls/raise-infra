@@ -7,16 +7,12 @@ let
   caddySubHost = caddyHelpers.mkSubHost "hivegent";
   hivegentUrl = caddyHelpers.mkSubUrl "hivegent";
   rauthyIssuer = config.custom.rauthy.issuer;
-  environmentFile = "/etc/hivegent/hivegent.env";
 in
 {
   services.hivegent = {
     enable = true;
 
     postgresql.createLocally = true;
-
-    # Runtime secrets stay outside the Nix store.
-    inherit environmentFile;
 
     # Device placement for every torch / onnxruntime model (dense embeddings,
     # the model-based chunkers, docling) is decided centrally by the process
@@ -122,13 +118,6 @@ in
       force_mfa = false;
     }
   ];
-
-  # Provision the operator-managed secrets env file empty (0600, root) on
-  # activation so the unit's `EnvironmentFile` does not block startup before
-  # secrets are provisioned via:
-  #   printf 'HIVEGENT_MCP__CLIENT_SECRET=%s\n' '<secret>' > /etc/hivegent/hivegent.env
-  #   systemctl restart hivegent
-  systemd.tmpfiles.rules = [ "f ${environmentFile} 0600 root root -" ];
 
   systemd.services.hivegent = {
     # The backend fetches OIDC discovery from the Rauthy issuer during startup,
