@@ -46,7 +46,7 @@ lib.lazyDerivation {
   derivation = env;
   passthru = {
     inherit cudaHome;
-    inherit (env) sdists python cudaPackagesAttr;
+    inherit (env) python cudaPackagesAttr;
   };
   meta = {
     description = "Python environment providing the vLLM inference server";
