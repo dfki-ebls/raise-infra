@@ -71,6 +71,7 @@ Do not restart the `postgresql` service, since Rauthy shares the same instance.
 To also wipe local files for a full reset, clear the state and cache while stopped: `rm -rf /var/lib/hivegent/* /var/cache/hivegent/*`.
 
 Runtime secrets are systemd credentials named like the setting they replace, and the unit imports every `HIVEGENT_*` credential from the system credential store.
+Hivegent maps such a file to its setting by its environment variable name, so any setting can be a credential, while llmhop names its credentials after their `${cred:…}` references, such as `vllm.watermark-key`.
 Store each one as a plain file in `/etc/credstore`, which systemd keeps readable by root only, and restart:
 
 ```bash
