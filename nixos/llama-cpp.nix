@@ -25,7 +25,6 @@ in
 lib.mkIf config.custom.enableNvidia {
   services.llmhop.llama-cpp = {
     enable = false;
-    environmentFile = "/etc/llama-cpp/llama-cpp.env";
 
     # https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md
     modelSettings = rec {
