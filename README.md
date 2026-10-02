@@ -89,6 +89,20 @@ systemd-ask-password -n "MCP client secret:" | systemd-creds encrypt --name=HIVE
 
 Remove a secret by deleting its file and restarting.
 
+### Watermarking
+
+vLLM marks the output of the model with `gumbel`, and MTP stays off since vLLM skips context deduplication on speculative tokens (`nixos/vllm.nix`).
+The detector `vllm-detector-watermark` shares that config and is reached through llmhop at `/route/watermark/detect`, which Hivegent's `transparency` section points at.
+llmhop listens only on unix sockets, one per client in `services.llmhop.listen` (`nixos/llmhop.nix`), so no other local process can request unmarked output.
+Hivegent connects to `/run/llmhop/hivegent.sock`, which only its group can use, and root keeps `/run/llmhop/default.sock` for debugging.
+Both secrets come from `custom.credstore`:
+
+- `vllm.watermark-key`, an unsigned 64-bit integer shared by the model and the detector, so changing it makes previously marked text undetectable.
+- `HIVEGENT_TRANSPARENCY__SECRET_KEY`, from which Hivegent derives the key that signs detection reports and export provenance, so changing it rotates that key.
+
+Back up both, and see Hivegent's `docs/article-50-2-operations.md` for rotation and testing.
+To restore a backup, write it to the same path before the units first start, or replace the file and restart them.
+
 ### Service integrations (client credentials)
 
 The browser SPA client (`hivegent-spa`) is provisioned automatically on first DB init.

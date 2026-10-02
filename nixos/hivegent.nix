@@ -1,5 +1,7 @@
 {
+  lib,
   config,
+  pkgs,
   caddyHelpers,
   ...
 }:
@@ -10,6 +12,8 @@ let
 
   # Resolved to llmhop's socket through `network.unix_sockets`.
   llmhopUrl = "http://llmhop";
+  inherit (config.services.llmhop.vllm) detectors;
+  withTransparency = lib.mkIf (detectors ? watermark);
 in
 {
   services.hivegent = {
@@ -68,6 +72,12 @@ in
         client_id = "hivegent-mcp";
         base_url = "${hivegentUrl}/mcp";
       };
+
+      transparency = withTransparency {
+        detector_url = "${llmhopUrl}/route/${detectors.watermark.name}/detect";
+        report_issuer = hivegentUrl;
+        contact_email = config.custom.admin.mail;
+      };
     };
 
     caddy = {
@@ -83,6 +93,10 @@ in
         ${caddyHelpers.scannerHoneypots}
       '';
     };
+  };
+
+  custom.credstore = withTransparency {
+    HIVEGENT_TRANSPARENCY__SECRET_KEY = "${lib.getExe pkgs.openssl} rand -base64 32";
   };
 
   # Bootstrap only the public SPA client.
