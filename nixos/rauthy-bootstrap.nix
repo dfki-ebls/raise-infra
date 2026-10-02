@@ -1,64 +1,32 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
   cfg = config.custom.rauthy;
 
-  opensslExe = lib.getExe' pkgs.openssl "openssl";
-
-  # Auto-generated secrets, kept out of the Nix store. Loaded before the
-  # operator-managed `environmentFile` so user secrets can override them.
-  envFile = "/etc/rauthy/bootstrap.env";
+  credential = "rauthy.secrets";
+  fromSecrets = "$SECRETS";
+  rauthy = lib.getExe cfg.package;
 in
 {
   config = lib.mkIf cfg.enable {
-    # `ReadWritePaths` needs the target directory to exist.
-    systemd.tmpfiles.rules = [ "d /etc/rauthy 0755 root root -" ];
+    # Rauthy's own generators print the `[cluster]` and `[encryption]` tables.
+    custom.credstore.${credential} = "${rauthy} generate-secrets && ${rauthy} generate-enc-key";
 
-    systemd.services.rauthy.serviceConfig.EnvironmentFile = lib.mkBefore [ envFile ];
-
-    # Keep generated secrets out of the Nix store.
-    systemd.services.rauthy-generate-secrets = {
-      description = "Generate Rauthy bootstrap secrets if missing";
-      requiredBy = [ "rauthy.service" ];
-      before = [ "rauthy.service" ];
-      partOf = [ "rauthy.service" ];
-      serviceConfig = {
-        Type = "oneshot";
-        UMask = "0077";
-        ProtectSystem = "strict";
-        ReadWritePaths = [ "/etc/rauthy" ];
-        ProtectHome = true;
-        PrivateTmp = true;
-        NoNewPrivileges = true;
-        CapabilityBoundingSet = "";
+    custom.rauthy = {
+      secretsCredential = credential;
+      settings = {
+        cluster = {
+          secret_raft = fromSecrets;
+          secret_api = fromSecrets;
+        };
+        encryption = {
+          keys = [ fromSecrets ];
+          key_active = fromSecrets;
+        };
       };
-      script = ''
-        set -euo pipefail
-        umask 077
-
-        touch ${envFile}
-
-        # Rauthy encryption keys.
-        if ! grep -q '^ENC_KEYS=' ${envFile}; then
-          enc_id=$(${opensslExe} rand -hex 4)
-          enc_key=$(${opensslExe} rand -base64 32)
-          echo "ENC_KEYS=$enc_id/$enc_key" >> ${envFile}
-          echo "ENC_KEY_ACTIVE=$enc_id" >> ${envFile}
-        fi
-
-        # Hiqlite authentication secrets.
-        if ! grep -q '^HQL_SECRET_RAFT=' ${envFile}; then
-          echo "HQL_SECRET_RAFT=$(${opensslExe} rand -hex 24)" >> ${envFile}
-        fi
-
-        if ! grep -q '^HQL_SECRET_API=' ${envFile}; then
-          echo "HQL_SECRET_API=$(${opensslExe} rand -hex 24)" >> ${envFile}
-        fi
-      '';
     };
   };
 }

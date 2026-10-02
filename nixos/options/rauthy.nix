@@ -74,8 +74,9 @@ in
 
         ::: {.caution}
         Anything in this attrset lands in `/nix/store` and becomes
-        world-readable. Use `environmentFile` for secrets, or render the
-        config externally and pass it via `configFile`.
+        world-readable. Set secrets to `"$SECRETS"` and provide them through
+        `secretsCredential`, use `environmentFile`, or render the config
+        externally and pass it via `configFile`.
         :::
       '';
     };
@@ -95,6 +96,17 @@ in
         cannot live in `/nix/store` — e.g. a sops-nix template, since
         `EnvironmentFile` does not interact cleanly with `DynamicUser`
         (see <https://github.com/Mic92/sops-nix/issues/198>).
+      '';
+    };
+
+    secretsCredential = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "rauthy.secrets";
+      description = ''
+        Name of a systemd credential imported from the system credential
+        store and used as Rauthy's secrets file, a TOML file that resolves
+        every `"$SECRETS"` value of `settings`.
       '';
     };
 
@@ -278,6 +290,7 @@ in
           wants = [ "network-online.target" ];
 
           environment = lib.mkMerge [
+            (lib.mkIf (cfg.secretsCredential != null) { SECRETS_FILE = "%d/${cfg.secretsCredential}"; })
             (lib.optionalAttrs (bootstrapData != { }) {
               BOOTSTRAP_DIR = toString (
                 pkgs.linkFarm "rauthy-bootstrap" (
@@ -301,6 +314,7 @@ in
             RuntimeDirectory = lib.mkIf cfg.enableUnixSocket "rauthy";
             RuntimeDirectoryMode = lib.mkIf cfg.enableUnixSocket "750";
             EnvironmentFile = lib.optional (cfg.environmentFile != "") cfg.environmentFile;
+            ImportCredential = lib.optional (cfg.secretsCredential != null) cfg.secretsCredential;
             LockPersonality = true;
             MemoryDenyWriteExecute = true;
             NoNewPrivileges = true;

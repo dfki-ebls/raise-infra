@@ -35,15 +35,10 @@ Ranges and bare IPs are accepted interchangeably, so `203.0.113.5` allows that s
 ## Rauthy
 
 Rauthy is the OIDC identity provider.
-Encryption and cluster secrets in `/etc/rauthy/bootstrap.env` are generated automatically on first start.
+Encryption and cluster secrets are generated on first start into the credential `/etc/credstore/rauthy.secrets`.
+Rauthy encrypts data with that key, so regenerating it makes existing data unreadable.
 
-To regenerate them, delete the file and restart:
-
-```bash
-rm /etc/rauthy/bootstrap.env && systemctl restart rauthy-generate-secrets rauthy
-```
-
-User-managed secrets live in `/etc/rauthy/rauthy.env`, loaded after the generated file so it can override it.
+User-managed secrets live in `/etc/rauthy/rauthy.env`, whose entries override the secrets file.
 Rauthy sends mail through the uni Trier relay (`mail.wi2.uni-trier.de:465`, implicit TLS), and the SMTP password is the only secret kept out of the Nix store.
 Provision it on the server, then restart:
 
