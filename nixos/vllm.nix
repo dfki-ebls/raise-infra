@@ -7,8 +7,16 @@
 # Target hardware: NVIDIA RTX PRO 4500 Blackwell, 32 GB GDDR7.
 let
   imgSize = 1024;
+  model = "unsloth/Qwen3.8-27B-NVFP4";
+  # Shared by the generating worker and its detector.
+  # No MTP, since vLLM skips context deduplication on speculative tokens,
+  # which makes Gumbel watermarking prone to repetition loops.
+  watermark.algorithm = "gumbel";
 in
 lib.mkIf config.custom.enableNvidia {
+  # llmhop grants it to every workload with a `watermark`.
+  custom.credstore."vllm.watermark-key" = "od -An -N8 -tu8 /dev/urandom | tr -d ' '";
+
   services.llmhop.vllm = {
     enable = true;
     package = pkgs.vllm;
@@ -46,7 +54,7 @@ lib.mkIf config.custom.enableNvidia {
 
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models."qwen3.8-27b" = {
-      model = "unsloth/Qwen3.8-27B-NVFP4";
+      inherit model watermark;
       # https://unsloth.ai/docs/models/qwen3.8
       # https://recipes.vllm.ai/Qwen/Qwen3.8-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
@@ -61,10 +69,6 @@ lib.mkIf config.custom.enableNvidia {
           top_k = 20;
           top_p = 0.95;
         };
-        speculative-config = {
-          method = "mtp";
-          num_speculative_tokens = 2;
-        };
         mm-processor-kwargs = {
           images_kwargs.size = {
             longest_edge = imgSize * imgSize;
@@ -72,6 +76,11 @@ lib.mkIf config.custom.enableNvidia {
           };
         };
       };
+    };
+
+    detectors.watermark = {
+      tokenizer = model;
+      inherit watermark;
     };
   };
 }
