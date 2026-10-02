@@ -1,9 +1,9 @@
-{ ... }:
+{ config, ... }:
 {
   services.llmhop = {
     enable = true;
-    # Unix sockets only, one per client, see README.
+    # Unix socket only, which members of llmhop's group can use, see README.
     port = null;
-    listen.hivegent.socketGroup = "hivegent";
+    socketGroup = config.services.llmhop.group;
   };
 }

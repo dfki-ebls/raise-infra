@@ -93,8 +93,8 @@ Remove a secret by deleting its file and restarting.
 
 vLLM marks the output of the model with `gumbel`, and MTP stays off since vLLM skips context deduplication on speculative tokens (`nixos/vllm.nix`).
 The detector `vllm-detector-watermark` shares that config and is reached through llmhop at `/route/watermark/detect`, which Hivegent's `transparency` section points at.
-llmhop listens only on unix sockets, one per client in `services.llmhop.listen` (`nixos/llmhop.nix`), so no other local process can request unmarked output.
-Hivegent connects to `/run/llmhop/hivegent.sock`, which only its group can use, and root keeps `/run/llmhop/default.sock` for debugging.
+llmhop listens only on the unix socket `/run/llmhop/default.sock` (`nixos/llmhop.nix`), which only members of the `llmhop` group can use, so no other local process can request unmarked output.
+Hivegent's dynamic user joins that group through `SupplementaryGroups`.
 Both secrets come from `custom.credstore`:
 
 - `vllm.watermark-key`, an unsigned 64-bit integer shared by the model and the detector, so changing it makes previously marked text undetectable.

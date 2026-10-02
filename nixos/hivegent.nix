@@ -64,7 +64,7 @@ in
         websearch_language = "de";
         # Advertised in the web tools' User-Agent for traffic questions.
         contact_email = config.custom.admin.mail;
-        unix_sockets.llmhop = config.services.llmhop.listen.hivegent.socket;
+        unix_sockets.llmhop = config.services.llmhop.socket;
       };
 
       mcp = {
@@ -150,5 +150,8 @@ in
       "caddy.service"
       "rauthy.service"
     ];
+
+    # Grants the dynamic user access to llmhop's socket.
+    serviceConfig.SupplementaryGroups = [ config.services.llmhop.socketGroup ];
   };
 }
