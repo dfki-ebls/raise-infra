@@ -7,6 +7,9 @@ let
   caddySubHost = caddyHelpers.mkSubHost "hivegent";
   hivegentUrl = caddyHelpers.mkSubUrl "hivegent";
   rauthyIssuer = config.custom.rauthy.issuer;
+
+  # Resolved to llmhop's socket through `network.unix_sockets`.
+  llmhopUrl = "http://llmhop";
 in
 {
   services.hivegent = {
@@ -44,7 +47,7 @@ in
 
       llm = {
         model = "qwen3.8-27b";
-        base_url = "http://${config.services.llmhop.host}:${toString config.services.llmhop.port}/v1";
+        base_url = "${llmhopUrl}/v1";
         inference_provider = "vllm";
       };
 
@@ -57,6 +60,7 @@ in
         websearch_language = "de";
         # Advertised in the web tools' User-Agent for traffic questions.
         contact_email = config.custom.admin.mail;
+        unix_sockets.llmhop = config.services.llmhop.listen.hivegent.socket;
       };
 
       mcp = {

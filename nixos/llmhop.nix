@@ -2,7 +2,8 @@
 {
   services.llmhop = {
     enable = true;
-    host = "127.0.0.1";
-    port = 18000;
+    # Unix sockets only, one per client, see README.
+    port = null;
+    listen.hivegent.socketGroup = "hivegent";
   };
 }
