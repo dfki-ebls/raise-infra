@@ -12,6 +12,8 @@ let
   # No MTP, since vLLM skips context deduplication on speculative tokens,
   # which makes Gumbel watermarking prone to repetition loops.
   watermark.algorithm = "gumbel";
+  # Optional, read through `HF_TOKEN_PATH` and skipped while missing.
+  credentials."huggingface.token" = { };
 in
 lib.mkIf config.custom.enableNvidia {
   # llmhop grants it to every workload with a `watermark`.
@@ -20,10 +22,12 @@ lib.mkIf config.custom.enableNvidia {
   services.llmhop.vllm = {
     enable = true;
     package = pkgs.vllm;
-    environmentFile = "/etc/vllm/vllm.env";
     uid = 503;
 
-    environment.CUDA_HOME = "${pkgs.vllm.cudaHome}";
+    environment = {
+      CUDA_HOME = "${pkgs.vllm.cudaHome}";
+      HF_TOKEN_PATH = "%d/huggingface.token";
+    };
 
     # https://docs.vllm.ai/en/stable/cli/serve/
     modelSettings = {
@@ -54,7 +58,7 @@ lib.mkIf config.custom.enableNvidia {
 
     # https://docs.vllm.ai/en/latest/configuration/conserving_memory/
     models."qwen3.8-27b" = {
-      inherit model watermark;
+      inherit model watermark credentials;
       # https://unsloth.ai/docs/models/qwen3.8
       # https://recipes.vllm.ai/Qwen/Qwen3.8-27B
       # https://docs.vllm.ai/projects/recipes/en/latest/Qwen/Qwen3.5.html
@@ -80,7 +84,7 @@ lib.mkIf config.custom.enableNvidia {
 
     detectors.watermark = {
       tokenizer = model;
-      inherit watermark;
+      inherit watermark credentials;
     };
   };
 }
