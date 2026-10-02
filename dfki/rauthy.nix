@@ -5,21 +5,12 @@
 }:
 let
   mail = "raise@wi2.uni-trier.de";
-
-  # Operator-managed env file for user secrets such as `SMTP_PASSWORD`, kept out
-  # of the Nix store. Loaded after the auto-generated `/etc/rauthy/bootstrap.env`
-  # so it can override it. Created empty (0600, root) on activation so the unit's
-  # `EnvironmentFile` does not fail before the secret is provisioned via:
-  #   printf 'SMTP_PASSWORD=%s\n' '<secret>' > /etc/rauthy/rauthy.env
-  #   systemctl restart rauthy
-  secretsEnvFile = "/etc/rauthy/rauthy.env";
 in
 {
   config = lib.mkIf config.custom.rauthy.enable {
-    systemd.tmpfiles.rules = [ "f ${secretsEnvFile} 0600 root root -" ];
-
     custom.rauthy = {
-      environmentFile = secretsEnvFile;
+      # `SMTP_PASSWORD`, see README.
+      environmentFile = "/etc/rauthy/rauthy.env";
 
       # SMTP via the uni Trier relay. Port 465 (implicit TLS/SSL) maps to
       # Rauthy's default connection mode, which builds a lettre `relay()`

@@ -111,17 +111,14 @@ in
     };
 
     environmentFile = lib.mkOption {
-      type = lib.types.oneOf [
-        lib.types.str
-        lib.types.path
-      ];
-      default = "";
+      type = with lib.types; nullOr (either str path);
+      default = null;
       description = ''
         Optional `KEY=VALUE` env file forwarded via `EnvironmentFile`,
-        useful for operator-managed secrets like `SMTP_PASSWORD`. Loaded
-        *after* the auto-generated `/etc/rauthy/bootstrap.env`, so entries
-        here win on conflicts. Must be readable by `root` (systemd reads
-        it before dropping to the unit's `DynamicUser`).
+        useful for operator-managed secrets like `SMTP_PASSWORD`.
+        Its entries override the secrets file. Skipped while missing,
+        and must be readable by `root`, since systemd reads it before dropping
+        to the unit's `DynamicUser`.
 
         Note that `EnvironmentFile` and `DynamicUser` do not always play
         well with sops-nix
@@ -313,7 +310,7 @@ in
             WorkingDirectory = "%S/rauthy";
             RuntimeDirectory = lib.mkIf cfg.enableUnixSocket "rauthy";
             RuntimeDirectoryMode = lib.mkIf cfg.enableUnixSocket "750";
-            EnvironmentFile = lib.optional (cfg.environmentFile != "") cfg.environmentFile;
+            EnvironmentFile = lib.optional (cfg.environmentFile != null) "-${cfg.environmentFile}";
             ImportCredential = lib.optional (cfg.secretsCredential != null) cfg.secretsCredential;
             LockPersonality = true;
             MemoryDenyWriteExecute = true;
