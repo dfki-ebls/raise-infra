@@ -57,12 +57,14 @@ let
       }
     '';
 
+  # Private ranges (e.g., VPN clients) have no country and are exempt.
   mkGeoblock =
     {
       countries ? [ "DE" ],
     }:
     lib.optionalString config.custom.enableGeoblocking ''
       @geoblocked {
+        not client_ip private_ranges
         not {
           maxmind_geolocation {
             db_path ${pkgs.dbip-country-lite.mmdb}
