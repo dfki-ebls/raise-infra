@@ -292,6 +292,7 @@
       "original": {
         "owner": "dfki-ebls",
         "repo": "hivegent",
+        "rev": "47171d701397b05b552c1695aaf098f502a98a04",
         "type": "github"
       }
     },
