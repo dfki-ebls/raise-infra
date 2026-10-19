@@ -22,7 +22,6 @@
         flake-parts.follows = "flake-parts";
         flocken.follows = "flocken";
         treefmt-nix.follows = "treefmt-nix";
-        quadlet-nix.follows = "quadlet-nix";
         pyproject-nix.follows = "pyproject-nix";
         uv2nix.follows = "uv2nix";
         pyproject-build-systems.follows = "pyproject-build-systems";
@@ -45,13 +44,6 @@
         nixpkgs.follows = "nixpkgs";
         pyproject-nix.follows = "pyproject-nix";
         uv2nix.follows = "uv2nix";
-      };
-    };
-    quadlet-nix = {
-      url = "github:mirkolenz/quadlet-nix/v1";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        flake-parts.follows = "flake-parts";
       };
     };
     treefmt-nix = {

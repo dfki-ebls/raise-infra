@@ -313,9 +313,7 @@
         "pyproject-nix": [
           "pyproject-nix"
         ],
-        "quadlet-nix": [
-          "quadlet-nix"
-        ],
+        "quadlet-nix": "quadlet-nix",
         "systems": "systems_3",
         "treefmt-nix": [
           "treefmt-nix"
@@ -576,9 +574,11 @@
     "quadlet-nix": {
       "inputs": {
         "flake-parts": [
+          "llmhop",
           "flake-parts"
         ],
         "nixpkgs": [
+          "llmhop",
           "nixpkgs"
         ]
       },
@@ -636,7 +636,6 @@
         "nixpkgs-stable": "nixpkgs-stable",
         "pyproject-build-systems": "pyproject-build-systems_2",
         "pyproject-nix": "pyproject-nix_2",
-        "quadlet-nix": "quadlet-nix",
         "ragold": "ragold",
         "systems": "systems_6",
         "treefmt-nix": "treefmt-nix",
