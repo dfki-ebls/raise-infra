@@ -8,12 +8,12 @@ dependencies = [
   "flashinfer-jit-cache==0.7.0.post1",
   "flashinfer-jit-cache-sm120f==0.7.0.post1+cu130",
   "flashinfer-python==0.7.0.post1",
-  "vllm==0.31.0",
+  "vllm==0.32.0",
 ]
 
 [tool.uv]
 environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
-exclude-newer = "1 day"
+exclude-newer = "12 hours"
 preview-features = ["index-exclude-newer"]
 
 # The shim only needs our pinned Blackwell provider.
