@@ -9,8 +9,6 @@ let
   imgSize = 1024;
   model = "unsloth/Qwen3.8-27B-NVFP4";
   # Shared by the generating worker and its detector.
-  # No MTP, since vLLM skips context deduplication on speculative tokens,
-  # which makes Gumbel watermarking prone to repetition loops.
   watermark.algorithm = "gumbel";
   # Optional, read through `HF_TOKEN_PATH` and skipped while missing.
   credentials."huggingface.token" = { };
@@ -35,11 +33,11 @@ lib.mkIf config.custom.enableNvidia {
       enable-auto-tool-choice = true;
       enable-prefix-caching = true;
       gpu-memory-utilization = 0.95;
-      kv-cache-dtype = "fp8";
+      kv-cache-dtype = "nvfp4";
       kv-offloading-size = 16; # GiB
-      max-model-len = "144K";
-      max-num-batched-tokens = 4096;
-      max-num-seqs = 2;
+      max-model-len = "256K"; # native maximum
+      max-num-batched-tokens = 8192;
+      max-num-seqs = 4;
       limit-mm-per-prompt = {
         image = {
           # image.count * image.size * max-num-seqs <= max-num-batched-tokens
