@@ -14,12 +14,18 @@ let
   llmhopUrl = "http://llmhop";
   inherit (config.services.llmhop.vllm) detectors;
   withTransparency = lib.mkIf (detectors ? watermark);
+  openssl = lib.getExe pkgs.openssl;
+
+  # Web search through a local SearXNG and fetching of the pages it or the
+  # user names, off until the shared instance should reach the web.
+  withWeb = lib.mkIf false;
 in
 {
   services.hivegent = {
     enable = true;
 
     postgresql.createLocally = true;
+    searxng.createLocally = withWeb true;
 
     # Device placement for every torch / onnxruntime model (dense embeddings,
     # the model-based chunkers, docling) is decided centrally by the process
@@ -60,9 +66,11 @@ in
         max_images = 2;
       };
 
+      # Lets web_fetch open any public page the user or a search named.
+      security = withWeb { web_urls.allow_hosts = [ "*" ]; };
+
       network = {
-        websearch_language = "de";
-        # Advertised in the web tools' User-Agent for traffic questions.
+        # Advertised in web_fetch's User-Agent for traffic questions.
         contact_email = config.custom.admin.mail;
         unix_sockets.llmhop = config.services.llmhop.socket;
       };
@@ -95,8 +103,31 @@ in
     };
   };
 
-  custom.credstore = withTransparency {
-    HIVEGENT_TRANSPARENCY__SECRET_KEY = "${lib.getExe pkgs.openssl} rand -base64 32";
+  custom.credstore = lib.mkMerge [
+    (withTransparency {
+      HIVEGENT_TRANSPARENCY__SECRET_KEY = "${openssl} rand -base64 32";
+    })
+    (withWeb {
+      "searx.secret-key" = "${openssl} rand -hex 32";
+    })
+  ];
+
+  services.searx = withWeb {
+    enable = true;
+    settings = {
+      # Substituted by searx-init when it renders the settings.
+      server.secret_key = "$SEARX_SECRET_KEY";
+      # The corpus is German, so a search naming no language finds German pages.
+      search.default_lang = "de";
+    };
+  };
+
+  systemd.services.searx-init = withWeb {
+    serviceConfig.ImportCredential = "searx.secret-key";
+    script = lib.mkBefore ''
+      SEARX_SECRET_KEY=$(< "$CREDENTIALS_DIRECTORY/searx.secret-key")
+      export SEARX_SECRET_KEY
+    '';
   };
 
   # Bootstrap only the public SPA client.
