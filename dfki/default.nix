@@ -11,6 +11,9 @@
     };
   };
 
+  # DFKI operates this instance and issues Hivegent's additional terms itself.
+  services.hivegent.settings.accept_terms = true;
+
   system.autoUpgrade = {
     enable = true;
     flake = "github:dfki-ebls/raise-infra#default";

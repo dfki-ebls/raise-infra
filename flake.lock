@@ -282,17 +282,17 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1792483864,
-        "narHash": "sha256-Y00hfbi+H06qWqXdHReGs5fLn0P33FNHtSFFKQ+i1AM=",
+        "lastModified": 1792486456,
+        "narHash": "sha256-Lk7y8HSUXGu0wYN8Iry+lS/wbVOj7FlpjeQvMOadFC0=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "c86d1a36de90264105de5e231f55ca9e13f84154",
+        "rev": "d4ccfa7216233b16b49a7b07ad6ccdbf6b7b56e1",
         "type": "github"
       },
       "original": {
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "c86d1a36de90264105de5e231f55ca9e13f84154",
+        "rev": "d4ccfa7216233b16b49a7b07ad6ccdbf6b7b56e1",
         "type": "github"
       }
     },
