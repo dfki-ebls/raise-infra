@@ -32,13 +32,12 @@ lib.mkIf config.custom.enableNvidia {
       attention-backend = "flashinfer";
       enable-auto-tool-choice = true;
       enable-prefix-caching = true;
-      # Headroom for activations beyond the profiled peak at 8192 batched tokens.
-      gpu-memory-utilization = 0.9;
+      gpu-memory-utilization = 0.95;
       kv-cache-dtype = "nvfp4";
       kv-offloading-size = 16; # GiB
       max-model-len = "256K"; # native maximum
-      max-num-batched-tokens = 8192;
-      max-num-seqs = 4;
+      max-num-batched-tokens = 4096;
+      max-num-seqs = 2;
       limit-mm-per-prompt = {
         image = {
           # image.count * image.size * max-num-seqs <= max-num-batched-tokens
