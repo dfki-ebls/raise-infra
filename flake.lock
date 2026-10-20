@@ -282,17 +282,17 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1792406334,
-        "narHash": "sha256-i4IdSvgLAdslfGaZ0bNSXYeMuHYJE5BsemI36wWY8uI=",
+        "lastModified": 1792483864,
+        "narHash": "sha256-Y00hfbi+H06qWqXdHReGs5fLn0P33FNHtSFFKQ+i1AM=",
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "3d5b6c5fc52deed7712cde0c903bbc88acd6c893",
+        "rev": "c86d1a36de90264105de5e231f55ca9e13f84154",
         "type": "github"
       },
       "original": {
         "owner": "dfki-ebls",
         "repo": "hivegent",
-        "rev": "3d5b6c5fc52deed7712cde0c903bbc88acd6c893",
+        "rev": "c86d1a36de90264105de5e231f55ca9e13f84154",
         "type": "github"
       }
     },
@@ -612,11 +612,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790797864,
-        "narHash": "sha256-Urfozao7J+V0SNDTSJFjXkmZB3rUGkU/qGHTe65Swhg=",
+        "lastModified": 1792482331,
+        "narHash": "sha256-yGaNg5uvXrYp2ZKTSQkgNZcHl/zBfiwGGIvVJVWGsDs=",
         "owner": "dfki-ebls",
         "repo": "ragold",
-        "rev": "51bb92c00d76a80fd0c9b4dacddab5c0a0dd8658",
+        "rev": "83f780ecafa6de9600404a308dfcd4a1d2185be5",
         "type": "github"
       },
       "original": {
@@ -720,11 +720,11 @@
     },
     "systems_5": {
       "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "lastModified": 1791244623,
+        "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",
         "owner": "nix-systems",
         "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "rev": "d36eeed142f88b5a636f2e3856a53c61654cf29b",
         "type": "github"
       },
       "original": {
