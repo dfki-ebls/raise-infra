@@ -91,7 +91,9 @@ Remove a secret by deleting its file and restarting.
 
 ### Watermarking
 
-vLLM marks the output of the model with `gumbel`, and MTP stays off since vLLM skips context deduplication on speculative tokens (`nixos/vllm.nix`).
+vLLM marks the output of the model with `gumbel` (`nixos/vllm.nix`), and MTP stays off since speculative decoding needs `dual_key_gumbel` with probabilistic drafting, which is not yet tested on this card.
+Deduplication also covers the prompt, since Gumbel sampling is deterministic per context and an agent retrying a failed tool call would otherwise regenerate the identical tokens.
+This is vLLM's option for multi-turn non-distortion, at the cost of leaving text copied from the prompt unmarked, and the default 8192-position search window keeps its scanning cost bounded.
 The detector `vllm-detector-watermark` shares that config and is reached through llmhop at `/route/watermark/detect`, which Hivegent's `transparency` section points at.
 llmhop listens only on the unix socket `/run/llmhop/default.sock` (`nixos/llmhop.nix`), which only members of the `llmhop` group can use, so no other local process can request unmarked output.
 Hivegent's dynamic user joins that group through `SupplementaryGroups`.

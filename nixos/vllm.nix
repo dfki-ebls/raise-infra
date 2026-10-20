@@ -9,7 +9,11 @@ let
   imgSize = 1024;
   model = "unsloth/Qwen3.8-27B-NVFP4";
   # Shared by the generating worker and its detector.
-  watermark.algorithm = "gumbel";
+  watermark = {
+    algorithm = "gumbel";
+    # Gumbel is deterministic per context, so unmarked prompt contexts let retries vary.
+    deduplicate_contexts = "all";
+  };
   # Optional, read through `HF_TOKEN_PATH` and skipped while missing.
   credentials."huggingface.token" = { };
 in
