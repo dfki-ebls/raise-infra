@@ -2,6 +2,7 @@
   lib,
   config,
   pkgs,
+  inputs,
   caddyHelpers,
   ...
 }:
@@ -23,6 +24,14 @@ in
 {
   services.hivegent = {
     enable = true;
+
+    # patchelf 0.19 corrupts the CUDA executables bundled in the GPU wheels,
+    # which this hook patches a second time (see `nixos/nvidia.nix`).
+    package = inputs.hivegent.packages.${pkgs.stdenv.hostPlatform.system}.backend.override {
+      autoAddDriverRunpath = pkgs.autoAddDriverRunpath.overrideAttrs (prev: {
+        propagatedBuildInputs = prev.propagatedBuildInputs ++ [ pkgs.stable.patchelf ];
+      });
+    };
 
     postgresql.createLocally = true;
     searxng.createLocally = withWeb true;
