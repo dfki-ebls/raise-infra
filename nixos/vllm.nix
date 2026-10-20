@@ -32,7 +32,8 @@ lib.mkIf config.custom.enableNvidia {
       attention-backend = "flashinfer";
       enable-auto-tool-choice = true;
       enable-prefix-caching = true;
-      gpu-memory-utilization = 0.95;
+      # Headroom for activations beyond the profiled peak at 8192 batched tokens.
+      gpu-memory-utilization = 0.9;
       kv-cache-dtype = "nvfp4";
       kv-offloading-size = 16; # GiB
       max-model-len = "256K"; # native maximum
