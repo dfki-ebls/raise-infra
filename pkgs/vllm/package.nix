@@ -32,14 +32,15 @@ let
   # `/usr/local/cuda`. Not the bundled wheels: those are a runtime toolkit, with
   # no `libcudart.so` namelink and no driver stub to link against. The set vLLM's
   # own image installs for runtime JIT (docker/Dockerfile: nvcc, cudart, nvrtc,
-  # cuobjdump, cublas, curand), on the CUDA line the lock resolved.
+  # cuobjdump, cublas, curand), on the CUDA line the lock resolved. Taken from
+  # stable, since patchelf 0.19 aborts their driver runpath pass (see above).
   cudaHome = mkCudaHome {
     name = "vllm-cuda-home";
-    packages = with pkgs.${env.cudaPackagesAttr}; [
+    packages = with stable.${env.cudaPackagesAttr}; [
       cuda_nvcc
       cuda_cudart
       cuda_crt
-      cccl
+      cuda_cccl
       cuda_nvrtc
       cuda_cuobjdump
       libcublas
