@@ -6,11 +6,16 @@
   ffmpeg_8-headless,
   rdma-core,
   tbb_2022,
+  stable,
 }:
 let
   env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
+    # patchelf 0.19 corrupts executables rewritten more than once,
+    # which aborts the driver runpath pass on z3-solver's `bin/z3`.
+    # Drop once https://github.com/NixOS/patchelf/pull/672 lands in nixpkgs.
+    nativeBuildInputs = [ stable.patchelf ];
     buildInputs = [
       ffmpeg_8-headless # torchcodec, which supports FFmpeg 4 to 8
       rdma-core # InfiniBand for cuFile and nvshmem
