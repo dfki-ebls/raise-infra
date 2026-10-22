@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ lib, ... }:
 {
   virtualisation.vmVariant = {
     disabledModules = [ ../dfki/vpn.nix ];
@@ -38,7 +38,6 @@
       ];
     };
 
-    users.users.${config.custom.admin.login}.password = "";
     security.sudo-rs.wheelNeedsPassword = false;
   };
 }

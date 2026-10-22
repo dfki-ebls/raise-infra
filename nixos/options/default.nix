@@ -17,10 +17,6 @@
       default = true;
     };
     admin = {
-      login = lib.mkOption {
-        type = lib.types.str;
-        description = "Login name for the admin user.";
-      };
       name = lib.mkOption {
         type = lib.types.str;
         description = "Display name of the admin user.";

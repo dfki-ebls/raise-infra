@@ -5,7 +5,6 @@
   custom = {
     rootDomain = lib.mkDefault "raise.dfki.dev";
     admin = {
-      login = "mlenz";
       name = "Mirko Lenz";
       mail = "mirko.lenz@dfki.de";
     };
