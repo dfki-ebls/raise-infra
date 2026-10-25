@@ -20,6 +20,13 @@ lib.mkIf config.custom.enableNvidia {
     nvidiaSettings = false;
     modesetting.enable = true;
   };
+  # Load at boot, `security.lockKernelModules` blocks on-demand loading later.
+  boot.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_drm"
+    "nvidia_uvm"
+  ];
   hardware.nvidia-container-toolkit.enable = true;
   nixpkgs.config.cudaSupport = true;
   nixpkgs.overlays = [

@@ -14,6 +14,8 @@
   hardware.enableAllFirmware = true;
 
   security = {
+    lockKernelModules = true;
+    protectKernelImage = true;
     sudo-rs = {
       enable = true;
       execWheelOnly = true;
