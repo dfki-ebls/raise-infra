@@ -114,7 +114,7 @@ in
 
   custom.credstore = lib.mkMerge [
     (withTransparency {
-      HIVEGENT_TRANSPARENCY__SECRET_KEY = "${openssl} rand -base64 32";
+      "hivegent.TRANSPARENCY__SECRET_KEY" = "${openssl} rand -base64 32";
     })
     (withWeb {
       "searx.secret-key" = "${openssl} rand -hex 32";

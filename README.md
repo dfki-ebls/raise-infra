@@ -65,26 +65,26 @@ systemctl start hivegent
 Do not restart the `postgresql` service, since Rauthy shares the same instance.
 To also wipe local files for a full reset, clear the state and cache while stopped: `rm -rf /var/lib/hivegent/* /var/cache/hivegent/*`.
 
-Runtime secrets are systemd credentials named like the setting they replace, and the unit imports every `HIVEGENT_*` credential from the system credential store.
-Hivegent maps such a file to its setting by its environment variable name, so any setting can be a credential, while llmhop names its credentials after their `${cred:…}` references.
+Runtime secrets are systemd credentials named after their component, and the unit imports every `hivegent.*` credential from the system credential store.
+Hivegent maps `hivegent.<NAME>` to the setting of the variable `HIVEGENT_<NAME>`, so any setting can be a credential, while llmhop names its credentials after their `${cred:…}` references.
 Secrets listed in `custom.credstore` (`nixos/credstore.nix`) are generated if missing, before the first service importing them starts.
 Store any other one as a plain file in `/etc/credstore`, which systemd keeps readable by root only, and restart:
 
 ```bash
-(umask 077; systemd-ask-password -n "MCP client secret:" > /etc/credstore/HIVEGENT_MCP__CLIENT_SECRET)
+(umask 077; systemd-ask-password -n "MCP client secret:" > /etc/credstore/hivegent.MCP__CLIENT_SECRET)
 systemctl restart hivegent
 ```
 
 List the credentials the unit receives, without printing their values:
 
 ```bash
-systemd-run --pipe --wait --quiet --property=ImportCredential='HIVEGENT_*' systemd-creds list
+systemd-run --pipe --wait --quiet --property=ImportCredential='hivegent.*' systemd-creds list
 ```
 
 To keep a secret encrypted at rest with the host key, and the TPM if present, write it to `/etc/credstore.encrypted` instead:
 
 ```bash
-systemd-ask-password -n "MCP client secret:" | systemd-creds encrypt --name=HIVEGENT_MCP__CLIENT_SECRET - /etc/credstore.encrypted/HIVEGENT_MCP__CLIENT_SECRET
+systemd-ask-password -n "MCP client secret:" | systemd-creds encrypt --name=hivegent.MCP__CLIENT_SECRET - /etc/credstore.encrypted/hivegent.MCP__CLIENT_SECRET
 ```
 
 Remove a secret by deleting its file and restarting.
@@ -100,7 +100,7 @@ Hivegent's dynamic user joins that group through `SupplementaryGroups`.
 Both secrets come from `custom.credstore`:
 
 - `vllm.watermark-key`, an unsigned 64-bit integer shared by the model and the detector, so changing it makes previously marked text undetectable.
-- `HIVEGENT_TRANSPARENCY__SECRET_KEY`, from which Hivegent derives the key that signs detection reports and export provenance, so changing it rotates that key.
+- `hivegent.TRANSPARENCY__SECRET_KEY`, from which Hivegent derives the key that signs detection reports and export provenance, so changing it rotates that key.
 
 Back up both, and see Hivegent's `docs/article-50-2-operations.md` for rotation and testing.
 To restore a backup, write it to the same path before the units first start, or replace the file and restart them.
