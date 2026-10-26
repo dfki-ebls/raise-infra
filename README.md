@@ -13,23 +13,18 @@ ssh -o StrictHostKeychecking=no -o UserKnownHostsFile=/dev/null -A -p 2222 127.0
 
 ## VPN allowlist
 
-`dfki/vpn.nix` makes the internal vhosts (`rauthy`, `hivegent`) import server-local Caddyfile drop-ins from `/etc/caddy/vpn.d/*.caddy`.
-Caddy resolves the import when it adapts its config at startup, so the rules live only on the server and change with a `systemctl restart caddy`, no rebuild.
-An import glob that matches no files is a no-op, so the vhosts stay unrestricted in CI and on a fresh image until a drop-in exists.
+`dfki/vpn.nix` restricts the internal vhosts (`rauthy`, `hivegent`) to the `client_ip` allowlist in the server-local drop-ins `/etc/caddy/vpn.d/*.caddy`.
+Caddy resolves the import when it adapts its config at startup, so the allowlist lives only on the server and changes with a `systemctl restart caddy`, no rebuild.
+The vhosts fail closed, so they answer 403 to everyone but loopback on a fresh image or when the drop-ins are missing.
 
-Restrict the internal services to the DFKI VPN ranges by creating `/etc/caddy/vpn.d/allow.caddy`, then restarting Caddy:
+Allow the DFKI VPN ranges by creating `/etc/caddy/vpn.d/allow.caddy`, then restarting Caddy:
 
 ```caddy
-@blocked not {
-  client_ip 136.199.0.0/16
-  client_ip 203.0.113.5
-}
-handle @blocked {
-  respond "Access denied: Your IP is not allowed to access this resource." 403
-}
+client_ip 136.199.0.0/16
+client_ip 203.0.113.5
 ```
 
-Each `client_ip` line is merged into one allowlist that `not` blocks everyone outside of, so add or remove entries one per line.
+Each `client_ip` line is merged into one allowlist, so add or remove entries one per line.
 Ranges and bare IPs are accepted interchangeably, so `203.0.113.5` allows that single host alongside the range.
 
 ## Rauthy
