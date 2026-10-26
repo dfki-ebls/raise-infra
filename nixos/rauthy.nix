@@ -79,8 +79,9 @@ in
     '';
   };
 
-  # Split-horizon for local relying parties: Hivegent may only reach loopback,
-  # so the public issuer resolves to this host's Caddy, keeping URL and TLS name.
+  # Split-horizon for local relying parties such as Hivegent, which is confined
+  # to loopback and passes the VPN allowlist there, so the public issuer
+  # resolves to this host's Caddy, keeping URL and TLS name.
   networking.hosts = lib.mkIf cfg.enable {
     "127.0.0.1" = [ pubUrl ];
     "::1" = [ pubUrl ];

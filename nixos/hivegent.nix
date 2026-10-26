@@ -36,6 +36,10 @@ in
     postgresql.createLocally = true;
     searxng.createLocally = withWeb true;
 
+    # Every endpoint is local (Rauthy via split-horizon, llmhop and Postgres
+    # via unix sockets), so confine the backend to loopback.
+    allowedAddresses = [ ];
+
     # Device placement for every torch / onnxruntime model (dense embeddings,
     # the model-based chunkers, docling) is decided centrally by the process
     # environment rather than per-library config — the backend uses `auto`
