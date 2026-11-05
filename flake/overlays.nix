@@ -1,7 +1,6 @@
 {
   lib,
   inputs,
-  self,
   ...
 }:
 {
@@ -18,12 +17,5 @@
         directory = ../pkgs;
       };
     in
-    {
-      inherit custom;
-      unstable = import inputs.nixpkgs {
-        inherit (prev.stdenv.hostPlatform) system;
-        config = self.nixpkgsConfig;
-      };
-    }
-    // custom;
+    { inherit custom; } // custom;
 }
