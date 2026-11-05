@@ -322,16 +322,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1790877853,
-        "narHash": "sha256-7B5mlBJnzRwcl88hPHAwRzN61+RVG7k7HvsDW0KcQ+s=",
+        "lastModified": 1793867320,
+        "narHash": "sha256-AzjJEITy736j3xvNhhrwcYm5MfgqdbpMbuaY7bJIgq4=",
         "owner": "mirkolenz",
         "repo": "llmhop",
-        "rev": "0beebcc75759eae4aac1eea80cf156eb1edcb749",
+        "rev": "be7c62e83bc74b688bb438c254c9e7199c69295e",
         "type": "github"
       },
       "original": {
         "owner": "mirkolenz",
-        "ref": "v2",
+        "ref": "v3",
         "repo": "llmhop",
         "type": "github"
       }
@@ -582,11 +582,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790855143,
-        "narHash": "sha256-Zd7RN2Mo9BCoKlDSMjRMF9xQ1kDkxS2g4lToUQxBCxc=",
+        "lastModified": 1793832538,
+        "narHash": "sha256-hPtKxoRZ/vNgrgOpQBeJ9V0VIRrr5D+/CNNbYbZHXlI=",
         "owner": "mirkolenz",
         "repo": "quadlet-nix",
-        "rev": "a78498bc0fa491e5b16e685cd38888deba473aed",
+        "rev": "5d19d152b8ecfc7218a086f211473ebba3c9ae83",
         "type": "github"
       },
       "original": {
@@ -689,11 +689,11 @@
     },
     "systems_3": {
       "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "lastModified": 1791244623,
+        "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",
         "owner": "nix-systems",
         "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "rev": "d36eeed142f88b5a636f2e3856a53c61654cf29b",
         "type": "github"
       },
       "original": {

@@ -16,7 +16,7 @@
       };
     };
     llmhop = {
-      url = "github:mirkolenz/llmhop/v2";
+      url = "github:mirkolenz/llmhop/v3";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-parts.follows = "flake-parts";

@@ -13,6 +13,7 @@ let
 
   # Resolved to llmhop's socket through `network.unix_sockets`.
   llmhopUrl = "http://llmhop";
+  llmhopListener = config.services.llmhop.gateway.llmhop.listen.default;
   inherit (config.services.llmhop.vllm) detectors;
   withTransparency = lib.mkIf (detectors ? watermark);
   openssl = lib.getExe pkgs.openssl;
@@ -85,7 +86,7 @@ in
       network = {
         # Advertised in web_fetch's User-Agent for traffic questions.
         contact_email = config.custom.admin.mail;
-        unix_sockets.llmhop = config.services.llmhop.socket;
+        unix_sockets.llmhop = llmhopListener.socket;
       };
 
       mcp = {
@@ -196,6 +197,6 @@ in
     ];
 
     # Grants the dynamic user access to llmhop's socket.
-    serviceConfig.SupplementaryGroups = [ config.services.llmhop.socketGroup ];
+    serviceConfig.SupplementaryGroups = [ llmhopListener.socketGroup ];
   };
 }

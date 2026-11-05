@@ -21,7 +21,7 @@ let
       rdma-core # InfiniBand for cuFile and nvshmem
       tbb_2022 # numba's threading layer
     ];
-    venvOptionalLibs = [
+    optionalLibs = [
       # Variants for the FFmpeg majors not supplied above.
       "*/torchcodec/libtorchcodec_*[!8].so"
       # nvshmem plugins for the launchers and fabrics of multi-node jobs.
