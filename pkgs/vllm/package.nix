@@ -6,16 +6,14 @@
   ffmpeg_8-headless,
   rdma-core,
   tbb_2022,
-  stable,
+  patchelf_0_15,
 }:
 let
   env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
-    # patchelf 0.19 corrupts executables rewritten more than once,
-    # which aborts the driver runpath pass on z3-solver's `bin/z3`.
-    # Drop once https://github.com/NixOS/patchelf/pull/672 lands in nixpkgs.
-    nativeBuildInputs = [ stable.patchelf ];
+    # The driver runpath pass on z3-solver's `bin/z3` aborts with patchelf 0.19.
+    nativeBuildInputs = [ patchelf_0_15 ];
     buildInputs = [
       ffmpeg_8-headless # torchcodec, which supports FFmpeg 4 to 8
       rdma-core # InfiniBand for cuFile and nvshmem
@@ -32,15 +30,14 @@ let
   # `/usr/local/cuda`. Not the bundled wheels: those are a runtime toolkit, with
   # no `libcudart.so` namelink and no driver stub to link against. The set vLLM's
   # own image installs for runtime JIT (docker/Dockerfile: nvcc, cudart, nvrtc,
-  # cuobjdump, cublas, curand), on the CUDA line the lock resolved. Taken from
-  # stable, since patchelf 0.19 aborts their driver runpath pass (see above).
+  # cuobjdump, cublas, curand), on the CUDA line the lock resolved.
   cudaHome = mkCudaHome {
     name = "vllm-cuda-home";
-    packages = with stable.${env.cudaPackagesAttr}; [
+    packages = with pkgs.${env.cudaPackagesAttr}; [
       cuda_nvcc
       cuda_cudart
       cuda_crt
-      cuda_cccl
+      cccl
       cuda_nvrtc
       cuda_cuobjdump
       libcublas
