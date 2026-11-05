@@ -4,11 +4,11 @@ version = "0.0.0"
 requires-python = "==3.14.*"
 dependencies = [
   # Prebuilt kernels, so flashinfer loads them instead of invoking nvcc on every cold start.
-  "flashinfer-cubin==0.7.0.post1",
-  "flashinfer-jit-cache==0.7.0.post1",
-  "flashinfer-jit-cache-sm120f==0.7.0.post1+cu130",
-  "flashinfer-python==0.7.0.post1",
-  "vllm==0.32.0",
+  "flashinfer-cubin==0.7.2.post1",
+  "flashinfer-jit-cache==0.7.2.post1",
+  "flashinfer-jit-cache-sm120f==0.7.2.post1+cu130",
+  "flashinfer-python==0.7.2.post1",
+  "vllm==0.33.0",
 ]
 
 [tool.uv]
