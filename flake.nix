@@ -19,8 +19,7 @@
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-parts.follows = "flake-parts";
-        flocken.follows = "flocken";
-        treefmt-nix.follows = "treefmt-nix";
+        systems.follows = "systems";
         pyproject-nix.follows = "pyproject-nix";
         uv2nix.follows = "uv2nix";
         pyproject-build-systems.follows = "pyproject-build-systems";
