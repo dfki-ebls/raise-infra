@@ -300,9 +300,6 @@
         "flake-parts": [
           "flake-parts"
         ],
-        "flocken": [
-          "flocken"
-        ],
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -314,19 +311,16 @@
         ],
         "quadlet-nix": "quadlet-nix",
         "systems": "systems_3",
-        "treefmt-nix": [
-          "treefmt-nix"
-        ],
         "uv2nix": [
           "uv2nix"
         ]
       },
       "locked": {
-        "lastModified": 1793867320,
-        "narHash": "sha256-AzjJEITy736j3xvNhhrwcYm5MfgqdbpMbuaY7bJIgq4=",
+        "lastModified": 1793953954,
+        "narHash": "sha256-ZjNmncMX9M9d/JcIhPDZKUwMgru7kEhlycP58TzELWg=",
         "owner": "mirkolenz",
         "repo": "llmhop",
-        "rev": "be7c62e83bc74b688bb438c254c9e7199c69295e",
+        "rev": "22b11250f089423da2e49112065cb93c534c771f",
         "type": "github"
       },
       "original": {
@@ -562,18 +556,14 @@
         "flake-parts": [
           "llmhop",
           "flake-parts"
-        ],
-        "nixpkgs": [
-          "llmhop",
-          "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1793832538,
-        "narHash": "sha256-hPtKxoRZ/vNgrgOpQBeJ9V0VIRrr5D+/CNNbYbZHXlI=",
+        "lastModified": 1793953336,
+        "narHash": "sha256-DJcXM28DZRg7v3jE5i3S8NBopJKJqeKPZHZ5arTyGls=",
         "owner": "mirkolenz",
         "repo": "quadlet-nix",
-        "rev": "5d19d152b8ecfc7218a086f211473ebba3c9ae83",
+        "rev": "6902bde23da04bde0e40daf28e0a663636afe8f2",
         "type": "github"
       },
       "original": {
