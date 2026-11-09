@@ -6,14 +6,11 @@
   ffmpeg_8-headless,
   rdma-core,
   tbb_2022,
-  patchelf_0_15,
 }:
 let
   env = mkUvEnv {
     name = "vllm-env";
     workspaceRoot = ./.;
-    # The driver runpath pass on z3-solver's `bin/z3` aborts with patchelf 0.19.
-    nativeBuildInputs = [ patchelf_0_15 ];
     buildInputs = [
       ffmpeg_8-headless # torchcodec, which supports FFmpeg 4 to 8
       rdma-core # InfiniBand for cuFile and nvshmem
