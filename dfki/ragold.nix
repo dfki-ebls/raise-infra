@@ -13,6 +13,9 @@ let
   };
 in
 {
+  # Lets users transfer a Hivegent reply to RAGold as a gold benchmark entry.
+  services.hivegent.settings.ragold.url = caddyHelpers.mkSubUrl "ragold";
+
   services.caddy.virtualHosts.ragold = {
     hostName = caddyHelpers.mkSubHost "ragold";
     extraConfig = ''
