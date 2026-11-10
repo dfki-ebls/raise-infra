@@ -49,7 +49,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     ragold = {
-      url = "github:dfki-ebls/ragold";
+      url = "github:dfki-ebls/ragold/v1";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-parts.follows = "flake-parts";
