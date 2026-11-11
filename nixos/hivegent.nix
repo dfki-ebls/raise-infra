@@ -47,12 +47,26 @@ in
         audience = [ "hivegent-*" ];
       };
 
+      # 32-core, 128 GB host shared with the LLM servers, Postgres, and Rauthy.
       compute = {
-        # 64-core host: lift the CPU-thread default for the OCR / PDF-parse
-        # and (with the GPU hidden) the neural stages without oversubscribing,
-        # as Tesseract's OpenMP scales sublinearly past ~16.
-        num_threads = 16;
+        # Each worker converts one document at a time and holds its own models
+        # (about 4-6 GB on CPU), so 8 stay well within memory.
+        worker_processes = 8;
+        # Total budget split across the workers (3 each), since Tesseract's
+        # OpenMP scales sublinearly and parallel documents beat wider OCR.
+        # The rest stays with embeddings, Postgres, and the other services.
+        num_threads = 24;
       };
+
+      jobs = {
+        # Enough files in flight that a single collection import fills the
+        # worker pool, while the rest queue on it.
+        max_concurrency = 4;
+        collection_concurrency = 8;
+      };
+
+      # Short-lived pdfium paging processes, light next to the pool.
+      isolation.max_workers = 4;
 
       conversion = {
         # The corpus is German-only; each extra OCR language widens
