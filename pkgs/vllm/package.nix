@@ -5,7 +5,7 @@
   mkCudaHome,
   ffmpeg_8-headless,
   rdma-core,
-  tbb_2022,
+  onetbb,
 }:
 let
   env = mkUvEnv {
@@ -14,7 +14,7 @@ let
     buildInputs = [
       ffmpeg_8-headless # torchcodec, which supports FFmpeg 4 to 8
       rdma-core # InfiniBand for cuFile and nvshmem
-      tbb_2022 # numba's threading layer
+      onetbb # numba's threading layer
     ];
     optionalLibs = [
       # Variants for the FFmpeg majors not supplied above.
