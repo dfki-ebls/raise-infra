@@ -22,11 +22,6 @@ lib.mkIf config.custom.enableNvidia {
   ];
   hardware.nvidia-container-toolkit.enable = true;
   nixpkgs.config.cudaSupport = true;
-  nixpkgs.overlays = [
-    (final: prev: {
-      cudaPackages = prev.cudaPackages_13_3;
-    })
-  ];
   environment.systemPackages = with pkgs; [
     python3Packages.gpustat
     nvtopPackages.nvidia
