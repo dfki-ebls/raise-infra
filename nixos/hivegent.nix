@@ -8,7 +8,76 @@
 let
   caddySubHost = caddyHelpers.mkSubHost "hivegent";
   hivegentUrl = caddyHelpers.mkSubUrl "hivegent";
-  rauthyIssuer = config.custom.rauthy.issuer;
+  inherit (config.custom.rauthy) issuer origin;
+
+  # Every OIDC client whose tokens the API accepts, matched exactly, since a
+  # prefix would admit any client an IdP admin later names alike.
+  spaClient = "hivegent-spa";
+  integrationClient = "hivegent-integration";
+
+  # The module's own header block is deferred and sets `frame-ancestors` as
+  # the whole policy at response time, overriding even the API's strict one.
+  # A deferred header with a matcher sorts outside it and applies last.
+  renderCsp = lib.concatMapAttrsStringSep "; " (name: sources: "${name} ${toString sources}");
+  apiCsp = {
+    default-src = [ "'none'" ];
+    frame-ancestors = [ "'none'" ];
+    base-uri = [ "'none'" ];
+    form-action = [ "'none'" ];
+  };
+  # Enforced for the SPA, closing every channel model output could exfiltrate
+  # through (remote images, fetches, frames). oidc-spa reaches Rauthy for
+  # discovery and tokens and restores sessions in a hidden Rauthy iframe,
+  # previews are blob URLs.
+  spaCsp = {
+    base-uri = [ "'self'" ];
+    connect-src = [
+      "'self'"
+      "blob:"
+      "data:"
+      origin
+    ];
+    form-action = [ "'self'" ];
+    frame-ancestors = [ "'self'" ];
+    frame-src = [
+      "'self'"
+      "blob:"
+      origin
+    ];
+    img-src = [
+      "'self'"
+      "blob:"
+      "data:"
+    ];
+    media-src = [
+      "'self'"
+      "blob:"
+    ];
+  };
+  # Report-only until verified in a browser, chiefly that `object-src` leaves
+  # blob PDF previews working. KaTeX and Mermaid set inline styles, zip export
+  # runs in a blob worker, and the hash is the theme script in `index.html`.
+  spaStrictCsp = spaCsp // {
+    default-src = [ "'self'" ];
+    font-src = [
+      "'self'"
+      "data:"
+    ];
+    object-src = [ "'none'" ];
+    script-src = [
+      "'self'"
+      "'sha256-fPAimwCvWk3vayb3NOchXjTKHEpKol20cA6iTqkXLvM='"
+    ];
+    style-src = [
+      "'self'"
+      "'unsafe-inline'"
+    ];
+    worker-src = [
+      "'self'"
+      "blob:"
+    ];
+  };
+  inherit (config.services.hivegent.caddy) docsPath;
 
   # Resolved to llmhop's socket through `network.unix_sockets`.
   llmhopUrl = "http://llmhop";
@@ -37,14 +106,19 @@ in
     # environment rather than per-library config — the backend uses `auto`
     # detection everywhere. Hide the GPU for now so the whole VRAM budget
     # stays with the llama-server; `auto` then resolves to CPU for all of
-    # them. Drop this once there is GPU headroom to offload onto.
+    # them. Drop this together with `PrivateDevices` below once there is
+    # GPU headroom to offload onto.
     environment.CUDA_VISIBLE_DEVICES = "";
 
     settings = {
       auth = {
         enable = true;
-        issuer = rauthyIssuer;
-        audience = [ "hivegent-*" ];
+        inherit issuer;
+        audience = [
+          spaClient
+          integrationClient
+        ];
+        frontend_client_id = spaClient;
       };
 
       # 32-core, 128 GB host shared with the LLM servers, Postgres, and Rauthy.
@@ -85,8 +159,13 @@ in
         max_images = 2;
       };
 
-      # Lets web_fetch open any public page the user or a search named.
-      security = withWeb { web_urls.allow_hosts = [ "*" ]; };
+      security = {
+        # No user-supplied endpoint, so neither a user LLM `base_url` nor a
+        # per-request MCP server is reachable.
+        user_urls.allow_hosts = [ ];
+        # Lets web_fetch open any public page the user or a search named.
+        web_urls = withWeb { allow_hosts = [ "*" ]; };
+      };
 
       network = {
         # Advertised in web_fetch's User-Agent for traffic questions.
@@ -111,13 +190,27 @@ in
       enable = true;
       hostName = caddySubHost;
       hsts = config.custom.enableCertificates;
-      # The SPA reads its OIDC config from the backend's `/api/config` (issuer
-      # from `settings.auth.issuer` above, client id `hivegent-spa` by default),
-      # so there is no per-deployment frontend build.
+      # The SPA reads its OIDC config from the backend's `/api/v1/config`
+      # (`settings.auth` above), so there is no per-deployment frontend build.
       # Site-wide hardening the reusable module intentionally leaves out.
       extraConfig = ''
         ${caddyHelpers.mkGeoblock { }}
         ${caddyHelpers.scannerHoneypots}
+
+        @csp_api path /api/*
+        header @csp_api {
+          defer
+          Content-Security-Policy "${renderCsp apiCsp}"
+        }
+
+        # The handbook is mdbook output with inline scripts, so it keeps the
+        # module's policy.
+        @csp_spa not path /api/* ${docsPath} ${docsPath}/*
+        header @csp_spa {
+          defer
+          Content-Security-Policy "${renderCsp spaCsp}"
+          Content-Security-Policy-Report-Only "${renderCsp spaStrictCsp}"
+        }
       '';
     };
   };
@@ -152,7 +245,7 @@ in
   # Bootstrap only the public SPA client.
   custom.rauthy.bootstrap.clients = [
     {
-      id = "hivegent-spa";
+      id = spaClient;
       name = "Hivegent";
       secret = null;
       client_uri = hivegentUrl;
@@ -201,7 +294,11 @@ in
       "rauthy.service"
     ];
 
-    # Grants the dynamic user access to llmhop's socket.
-    serviceConfig.SupplementaryGroups = [ llmhopListener.socketGroup ];
+    serviceConfig = {
+      # Grants the dynamic user access to llmhop's socket.
+      SupplementaryGroups = [ llmhopListener.socketGroup ];
+      # The module exposes the host devices for CUDA, which is hidden above.
+      PrivateDevices = lib.mkForce true;
+    };
   };
 }
