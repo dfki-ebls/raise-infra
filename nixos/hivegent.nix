@@ -11,72 +11,41 @@ let
   inherit (config.custom.rauthy) issuer origin;
 
   # Every OIDC client whose tokens the API accepts, matched exactly, since a
-  # prefix would admit any client an IdP admin later names alike.
+  # prefix would admit any client an IdP admin later names alike. The SPA one
+  # is the backend's default `auth.frontend_client_id`.
   spaClient = "hivegent-spa";
   integrationClient = "hivegent-integration";
 
   # The module's own header block is deferred and sets `frame-ancestors` as
   # the whole policy at response time, overriding even the API's strict one.
   # A deferred header with a matcher sorts outside it and applies last.
-  renderCsp = lib.concatMapAttrsStringSep "; " (name: sources: "${name} ${toString sources}");
-  apiCsp = {
-    default-src = [ "'none'" ];
-    frame-ancestors = [ "'none'" ];
-    base-uri = [ "'none'" ];
-    form-action = [ "'none'" ];
-  };
+  csp = lib.concatStringsSep "; ";
+  apiCsp = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
   # Enforced for the SPA, closing every channel model output could exfiltrate
   # through (remote images, fetches, frames). oidc-spa reaches Rauthy for
   # discovery and tokens and restores sessions in a hidden Rauthy iframe,
   # previews are blob URLs.
-  spaCsp = {
-    base-uri = [ "'self'" ];
-    connect-src = [
-      "'self'"
-      "blob:"
-      "data:"
-      origin
-    ];
-    form-action = [ "'self'" ];
-    frame-ancestors = [ "'self'" ];
-    frame-src = [
-      "'self'"
-      "blob:"
-      origin
-    ];
-    img-src = [
-      "'self'"
-      "blob:"
-      "data:"
-    ];
-    media-src = [
-      "'self'"
-      "blob:"
-    ];
-  };
+  spaCsp = csp [
+    "base-uri 'self'"
+    "form-action 'self'"
+    "frame-ancestors 'self'"
+    "connect-src 'self' blob: data: ${origin}"
+    "frame-src 'self' blob: ${origin}"
+    "img-src 'self' blob: data:"
+    "media-src 'self' blob:"
+  ];
   # Report-only until verified in a browser, chiefly that `object-src` leaves
   # blob PDF previews working. KaTeX and Mermaid set inline styles, zip export
   # runs in a blob worker, and the hash is the theme script in `index.html`.
-  spaStrictCsp = spaCsp // {
-    default-src = [ "'self'" ];
-    font-src = [
-      "'self'"
-      "data:"
-    ];
-    object-src = [ "'none'" ];
-    script-src = [
-      "'self'"
-      "'sha256-fPAimwCvWk3vayb3NOchXjTKHEpKol20cA6iTqkXLvM='"
-    ];
-    style-src = [
-      "'self'"
-      "'unsafe-inline'"
-    ];
-    worker-src = [
-      "'self'"
-      "blob:"
-    ];
-  };
+  spaStrictCsp = csp [
+    spaCsp
+    "default-src 'self'"
+    "font-src 'self' data:"
+    "object-src 'none'"
+    "script-src 'self' 'sha256-fPAimwCvWk3vayb3NOchXjTKHEpKol20cA6iTqkXLvM='"
+    "style-src 'self' 'unsafe-inline'"
+    "worker-src 'self' blob:"
+  ];
   inherit (config.services.hivegent.caddy) docsPath;
 
   # Resolved to llmhop's socket through `network.unix_sockets`.
@@ -112,13 +81,11 @@ in
 
     settings = {
       auth = {
-        enable = true;
         inherit issuer;
         audience = [
           spaClient
           integrationClient
         ];
-        frontend_client_id = spaClient;
       };
 
       # 32-core, 128 GB host shared with the LLM servers, Postgres, and Rauthy.
@@ -173,12 +140,6 @@ in
         unix_sockets.llmhop = llmhopListener.socket;
       };
 
-      mcp = {
-        enable = false;
-        client_id = "hivegent-mcp";
-        base_url = "${hivegentUrl}/mcp";
-      };
-
       transparency = withTransparency {
         detector_url = "${llmhopUrl}/route/${detectors.watermark.name}/detect";
         report_issuer = hivegentUrl;
@@ -200,7 +161,7 @@ in
         @csp_api path /api/*
         header @csp_api {
           defer
-          Content-Security-Policy "${renderCsp apiCsp}"
+          Content-Security-Policy "${apiCsp}"
         }
 
         # The handbook is mdbook output with inline scripts, so it keeps the
@@ -208,8 +169,8 @@ in
         @csp_spa not path /api/* ${docsPath} ${docsPath}/*
         header @csp_spa {
           defer
-          Content-Security-Policy "${renderCsp spaCsp}"
-          Content-Security-Policy-Report-Only "${renderCsp spaStrictCsp}"
+          Content-Security-Policy "${spaCsp}"
+          Content-Security-Policy-Report-Only "${spaStrictCsp}"
         }
       '';
     };
@@ -242,16 +203,17 @@ in
     '';
   };
 
-  # Bootstrap only the public SPA client.
+  # Bootstrap only the SPA client, public without a secret, so Rauthy enforces
+  # S256 PKCE. Rauthy emits roles without a dedicated scope, while groups need
+  # the groups scope.
   custom.rauthy.bootstrap.clients = [
-    {
+    rec {
       id = spaClient;
       name = "Hivegent";
-      secret = null;
       client_uri = hivegentUrl;
       contacts = [ config.custom.admin.mail ];
       redirect_uris = [ "${hivegentUrl}/" ];
-      post_logout_redirect_uris = [ "${hivegentUrl}/" ];
+      post_logout_redirect_uris = redirect_uris;
       allowed_origins = [ hivegentUrl ];
       enabled = true;
       flows_enabled = [
@@ -262,33 +224,21 @@ in
       id_token_alg = "EdDSA";
       auth_code_lifetime = 60;
       access_token_lifetime = 1800;
-      # Rauthy emits roles without a dedicated scope, while groups need the groups scope.
       scopes = [
         "openid"
         "profile"
         "email"
         "groups"
       ];
-      default_scopes = [
-        "openid"
-        "profile"
-        "email"
-        "groups"
-      ];
-      challenges = [ "S256" ];
+      default_scopes = scopes;
       force_mfa = false;
     }
   ];
 
   systemd.services.hivegent = {
-    # The backend fetches OIDC discovery from the Rauthy issuer during startup,
-    # and that public issuer URL is served through Caddy, so order the backend
-    # behind both to reach discovery on the first try. Ordering only, never
-    # `requires`: Caddy restarts on every vhost change on this host (all sites
-    # share one instance, and `enableReload = false` turns each change into a
-    # full restart), and a requirement dependency would propagate that restart
-    # into the backend, needlessly reloading its ML models. `after` carries no
-    # such stop/restart propagation, and both units are independently enabled.
+    # Discovery from the public issuer goes through Caddy to Rauthy at startup.
+    # Ordering only, since Caddy restarts on every vhost change here and a
+    # requirement would restart the backend and reload its models with it.
     after = [
       "caddy.service"
       "rauthy.service"
