@@ -26,15 +26,22 @@ in
 
     package = lib.mkPackageOption pkgs "rauthy" { };
 
+    origin = lib.mkOption {
+      type = lib.types.str;
+      example = "https://sso.example.com";
+      description = ''
+        Public origin Rauthy is served at, set by the deployment so
+        relying-party modules can reference it instead of hardcoding Rauthy's
+        public host, e.g. in their Content Security Policy.
+      '';
+    };
+
     issuer = lib.mkOption {
       type = lib.types.str;
-      default = "";
-      example = "https://sso.example.com/auth/v1/";
-      description = ''
-        Public OIDC issuer URL including the trailing `/auth/v1/`, set by the
-        deployment so relying-party modules can reference it instead of
-        hardcoding Rauthy's public host.
-      '';
+      readOnly = true;
+      default = "${cfg.origin}/auth/v1/";
+      defaultText = lib.literalExpression ''"${config.custom.rauthy.origin}/auth/v1/"'';
+      description = "Public OIDC issuer URL, derived from `origin`.";
     };
 
     settings = lib.mkOption {

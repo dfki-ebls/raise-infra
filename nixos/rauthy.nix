@@ -17,9 +17,7 @@ in
 {
   custom.rauthy = {
     enable = true;
-    # Public OIDC issuer, exposed so relying parties (Hivegent) need not
-    # hardcode Rauthy's public host.
-    issuer = "${pubOrigin}/auth/v1/";
+    origin = pubOrigin;
     postgresql.createLocally = true;
 
     settings = {
