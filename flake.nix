@@ -57,7 +57,7 @@
       };
     };
     hivegent = {
-      url = "github:dfki-ebls/hivegent";
+      url = "github:dfki-ebls/hivegent/6e5a8faabc64f9c31aebc36d4f07f50eb84325af";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-parts.follows = "flake-parts";
