@@ -84,6 +84,15 @@ systemd-ask-password -n "MCP client secret:" | systemd-creds encrypt --name=hive
 
 Remove a secret by deleting its file and restarting.
 
+### Hardening
+
+- The API accepts tokens only of the exact clients `hivegent-spa` and `hivegent-integration`, and `security.user_urls` allows no host, so users can neither bring their own LLM endpoint nor attach MCP servers.
+- Caddy enforces a Content Security Policy on the SPA that allows images, fetches, and frames only from the vhost itself, `blob:`/`data:` URLs, and Rauthy, so model output cannot exfiltrate data through remote images.
+  A stricter policy covering scripts, styles, workers, and plugins is sent as `Content-Security-Policy-Report-Only`, check the browser console for violations (PDF previews, KaTeX, Mermaid, the RAGold export) before moving it into the enforced one.
+  Its script hash pins the theme script of Hivegent's `index.html`, so recompute it when that script changes.
+- The backend unit runs without host devices, since the GPU is hidden from it.
+- Postgres listens only on its unix socket, and each service role may connect only to the database of the same name.
+
 ### Watermarking
 
 vLLM marks the output of the model with `gumbel` (`nixos/vllm.nix`), and MTP stays off since speculative decoding needs `dual_key_gumbel` with probabilistic drafting, which is not yet tested on this card.
@@ -106,7 +115,7 @@ The browser SPA client (`hivegent-spa`) is provisioned automatically on first DB
 To let an external service call the API non-interactively, create a confidential client by hand in the Rauthy admin UI so its secret stays out of the Nix store.
 In **Clients → Add Client** set:
 
-- **Client ID**: `hivegent-integration`, or any id starting with `hivegent-` so it matches Hivegent's `auth.audience` prefix (`nixos/hivegent.nix`).
+- **Client ID**: `hivegent-integration`, since Hivegent accepts tokens only for the client ids listed in its `auth.audience` (`nixos/hivegent.nix`), so another id needs adding there first.
 - **Confidential**: yes, since the client credentials grant requires a secret; copy the generated secret, as it is shown only once.
 - **Enabled flows**: `client_credentials` only, with no redirect URIs.
 - **Token algorithm**: EdDSA for both the access and ID token.
@@ -125,7 +134,7 @@ token=$(curl -fsS https://sso.<domain>/auth/v1/oidc/token \
   -d client_id=hivegent-integration \
   -d client_secret=<secret> | jq -r .access_token)
 
-curl -fsS https://hivegent.<domain>/api/documents -H "Authorization: Bearer $token"
+curl -fsS https://hivegent.<domain>/api/v1/directories/~ -H "Authorization: Bearer $token"
 ```
 
 For Python services, cache the token and refresh it shortly before it expires:
@@ -166,9 +175,9 @@ class ClientCredentialsAuth:
         return {"Authorization": f"Bearer {access_token}"}
 
 
-async def list_documents(client: httpx.AsyncClient, auth: ClientCredentialsAuth) -> object:
+async def get_workspace_tree(client: httpx.AsyncClient, auth: ClientCredentialsAuth) -> object:
     response = await client.get(
-        "https://hivegent.<domain>/api/documents",
+        "https://hivegent.<domain>/api/v1/directories/~",
         headers=await auth.headers(client),
     )
     response.raise_for_status()
@@ -182,7 +191,7 @@ When the client stays open, Authlib renews expired client credentials tokens fro
 from authlib.integrations.httpx_client import AsyncOAuth2Client
 
 
-async def list_documents() -> object:
+async def get_workspace_tree() -> object:
     async with AsyncOAuth2Client(
         "hivegent-integration",
         "<secret>",
@@ -190,7 +199,7 @@ async def list_documents() -> object:
         token_endpoint_auth_method="client_secret_post",
     ) as client:
         await client.fetch_token(grant_type="client_credentials")
-        response = await client.get("https://hivegent.<domain>/api/documents")
+        response = await client.get("https://hivegent.<domain>/api/v1/directories/~")
         response.raise_for_status()
         return response.json()
 ```
