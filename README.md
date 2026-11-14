@@ -86,10 +86,8 @@ Remove a secret by deleting its file and restarting.
 
 ### Hardening
 
-- The API accepts tokens only of the exact clients `hivegent-spa` and `hivegent-integration`, and `security.user_urls` allows no host, so users can neither bring their own LLM endpoint nor attach MCP servers.
+- The API accepts tokens only of the exact clients `hivegent-spa` and `hivegent-integration`.
 - Caddy enforces a Content Security Policy on the SPA that allows images, fetches, and frames only from the vhost itself, `blob:`/`data:` URLs, and Rauthy, so model output cannot exfiltrate data through remote images.
-  A stricter policy covering scripts, styles, workers, and plugins is sent as `Content-Security-Policy-Report-Only`, check the browser console for violations (PDF previews, KaTeX, Mermaid, the RAGold export) before moving it into the enforced one.
-  Its script hash pins the theme script of Hivegent's `index.html`, so recompute it when that script changes.
 - The backend unit runs without host devices, since the GPU is hidden from it.
 - Postgres listens only on its unix socket, and each service role may connect only to the database of the same name.
 

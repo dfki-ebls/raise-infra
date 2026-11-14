@@ -34,18 +34,6 @@ let
     "img-src 'self' blob: data:"
     "media-src 'self' blob:"
   ];
-  # Report-only until verified in a browser, chiefly that `object-src` leaves
-  # blob PDF previews working. KaTeX and Mermaid set inline styles, zip export
-  # runs in a blob worker, and the hash is the theme script in `index.html`.
-  spaStrictCsp = csp [
-    spaCsp
-    "default-src 'self'"
-    "font-src 'self' data:"
-    "object-src 'none'"
-    "script-src 'self' 'sha256-fPAimwCvWk3vayb3NOchXjTKHEpKol20cA6iTqkXLvM='"
-    "style-src 'self' 'unsafe-inline'"
-    "worker-src 'self' blob:"
-  ];
   inherit (config.services.hivegent.caddy) docsPath;
 
   # Resolved to llmhop's socket through `network.unix_sockets`.
@@ -126,13 +114,8 @@ in
         max_images = 2;
       };
 
-      security = {
-        # No user-supplied endpoint, so neither a user LLM `base_url` nor a
-        # per-request MCP server is reachable.
-        user_urls.allow_hosts = [ ];
-        # Lets web_fetch open any public page the user or a search named.
-        web_urls = withWeb { allow_hosts = [ "*" ]; };
-      };
+      # Lets web_fetch open any public page the user or a search named.
+      security = withWeb { web_urls.allow_hosts = [ "*" ]; };
 
       network = {
         # Advertised in web_fetch's User-Agent for traffic questions.
@@ -170,7 +153,6 @@ in
         header @csp_spa {
           defer
           Content-Security-Policy "${spaCsp}"
-          Content-Security-Policy-Report-Only "${spaStrictCsp}"
         }
       '';
     };
